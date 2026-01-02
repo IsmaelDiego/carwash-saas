@@ -1,12 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
     const registerForm = document.getElementById("registerForm");
+    // Asegúrate de que en tu HTML este elemento exista: <div id="message" class="alert" style="display:none;"></div>
+    const messageBox = document.getElementById("message-auth");
+
+    // Función para manejar colores y visibilidad
+    function showAlert(msg, type) {
+        messageBox.style.display = "block";
+        messageBox.className = `alert alert-${type} text-center`; // Bootstrap classes: alert-success, alert-danger
+        messageBox.innerText = msg;
+    }
 
     if (registerForm) {
         registerForm.addEventListener("submit", async (e) => {
             e.preventDefault(); // Evita que el formulario recargue la página
 
+            // 1. UI: Bloquear botón y limpiar mensajes previos
+            const submitBtn = registerForm.querySelector("button[type='submit']");
+            const originalBtnText = submitBtn.innerText;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Registrando...";
+            messageBox.style.display = "none";
+
+            // 2. Capturar datos
             const formData = new FormData(registerForm);
-            const data = Object.fromEntries(formData.entries()); // Convierte FormData a Objeto JS
+            const data = Object.fromEntries(formData.entries()); 
 
             try {
                 const response = await fetch(`${BASE_URL}/register`, {
@@ -20,16 +38,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    alert("Registro exitoso via JS. Redirigiendo al login...");
-                    window.location.href = result.redirect; // Redirección controlada por backend
+                    // 3. ÉXITO (Verde)
+                    showAlert("¡Usuario registrado exitosamente! Redirigiendo...", "success");
+                    
+                    setTimeout(() => {
+                        window.location.href = result.redirect; // Redirección controlada por backend
+                    }, 1500); 
                 } else {
-                    // Mostrar error
-                    document.getElementById("message").innerText = result.message || "Error desconocido";
+                    // 4. ERROR DEL SERVIDOR (Rojo) - Ej: Email duplicado
+                    showAlert(result.message || "Error desconocido al registrar", "danger");
+                    
+                    // Restaurar botón
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalBtnText;
                 }
 
             } catch (error) {
                 console.error("Error:", error);
-                document.getElementById("message").innerText = "Error de conexión con el servidor";
+                
+                // 5. ERROR DE CONEXIÓN (Amarillo)
+                showAlert("Error de conexión con el servidor", "warning");
+
+                // Restaurar botón
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
             }
         });
     }

@@ -47,7 +47,8 @@ class AuthController
                 $_SESSION['user'] = [
                     'id'   => $user['id'],
                     'name' => $user['name'],
-                    'role' => $user['role']
+                    'role' => $user['role'],
+                    'email' => $user['email']
                 ];
 
                 // Responder éxito a JS
@@ -130,10 +131,10 @@ class AuthController
      */
     public function logout(): void
     {
-        // Vaciar array de sesión
+        // 1. Vaciar array de sesión
         $_SESSION = [];
 
-        // Invalidar la cookie de sesión si existe
+        // 2. Invalidar la cookie de sesión (Borrado profundo)
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '', time() - 42000,
@@ -142,11 +143,18 @@ class AuthController
             );
         }
 
-        // Destruir la sesión
+        // 3. Destruir la sesión en el servidor
         session_destroy();
 
-        // Redirigir al login
-        header('Location: ' . BASE_URL . '/login');
+        // ---------------------------------------------------------
+        // CAMBIO AQUÍ: En lugar de redirigir, cargamos la vista.
+        // ---------------------------------------------------------
+        // La sesión ya está destruida en este punto, así que es seguro.
+        
+        require VIEW_PATH . '/auth/sign-out.view.php';
+        
+        // No necesitamos exit aquí porque es el final del script, 
+        // pero no está de más ponerlo.
         exit;
     }
 }

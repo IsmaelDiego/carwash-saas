@@ -45,10 +45,12 @@ class AuthController
 
                 // Guardar datos en sesión
                 $_SESSION['user'] = [
-                    'id'   => $user['id'],
-                    'name' => $user['name'],
-                    'role' => $user['role'],
-                    'email' => $user['email']
+                    'id'   => $user['id_usuario'],
+                    'name' => $user['nombre'],
+                    'role' => $user['id_rol'],
+                    'email' => $user['email'],
+                    'rolename' => $user['rol']   
+                    
                 ];
 
                 // Responder éxito a JS

@@ -3,6 +3,7 @@
 class Router
 {
     /**
+     * 3.
      * Punto de entrada principal
      */
     public function run(): void
@@ -16,69 +17,91 @@ class Router
      */
     public function dispatch(string $uri): void
     {
-        // 1. Limpieza de la URL
-        // Obtenemos solo la ruta, sin parámetros GET (?id=1) y quitamos la BASE_URL
+        // 1. Limpieza (Igual que antes)
         $path = parse_url($uri, PHP_URL_PATH);
-
         if (defined('BASE_URL') && BASE_URL !== '' && strpos($path, BASE_URL) === 0) {
             $path = substr($path, strlen(BASE_URL));
         }
-
         $path = trim($path, '/');
 
-        // 2. Manejo de Alias (Rutas cortas)
-        // Convertimos rutas "bonitas" a la estructura Controlador/Metodo real
-        if ($path === '' || $path === 'index.php') {
-            $path = 'home/index'; // Página de inicio por defecto
-        } elseif ($path === 'login') {
-            $path = 'auth/login';
-        } elseif ($path === 'logout') {
-            $path = 'auth/logout';
-        } elseif ($path === 'register') {
-            $path = 'auth/register';
-        }
+        // 2. Alias (Igual que antes)
+        if ($path === '' || $path === 'index.php') $path = 'home/index';
+        elseif ($path === 'login') $path = 'auth/login';
+        elseif ($path === 'logout') $path = 'auth/logout';
 
-        // 3. Desglose de la ruta
+        // 3. Desglose
         $segments = explode('/', $path);
 
-        // a. Obtener Controlador (Primer segmento)
-        $controllerBase = array_shift($segments); // Saca el primer elemento
+        // --- NUEVA LÓGICA: DETECCIÓN DE CARPETAS ---
+        $folder = '';
+        
+        // Verificamos si el primer segmento es una carpeta real dentro de controllers
+        // Ej: Si la URL es "admin/cliente/lista", segments[0] es "admin"
+        if (!empty($segments) && is_dir(APP_PATH . '/controllers/' . $segments[0])) {
+            $folder = array_shift($segments) . '/'; // Guardamos 'admin/' y lo sacamos del array
+        }
+        // -------------------------------------------
+
+        // 4. Obtener Controlador
+        // Si ya sacamos 'admin', el siguiente segmento es 'cliente'
+        // Si la carpeta era admin y no escribieron nada más (midominio.com/admin), mandamos al Dashboard
+        if (empty($segments)) {
+            $controllerBase = 'Dashboard'; 
+        } else {
+            $controllerBase = array_shift($segments);
+        }
+
         $controllerName = ucfirst($controllerBase) . 'Controller';
 
-        // b. Obtener Método (Segundo segmento) - Default: index
+        // 5. Obtener Método
         $methodName = !empty($segments) ? array_shift($segments) : 'index';
 
-        // c. Obtener Parámetros (Lo que sobra en el array)
-        // Ejemplo: en /producto/editar/5, el '5' queda en $params
+        // 6. Parámetros
         $params = $segments;
 
-        // 4. Buscar el archivo del controlador
-        $file = APP_PATH . '/controllers/' . $controllerName . '.php';
+        // ... (el código anterior de tu dispatch se queda igual hasta el paso 6) ...
+
+        // 7. Buscar el archivo (Concatenamos la $folder)
+        $file = APP_PATH . '/controllers/' . $folder . $controllerName . '.php';
 
         if (!file_exists($file)) {
-            $this->send404("Controlador no encontrado: $controllerName");
+            $this->send404("Controlador no encontrado en: controllers/$folder$controllerName.php");
             return;
         }
 
-        // 5. Cargar e Instanciar
         require_once $file;
 
-        if (!class_exists($controllerName)) {
-            $this->send404("Clase no definida: $controllerName");
-            return;
+        // --- NUEVA LÓGICA DE NAMESPACES ---
+        
+        // 8. Construir el nombre completo de la clase (Fully Qualified Class Name)
+        $fullControllerName = $controllerName; // Asumimos primero que no hay namespace
+
+        if (!empty($folder)) {
+            // Convertimos "admin/" en "Admin"
+            $subNamespace = ucfirst(trim($folder, '/')); 
+            // El resultado será: Controllers\Admin\ClienteController
+            $fullControllerName = "Controllers\\" . $subNamespace . "\\" . $controllerName;
         }
 
-        $controller = new $controllerName();
+        // 9. Verificar si la clase existe (Probamos con Namespace primero)
+        if (!class_exists($fullControllerName)) {
+            // Fallback: Si no existe con namespace, probamos a la antigua (sin namespace)
+            if (!class_exists($controllerName)) {
+                $this->send404("Clase no encontrada. Asegúrate de que el namespace coincida con: $fullControllerName");
+                return;
+            }
+            $fullControllerName = $controllerName;
+        }
 
-        // 6. Ejecutar el método pasando parámetros
+        // 10. Instanciar el Controlador
+        $controller = new $fullControllerName();
+
         if (method_exists($controller, $methodName)) {
-            // Esta función mágica permite pasar el array $params como argumentos individuales ($id, $slug, etc.)
             call_user_func_array([$controller, $methodName], $params);
         } else {
-            $this->send404("Método no encontrado: $methodName");
+            $this->send404("Método $methodName no encontrado en $controllerName");
         }
     }
-
     /**
      * Función auxiliar para errores 404
      */

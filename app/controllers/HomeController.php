@@ -1,20 +1,27 @@
 <?php
+
 class HomeController
 {
     public function index()
     {
-        requireAuth(); // Obligatorio estar logueado
+        requireAuth();
 
-        $role = $_SESSION['user']['role'];
+        $role = (int) $_SESSION['user']['role'];
 
-        if ($role === 'admin') {
-            header('Location: ' . BASE_URL . '/admin/dashboard');
-        } elseif ($role === 'operador') {
-            header('Location: ' . BASE_URL . '/employee/dashboard'); // Ojo: tu controlador se llama Employee
-        } else {
-            // Rol desconocido
-            echo "Rol no reconocido";
+        switch ($role) {
+            case 1:
+                header('Location: ' . BASE_URL . '/admin/dashboard');
+                break;
+
+            case 2:
+                header('Location: ' . BASE_URL . '/employee/dashboard');
+                break;
+
+            default:
+                echo "Rol no reconocido";
+                break;
         }
+
         exit;
     }
 }

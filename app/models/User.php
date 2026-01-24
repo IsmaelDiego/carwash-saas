@@ -15,12 +15,28 @@ class User
      */
     public function findByEmail(string $email): ?array
     {
-        // IMPORTANTE: Agregamos 'AND active = 1'
+        // IMPORTANTE: Agregamos 'AND estado = 1'
         // Así, los usuarios desactivados no pasan el login.
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ? AND active = 1 LIMIT 1");
-        $stmt->execute([$email]);
+        $sql = "
+            SELECT 
+                u.id_usuario,
+                u.nombre,
+                u.email,
+                u.password,
+                u.id_rol,
+                r.nombre AS rol
+            FROM usuarios u
+            INNER JOIN roles r ON u.id_rol = r.id_rol
+            WHERE u.email = :email 
+            AND u.estado = 1
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':email' => $email]);
 
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
         return $result ?: null;
     }
 
@@ -34,15 +50,15 @@ class User
 
         // 2. Validar el Rol para evitar errores de ENUM en MySQL
         // Tu base de datos solo acepta 'admin' o 'operador'.
-        $validRoles = ['admin', 'operador'];
+        $validRoles = ['1', '2'];
         
         // Si el rol que llega no es válido, lo forzamos a 'operador' por seguridad
-        $role = in_array($data['role'] ?? '', $validRoles) ? $data['role'] : 'operador';
+        $role = in_array($data['role'] ?? '', $validRoles) ? $data['role'] : '2';
 
         // 3. Preparar la consulta
         // Insertamos active = 1 por defecto explícitamente
-        $sql = "INSERT INTO users (name, email, password, role, active) 
-                VALUES (:name, :email, :password, :role, 1)";
+        $sql = "INSERT INTO usuarios (nombre, email, password, id_rol ) 
+                VALUES (:name, :email, :password, :role)";
 
         $stmt = $this->db->prepare($sql);
 

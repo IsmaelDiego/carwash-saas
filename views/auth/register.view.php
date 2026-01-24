@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 
 <html
-  lang="en"
+  lang="es"
   class="layout-wide customizer-hide"
   data-assets-path="<?= BASE_URL ?>/template/assets/"
   data-template="vertical-menu-template-free">
@@ -12,7 +12,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Register</title>
+    <title>Registrar</title>
 
     <meta name="description" content="" />
 
@@ -160,8 +160,8 @@
                     <label class="input-group-text" for="inputGroupSelect01">Cargo</label>
                         <select class="form-select" id="inputGroupSelect01" name="role" >
                             <option selected="">Selecione...</option>
-                            <option value="admin">Administrador</option>
-                            <option value="operador">Operador/Trabajador</option>
+                            <option value="1">Administrador</option>
+                            <option value="2">Operador/Trabajador</option>
                         </select>
                  </div>
 

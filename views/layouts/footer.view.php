@@ -1,6 +1,6 @@
  <!-- Footer -->
                     <footer class="content-footer footer bg-footer-theme">
-                        <div class="container-xxl">
+                        <div class="container-fluid">
                             <div
                                 class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
                                 <div class="mb-2 mb-md-0">
@@ -82,6 +82,25 @@
 
     <!-- Place this tag before closing body tag for github widget button. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+    <script>
+        // Busca todos los elementos con la clase .hide-url
+document.querySelectorAll('.hide-url').forEach(link => {
+    // 1. Guardamos la ruta real
+    const url = link.getAttribute('href');
+    
+    // 2. Quitamos el href para que no salga abajo
+    link.removeAttribute('href');
+    
+    // 3. Añadimos el cursor de mano (porque al quitar href se pierde)
+    link.style.cursor = 'pointer';
+    
+    // 4. Añadimos el evento click
+    link.addEventListener('click', () => {
+        window.location.href = url;
+    });
+});
+    </script>
 </body>
 
 </html>

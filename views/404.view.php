@@ -54,9 +54,9 @@
     <!-- Error -->
     <div class="container-xxl container-p-y">
       <div class="misc-wrapper">
-        <h1 class="mb-2 mx-2" style="line-height: 6rem; font-size: 6rem">403</h1>
-        <h4 class="mb-2 mx-2">Sin autorización ⚠️</h4>
-        <p class="mb-6 mx-2">No tienes permiso para ver esta sección.</p>
+        <h1 class="mb-2 mx-2" style="line-height: 6rem; font-size: 6rem">404</h1>
+        <h4 class="mb-2 mx-2">Página no encontrada️  ⚠️</h4>
+        <p class="mb-6 mx-2">No pudimos encontrar la página que estás buscando.</p>
         <a href="javascript:void(0);" onclick="volverAtrasSinRastro()" class="btn btn-primary">
     Volver
 </a> 

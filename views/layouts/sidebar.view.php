@@ -1,7 +1,7 @@
 
             <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
                 <div class="app-brand demo">
-                    <a href="<?= BASE_URL ?>/admin/dashboard" class="app-brand-link">
+                    <a href="<?= BASE_URL ?>/admin/dashboard" class="app-brand-link hide-url">
                         <span class="app-brand-logo demo">
                             <span class="text-primary">
                                 <svg
@@ -56,7 +56,7 @@
                         <span class="app-brand-text demo menu-text fw-bold ms-2">C-SAAS</span>
                     </a>
 
-                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link hide-url text-large ms-auto">
                         <i class="bx bx-chevron-left d-block d-xl-none align-middle"></i>
                     </a>
                 </div>
@@ -70,9 +70,9 @@
 
                     <li class="menu-item active">
                         <a
-                            href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/html/vertical-menu-template/app-email.html"
+                            href="<?= BASE_URL ?>/admin/dashboard"
                             target="_blank"
-                            class="menu-link">
+                            class="menu-link hide-url">
                             <i class="menu-icon tf-icons bx bx-home"></i>
                             <div class="text-truncate" data-i18n="Email">Dashboard</div>
                         </a>
@@ -82,7 +82,7 @@
                         <a
                             href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/html/vertical-menu-template/app-email.html"
                             target="_blank"
-                            class="menu-link">
+                            class="menu-link ">
                             <i class="menu-icon tf-icons bx bx-history"></i>
                             <div class="text-truncate" data-i18n="Email">Resumen del Día</div>
                         </a>
@@ -130,12 +130,7 @@
                         </a>
                         <ul class="menu-sub">
                             <li class="menu-item">
-                                <a href="pages-account-settings-account.html" class="menu-link">
-                                    <div class="text-truncate" data-i18n="Account">Registrar cliente</div>
-                                </a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="pages-account-settings-connections.html" class="menu-link">
+                                <a href="<?= BASE_URL ?>/admin/cliente/lista" class="menu-link hide-url">
                                     <div class="text-truncate" data-i18n="Connections">Lista de clientes</div>
                                 </a>
                             </li>

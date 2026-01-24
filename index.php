@@ -1,44 +1,32 @@
 <?php
-// index.php (VERSIÓN SI TUS CARPETAS ESTÁN EN LA RAÍZ)
+// Ubicación: index.php (En la raíz de tu proyecto)
 
+// 1. DEFINIR RAÍZ DEL PROYECTO
 define('BASE_PATH', __DIR__);
 
-// Ajuste de rutas (quitamos '/app')
+// 2. CONFIGURACIONES BASE
 require_once BASE_PATH . '/config/config.php';
 require_once BASE_PATH . '/config/database.php';
-require_once BASE_PATH . '/app/core/Router.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.use_strict_mode', 1);
-    session_start();
-}
+// 3. CARGA AUTOMÁTICA DE CLASES (Aquí llamas al archivo que acabamos de crear)
+require_once BASE_PATH . '/app/core/autoload.php';
 
-spl_autoload_register(function ($class) {
-    // Rutas ajustadas a la raíz
-    $paths = [
-        BASE_PATH . '/controllers/',
-        BASE_PATH . '/models/',
-        BASE_PATH . '/core/',
-        BASE_PATH . '/helpers/', // Agregué helpers aquí también
-        BASE_PATH . '/app/controllers/', // Dejo estas por si acaso tienes mezcla
-        BASE_PATH . '/app/models/',
-    ];
-
-    foreach ($paths as $path) {
-        if (file_exists($path . $class . '.php')) {
-            require_once $path . $class . '.php';
-            return;
-        }
-    }
-});
-
-// Ajuste ruta helpers (quitamos '/app' si está en raíz)
+// 4. CARGA DE HELPERS (Funciones globales)
+// Nota: Los helpers no se cargan con el autoloader porque son funciones, no Clases.
 if (file_exists(BASE_PATH . '/helpers/auth_helper.php')) {
     require_once BASE_PATH . '/helpers/auth_helper.php';
 } else {
     require_once BASE_PATH . '/app/helpers/auth_helper.php';
 }
 
+// 5. SEGURIDAD Y SESIONES (Tu código de seguridad estaba excelente)
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1); // Evita robo de sesión por JS
+    ini_set('session.use_strict_mode', 1); // Evita fijación de sesión
+    session_start();
+}
+
+// 6. ARRANCAR EL SISTEMA (Router)
+// Gracias al autoloader, ya no necesitas hacer require del Router.php
 $router = new Router();
 $router->run();

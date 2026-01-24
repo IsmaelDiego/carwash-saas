@@ -11,7 +11,7 @@ function requireAuth(): void
 }
 
 // Verificar rol específico (Admin, Operador, etc.)
-function requireRole(string $requiredRole): void
+function requireRole(int $requiredRole): void
 {
     requireAuth(); // Primero valida que esté logueado
 

@@ -4,19 +4,19 @@
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
                     <!-- Content -->
-                    <div class="container-xxl flex-grow-1 container-p-y">
+                    <div class="container-fluid flex-grow-1 container-p-y">
                         <div class="row">
                             <div class="col-xxl-8 mb-6 order-0">
                                 <div class="card">
                                     <div class="d-flex align-items-start row">
                                         <div class="col-sm-7">
                                             <div class="card-body">
-                                                <h5 class="card-title text-primary mb-3">Congratulations John! 🎉</h5>
+                                                <h5 class="card-title text-primary mb-3">BIENVENIDO <?= htmlspecialchars($_SESSION['user']['name']) ?>! 🤖</h5>
                                                 <p class="mb-6">
-                                                    You have done 72% more sales today.<br />Check your new badge in your profile.
+                                                    Has realizado un 72 % más de ventas hoy.<br />Revisa tus estadísticas aquí.
                                                 </p>
 
-                                                <a href="javascript:;" class="btn btn-sm btn-outline-primary">View Badges</a>
+                                                <p >⬇️⬇️⬇️⬇️⬇️⬇️</p>
                                             </div>
                                         </div>
                                         <div class="col-sm-5 text-center text-sm-left">
@@ -58,7 +58,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <p class="mb-1">Profit</p>
+                                                <p class="mb-1">Ganacia</p>
                                                 <h4 class="card-title mb-3">$12,628</h4>
                                                 <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +72.80%</small>
                                             </div>
@@ -90,7 +90,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <p class="mb-1">Sales</p>
+                                                <p class="mb-1">Ventas</p>
                                                 <h4 class="card-title mb-3">$4,679</h4>
                                                 <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +28.42%</small>
                                             </div>
@@ -105,7 +105,7 @@
                                         <div class="col-lg-8">
                                             <div class="card-header d-flex align-items-center justify-content-between">
                                                 <div class="card-title mb-0">
-                                                    <h5 class="m-0 me-2">Total Revenue</h5>
+                                                    <h5 class="m-0 me-2">Ingresos Totales</h5>
                                                 </div>
                                                 <div class="dropdown">
                                                     <button
@@ -151,7 +151,7 @@
                                                 </div>
 
                                                 <div id="growthChart"></div>
-                                                <div class="text-center fw-medium my-6">62% Company Growth</div>
+                                                <div class="text-center fw-medium my-6">62% de crecimiento de la empresa</div>
 
                                                 <div class="d-flex gap-11 justify-content-between">
                                                     <div class="d-flex">
@@ -212,7 +212,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <p class="mb-1">Payments</p>
+                                                <p class="mb-1">Pagos</p>
                                                 <h4 class="card-title mb-3">$2,456</h4>
                                                 <small class="text-danger fw-medium"><i class="icon-base bx bx-down-arrow-alt"></i> -14.82%</small>
                                             </div>
@@ -241,7 +241,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <p class="mb-1">Transactions</p>
+                                                <p class="mb-1">Transacciones</p>
                                                 <h4 class="card-title mb-3">$14,857</h4>
                                                 <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +28.14%</small>
                                             </div>
@@ -254,8 +254,8 @@
                                                     class="d-flex justify-content-between align-items-center flex-sm-row flex-column gap-10 flex-wrap">
                                                     <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
                                                         <div class="card-title mb-6">
-                                                            <h5 class="text-nowrap mb-1">Profile Report</h5>
-                                                            <span class="badge bg-label-warning">YEAR 2022</span>
+                                                            <h5 class="text-nowrap mb-1">Perfil</h5>
+                                                            <span class="badge bg-label-warning">Año 2022</span>
                                                         </div>
                                                         <div class="mt-sm-auto">
                                                             <span class="text-success text-nowrap fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> 68.2%</span>
@@ -549,32 +549,11 @@
                         </div>
                     </div>
                     <!-- / Content -->
-<!DOCTYPE html>
-<html lang="es">
+                </div>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Panel de Administración</title>
-</head>
-
-<body>
-    <h1>Dashboard Admin</h1>
-    <p>Bienvenido, <strong><?= htmlspecialchars($_SESSION['user']['name']) ?></strong></p>
-    <p>Bienvenido, <strong><?= htmlspecialchars($_SESSION['user']['email'] ?? '') ?></strong></p>
-    <p>Rol: <?= $_SESSION['user']['role'] ?></p>
-
-    <hr>
-
-    <a href="<?= BASE_URL ?>/logout">
-        <button type="button">Cerrar Sesión</button>
-    </a>
-</body>
-
-</html>
                    <!-- footer -->
                         <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 
                    
-
 
 

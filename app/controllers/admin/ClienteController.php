@@ -40,14 +40,13 @@ class ClienteController
         global $pdo;
         header('Content-Type: application/json');
 
+        // 1. Instanciamos el modelo
         $clienteModel = new Cliente($pdo);
         
-        // LIMIT 1000 para evitar errores de memoria RAM
-        $sql = "SELECT * FROM clientes ORDER BY id_cliente DESC LIMIT 1000"; 
-        $stmt = $pdo->query($sql);
-        $clientes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        // 2. Le pedimos al modelo que haga el trabajo sucio (la consulta SQL)
+        $clientes = $clienteModel->getAll();
 
-        // Enviamos los datos al Javascript de tu tabla
+        // 3. Devolvemos el JSON al Javascript
         echo json_encode(['data' => $clientes]);
     }
 

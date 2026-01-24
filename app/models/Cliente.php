@@ -53,10 +53,13 @@ class Cliente
     // ==========================================
     // TRAER TODOS LOS CLIENTES (Para la tabla)
     // ==========================================
+    // ==========================================
+    // MODELO: app/models/Cliente.php
+    // ==========================================
     public function getAll(): array
     {
-        // Traemos todos los clientes ordenados por el más reciente (los últimos registrados arriba)
-        $sql = "SELECT * FROM clientes ORDER BY id_cliente";
+        // Traemos los últimos 1000 clientes, ordenados por el más reciente (DESC)
+        $sql = "SELECT * FROM clientes ORDER BY id_cliente DESC LIMIT 1000";
         $stmt = $this->db->query($sql);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

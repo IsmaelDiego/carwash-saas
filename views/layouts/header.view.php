@@ -41,8 +41,9 @@
 
     <link rel="stylesheet" href="<?= BASE_URL ?>/TEMPLATE/assets/vendor/css/core.css" />
     <link rel="stylesheet" href="<?= BASE_URL ?>/TEMPLATE/assets/css/demo.css" />
-
+<link href="<?= BASE_URL ?>/public/js/select2/dist/css/select2.min.css" rel="stylesheet" />
     <!-- Vendors CSS -->
+     
 
     <link rel="stylesheet" href="<?= BASE_URL ?>/TEMPLATE/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 

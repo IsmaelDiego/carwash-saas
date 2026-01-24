@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     
                     setTimeout(() => {
-                        bootstrap.Modal.getInstance(document.getElementById('largeModal')).hide();
+                        bootstrap.Modal.getInstance(document.getElementById('modalRegistrar')).hide();
                         registerForm.reset(); 
                     }, 800); 
 
@@ -137,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             return `<span class="fw-medium text-primary">${data} ${row.apellidos}</span><br>
                                     <small class="text-muted">${correo}</small>`;
                         }
+
                         return data; 
                     }
                 },
@@ -193,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="text-center p-5">
                     <img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="130" class="mb-3 opacity-75" alt="Sin resultados">
                     <h5 class="fw-bold text-primary mb-1">No encontramos ningún cliente</h5>
-                    <span class="text-muted">Intenta con otro término de búsqueda o cambia las fechas del filtro.</span>
+                    <span class="text-muted">.</span>
                 </div>`
             }
         });

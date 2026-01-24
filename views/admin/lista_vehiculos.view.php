@@ -9,17 +9,17 @@
 
     <div class="col-lg-12 mb-4">
       <div class="m-1">
-        <h5 class="card-header">LISTA DE CLIENTES</h5>
+        <h5 class="card-header">LISTA DE VEHICULOS</h5>
 
         <div class="box d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
 
           <nav aria-label="breadcrumb">
             <ol class="breadcrumb breadcrumb-custom-icon mb-0">
               <li class="breadcrumb-item text-primary">
-                <a href="#" class="text-primary">Clientes</a>
+                <a href="#" class="text-primary">Vehiculos</a>
                 <i class="breadcrumb-icon icon-base bx bx-chevron-right align-middle"></i>
               </li>
-              <li class="breadcrumb-item active text-primary">Lista de Clientes</li>
+              <li class="breadcrumb-item active text-primary">Lista de Vehiculos</li>
             </ol>
           </nav>
           <div class="btns d-flex flex-wrap gap-2">
@@ -42,6 +42,8 @@
               <i class="icon-base bx bx-export"></i> &nbsp EXPORTAR
             </button>
           </div>
+          
+
 
         </div>
       </div>
@@ -50,19 +52,15 @@
     <!-- Hoverable Table rows -->
     <div class="card">
       <div class="table-responsive text-nowrap">
-        <table class="table table-hover w-100" id="tablaClientes">
+        <table class="table table-hover w-100" id="tablaVehiculos">
           <thead>
             <tr>
-              <th>Nombres</th>
-              <th>Apellidos</th>
-              <th>DNI</th>
-              <th>Sexo</th>
-              <th>Correo</th>
-              <th>Teléfono</th>
-              <th>Tel. Alt.</th>
-              <th>Fecha Registro</th>
-              <th>WhatsApp</th>
-              <th>Puntos</th>
+              <th>Placa</th>
+              <th>propietario</th>
+              <th>Tipo</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Color</th>
               <th>Observaciones</th>
               <th>Acciones</th>
             </tr>
@@ -88,11 +86,11 @@
 
 <?php
 
-require VIEW_PATH . '/partials/cliente/modals.php';
+require VIEW_PATH . '/partials/vehiculo/modals.php';
 
 require VIEW_PATH . '/partials/global/toasts.php';
 
-require VIEW_PATH . '/partials/cliente/filtros.php';
+require VIEW_PATH . '/partials/vehiculo/filtros.php';
 ?>
 
 
@@ -100,7 +98,11 @@ require VIEW_PATH . '/partials/cliente/filtros.php';
 <!-- footer -->
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 
-<script src="<?= BASE_URL ?>/public/js/admin/cliente.js"></script>
+<script src="<?= BASE_URL ?>/public/js/admin/vehiculo.js"></script>
+
+
+<script src="<?= BASE_URL ?>/public/js/select2/dist/js/select2.min.js"></script>
+
 
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
@@ -112,3 +114,5 @@ require VIEW_PATH . '/partials/cliente/filtros.php';
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+

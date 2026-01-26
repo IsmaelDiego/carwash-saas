@@ -62,6 +62,7 @@
               <th>Modelo</th>
               <th>Color</th>
               <th>Observaciones</th>
+              <th>Fecha Creación</th>
               <th>Acciones</th>
             </tr>
           </thead>

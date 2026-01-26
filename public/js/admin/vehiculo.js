@@ -28,9 +28,57 @@ document.addEventListener("DOMContentLoaded", () => {
         toastMensaje.innerText = mensaje;
         new bootstrap.Toast(toastEl, { delay: 3000 }).show();
     }
+// ==========================================================
+    // 1. REGISTRAR CLIENTE
+    // ==========================================================
+    const registerForm = document.getElementById("registrarvehiculo");
+    if (registerForm) {
+        registerForm.addEventListener("submit", async (e) => {
+            e.preventDefault(); 
+            const submitBtn = registerForm.querySelector("button[type='submit']");
+            const originalBtnText = submitBtn.innerText;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Registrando...";
+
+            const formData = new FormData(registerForm);
+            const data = Object.fromEntries(formData.entries()); 
+
+            try {
+                const response = await fetch(`${BASE_URL}/admin/vehiculo/registrarvehiculo`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    mostrarToast("El cliente se ha guardado correctamente.", "success");
+                    
+                    if ($('#tablaVehiculos').length) {
+                        $('#tablaVehiculos').DataTable().ajax.reload(function() { tabla.columns.adjust().draw(); }, false); 
+                    }
+                    
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('modalRegistrar')).hide();
+                        registerForm.reset(); 
+                    }, 800); 
+
+                } else {
+                    mostrarToast(result.message || "No se pudo registrar.", "danger");
+                }
+            } catch (error) {
+                mostrarToast("Error de conexión con el servidor.", "warning");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+            }
+        });
+    }
 
 // ==========================================================
-    // 1.5. CLON SELECT2: BUSCADOR DE CLIENTES SIN LIBRERÍAS
+    // 1.5. CLON SELECT2: BUSCADOR DE Vehiculos  SIN LIBRERÍAS
     // ==========================================================
     const btnSelect = document.getElementById('btnAbrirSelect');
     const textoSelect = document.getElementById('textoSelect');
@@ -145,6 +193,8 @@ document.addEventListener("DOMContentLoaded", () => {
             this.classList.add('active');
         });
     });
+
+    
     // ==========================================================
     // 2. CONFIGURACIÓN DE TABLA DATATABLES
     // ==========================================================
@@ -331,6 +381,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     "render": function(data, type) {
                         return type === 'display' ? `<span class="">${data}</span>` : data;
                     }
+                },{ 
+                    "data": "fecha_registro",
+                    "render": function(data, type) {
+                        if(!data) return '-';
+                        let f = new Date(data);
+                        return `${f.getDate().toString().padStart(2, '0')}/${(f.getMonth()+1).toString().padStart(2, '0')}/${f.getFullYear()}`;
+                    }
                 },
                 // 6. ACCIONES
                 { 
@@ -349,7 +406,23 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>`;
                     }
                 }
+                
+                
             ],
+            "ordering": true,
+            "language": {
+                "lengthMenu": "Mostrar _MENU_ registros",
+                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                "infoFiltered": "(filtrado de _MAX_ registros totales)",
+                "paginate": { "next": "Siguiente", "previous": "Anterior" },
+                "zeroRecords": `
+                <div class="text-center p-5">
+                    <img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="130" class="mb-3 opacity-75" alt="Sin resultados">
+                    <h5 class="fw-bold text-primary mb-1">No encontramos ningún Vehiculo</h5>
+                    <span class="text-muted">.</span>
+                </div>`
+            }
         });
 
 
@@ -414,41 +487,67 @@ document.addEventListener("DOMContentLoaded", () => {
             let vehiculo = JSON.parse(decodeURIComponent($(this).attr('data-json')));
             
             
-            let htmlDetalle = `
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item" ><strong>Placa:</strong> ${vehiculo.placa}</li>
-                    <li class="list-group-item"><strong>Propietario:</strong> ${vehiculo.propietario}</li>
-                    <li class="list-group-item"><strong>Tipo:</strong> ${vehiculo.tipo}</li>
-                    <li class="list-group-item"><strong>Marca:</strong> ${vehiculo.marca}</li>
-                    <li class="list-group-item"><strong>Modelo:</strong> ${vehiculo.modelo || 'No registrado'}</li>
-                    <li class="list-group-item"><strong>Color:</strong> ${vehiculo.color}</li>
-                    <li class="list-group-item"><strong>Observaciones:</strong> ${vehiculo.observaciones}</li>
-                </ul>`;
+            let htmlDetalle = `<div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="bx bx-car fs-2 text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold" id="detalle_placa">${vehiculo.placa}</h4>
+                        <span class="badge bg-secondary" id="detalle_tipo">${vehiculo.tipo}</span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6">
+                        <small class="text-muted d-block">Marca</small>
+                        <span class="fw-bold" id="detalle_marca">${vehiculo.marca}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Modelo</small>
+                        <span class="fw-bold" id="detalle_modelo">${vehiculo.marca}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Color</small>
+                        <span class="fw-bold" id="detalle_color">${vehiculo.color}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Propietario</small>
+                        <span class="fw-bold text-primary" id="detalle_propietario">${vehiculo.propietario}</span>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <div>
+                    <small class="text-muted d-block mb-1">Observaciones / Daños Previos</small>
+                    <p class="mb-0 p-2 bg-light rounded" id="detalle_observaciones" style="min-height: 50px;">
+                        ${vehiculo.observaciones}
+                    </p>
+                </div>
+                `;
             
             $('#contenidoDetalle').html(htmlDetalle);
             new bootstrap.Modal(document.getElementById('modalDetalle')).show();
         });
 
         $('#tablaVehiculos tbody').on('click', '.btn-editar', function () {
-            let cliente = JSON.parse(decodeURIComponent($(this).attr('data-json')));
-            $('#edit_id_cliente').val(cliente.id_cliente);
-            $('#edit_dni').val(cliente.dni_ruc);
-            $('#edit_nombres').val(cliente.nombres);
-            $('#edit_apellidos').val(cliente.apellidos);
-            $('#edit_sexo').val(cliente.sexo);
-            $('#edit_puntos').val(cliente.puntos);
-            $('#edit_email').val(cliente.email);
-            $('#edit_tel1').val(cliente.telefono_principal);
-            $('#edit_tel2').val(cliente.telefono_alternativo_w);
-            $('#edit_observaciones').val(cliente.observaciones);
-            $('#edit_whatsapp').prop('checked', cliente.estado_whatsapp == 1);
+            let vehiculo = JSON.parse(decodeURIComponent($(this).attr('data-json')));
+            $('#edit_id_vehiculo').val(vehiculo.id_vehiculo);
+            $('#edit_placa').val(vehiculo.placa);
+            $('#edit_propietario').val(vehiculo.propietario);
+            $('#edit_tipo').val(vehiculo.tipo);
+            $('#edit_marca').val(vehiculo.marca);
+            $('#edit_modelo').val(vehiculo.modelo);
+            $('#edit_color').val(vehiculo.color);
+            $('#edit_observaciones').val(vehiculo.observaciones);
             new bootstrap.Modal(document.getElementById('modalEditar')).show();
         });
 
         $('#tablaVehiculos tbody').on('click', '.btn-eliminar', function () {
-            let cliente = JSON.parse(decodeURIComponent($(this).attr('data-json')));
-            $('#delete_id_cliente').val(cliente.id_cliente);
-            $('#nombre_eliminar').text(cliente.nombres + ' ' + cliente.apellidos);
+            let vehiculo = JSON.parse(decodeURIComponent($(this).attr('data-json')));
+            $('#delete_id_vehiculo').val(vehiculo.id_vehiculo);
+            $('#placa_eliminar').text(vehiculo.placa);
+            $('#marca_eliminar').text(vehiculo.marca);
             new bootstrap.Modal(document.getElementById('modalEliminar')).show();
         });
 
@@ -461,7 +560,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // ==========================================================
         // 4. AJAX EDITAR Y ELIMINAR
         // ==========================================================
-        const formEditar = document.getElementById("formEditarCliente");
+        const formEditar = document.getElementById("formEditarVehiculo");
         if (formEditar) {
             formEditar.addEventListener("submit", async (e) => {
                 e.preventDefault();
@@ -470,7 +569,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnSubmit.innerText = "Guardando...";
 
                 try {
-                    const response = await fetch(`${BASE_URL}/admin/cliente/editarcliente`, {
+                    const response = await fetch(`${BASE_URL}/admin/vehiculo/editarvehiculo`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(Object.fromEntries(new FormData(formEditar).entries()))
@@ -489,7 +588,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        const formEliminar = document.getElementById("formEliminarCliente");
+        const formEliminar = document.getElementById("formEliminarVehiculo");
         if (formEliminar) {
             formEliminar.addEventListener("submit", async (e) => {
                 e.preventDefault();
@@ -498,7 +597,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnSubmit.innerText = "Eliminando...";
 
                 try {
-                    const response = await fetch(`${BASE_URL}/admin/cliente/eliminarcliente`, {
+                    const response = await fetch(`${BASE_URL}/admin/vehiculo/eliminarvehiculo`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(Object.fromEntries(new FormData(formEliminar).entries()))
@@ -520,6 +619,23 @@ document.addEventListener("DOMContentLoaded", () => {
     } // FIN DE IF TABLA CLIENTES
 
 
+$(document).ready(function() {
+    $('#placa, #edit_placa').on('input', function() {
+        
+        // 1. Captura el texto y lo convierte a MAYÚSCULAS reales inmediatamente
+        let texto = $(this).val().toUpperCase();
 
+        // 2. Elimina cualquier símbolo raro o espacios (solo deja letras y números)
+        texto = texto.replace(/[^A-Z0-9]/g, '');
+
+        // 3. Inserta el guion automáticamente en la posición 3
+        if (texto.length > 3) {
+            texto = texto.slice(0, 3) + '-' + texto.slice(3, 6);
+        }
+
+        // 4. Actualiza el input con el texto en mayúscula y con guion
+        $(this).val(texto);
+    });
+});
 
 }); // FIN DOMCONTENTLOADED

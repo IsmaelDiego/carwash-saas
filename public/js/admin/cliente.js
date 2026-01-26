@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 { "data": "telefono_principal" },
                 { "data": "telefono_alternativo_w", "visible": false, "defaultContent": "-" },
                 { 
-                    "data": "created_at", 
+                    "data": "fecha_registro", 
                     "visible": true,
                     "render": function(data) {
                         if(!data) return '-';
@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // C. VER DETALLE (Código Corregido con todos los campos)
         $('#tablaClientes tbody').on('click', '.btn-ver', function () {
             let cliente = JSON.parse(decodeURIComponent($(this).attr('data-json')));
-            let fecha = cliente.created_at ? new Date(cliente.created_at).toLocaleDateString() : '-';
+            let fecha = cliente.fecha_registro ? new Date(cliente.fecha_registro).toLocaleDateString() : '-';
             
             // Etiqueta bonita para el WhatsApp
             let badgeWhatsapp = cliente.estado_whatsapp == 1 

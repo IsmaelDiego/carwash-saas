@@ -242,7 +242,7 @@
                    </div>
                    <form id="formEditarCliente">
                        <div class="modal-body">
-                           <input type="hidden" id="edit_id _cliente" name="id_cliente">
+                           <input type="hidden" id="edit_id_cliente" name="id_cliente">
                            <div class="row g-3 mb-3">
                                <div class="col-md-3"><label class="form-label text-muted">DNI / RUC</label><input type="text" id="edit_dni" class="form-control bg-light" readonly></div>
                                <div class="col-md-4"><label class="form-label text-muted">Nombres</label><input type="text" id="edit_nombres" class="form-control bg-light" readonly></div>
@@ -289,11 +289,13 @@
                        <form id="formEliminarCliente">
                            <input type="hidden" id="delete_id_cliente" name="id_cliente">
                            <div class="modal-footer">
-                               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                               <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
 
-                               <?php if ($_SESSION['user']['role'] == 1): ?>
-                                   <button type="submit" class="btn btn-danger">Sí, eliminar</button>
-                               <?php endif; ?>
+                        <?php if ($_SESSION['user']['role'] == 1): ?>
+                            <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                        <?php endif; ?>
+                    </div>
                            </div>
                        </form>
                    </div>

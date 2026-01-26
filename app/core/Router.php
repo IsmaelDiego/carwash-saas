@@ -27,6 +27,7 @@ class Router
         // 2. Alias (Igual que antes)
         if ($path === '' || $path === 'index.php') $path = 'home/index';
         elseif ($path === 'login') $path = 'auth/login';
+        elseif ($path === 'register') $path = 'auth/register';
         elseif ($path === 'logout') $path = 'auth/logout';
 
         // 3. Desglose
@@ -110,7 +111,7 @@ class Router
         http_response_code(404);
         
         // Si existe una vista personalizada de 404, úsala
-        if (defined('VIEW_PATH') && file_exists(VIEW_PATH . '/404.view.php')) {
+        if (defined('VIEW_PATH') && file_exists(VIEW_PATH . '/405.view.php')) {
             require VIEW_PATH . '/404.view.php';
         } else {
             // Fallback simple por si no has creado la vista aún

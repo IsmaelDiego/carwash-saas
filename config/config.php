@@ -1,11 +1,18 @@
 <?php
 // app/config/config.php
 
-// BASE_URL dinámica (detecta si estás en localhost/proyecto o en dominio.com)
+// 1. Detección de URL base (Tu código actual, está perfecto)
 $scriptName = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 $baseUrl = ($scriptName === '/') ? '' : $scriptName;
 define('BASE_URL', $baseUrl);
 
-define('APP_PATH', BASE_PATH . '/app');
+// 2. Rutas del Sistema (Físicas)
+define('APP_PATH', BASE_PATH . '/app'); // Asegúrate que BASE_PATH esté definido en index.php
 define('VIEW_PATH', BASE_PATH . '/views');
-define('PUBLIC_PATH', BASE_URL . '/public'); // Para usar en HTML: <link href="<?= PUBLIC_PATH ?>
+
+// 3. Rutas para el HTML (Web)
+define('PUBLIC_URL', BASE_URL . '/public');
+
+// --- AGREGAMOS ESTA LÍNEA CLAVE ---
+// Apunta a: http://localhost/tu_proyecto/public/resources
+define('RESOURCES_URL', PUBLIC_URL . '/resources');

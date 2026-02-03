@@ -10,21 +10,24 @@ class User
     }
 
     /**
-     * Buscar usuario por email (Solo usuarios activos)
-     * Retorna array con datos del usuario o null si no existe/está inactivo.
+     * Buscar usuario por EMAIL (Para Admins o recuperación)
      */
     public function findByEmail(string $email): ?array
     {
-        // IMPORTANTE: Agregamos 'AND estado = 1'
-        // Así, los usuarios desactivados no pasan el login.
+        // ADAPTACIÓN V3.2:
+        // 1. Usamos 'password_hash' en lugar de 'password'.
+        // 2. Usamos 'nombres' en lugar de 'nombre'.
+        // 3. IDs explícitos (id_usuario, id_rol).
         $sql = "
             SELECT 
                 u.id_usuario,
-                u.nombre,
+                u.nombres,
+                u.dni,
                 u.email,
-                u.password,
+                u.password_hash,
+                u.avatar_url,
                 u.id_rol,
-                r.nombre AS rol
+                r.nombre AS rol_nombre
             FROM usuarios u
             INNER JOIN roles r ON u.id_rol = r.id_rol
             WHERE u.email = :email 
@@ -41,33 +44,68 @@ class User
     }
 
     /**
-     * Crear nuevo usuario en la base de datos
+     * NUEVO: Buscar usuario por DNI (Para Login de Empleados)
+     * En Carwash XP, es más probable que el cajero use su DNI.
+     */
+    public function findByDni(string $dni): ?array
+    {
+        $sql = "
+            SELECT 
+                u.id_usuario,
+                u.nombres,
+                u.dni,
+                u.password_hash,
+                u.id_rol,
+                r.nombre AS rol_nombre
+            FROM usuarios u
+            INNER JOIN roles r ON u.id_rol = r.id_rol
+            WHERE u.dni = :dni 
+            AND u.estado = 1
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':dni' => $dni]);
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ?: null;
+    }
+
+    /**
+     * Crear nuevo usuario (Adaptado a V3.2)
+     * Requiere array con: ['id_rol', 'dni', 'nombres', 'email', 'telefono', 'password']
      */
     public function create(array $data): bool
     {
-        // 1. Encriptar la contraseña de forma segura
+        // 1. Encriptar contraseña
         $hash = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        // 2. Validar el Rol para evitar errores de ENUM en MySQL
-        // Tu base de datos solo acepta 'admin' o 'operador'.
-        $validRoles = ['1', '2'];
-        
-        // Si el rol que llega no es válido, lo forzamos a 'operador' por seguridad
-        $role = in_array($data['role'] ?? '', $validRoles) ? $data['role'] : '2';
+        // 2. Validar Roles (1: Admin, 2: Cajero, 3: Operario)
+        $validRoles = [1, 2, 3];
+        // Si el rol no es válido, por seguridad lo forzamos a 3 (Operario - menor privilegio)
+        $id_rol = in_array((int)$data['id_rol'], $validRoles) ? $data['id_rol'] : 3;
 
-        // 3. Preparar la consulta
-        // Insertamos active = 1 por defecto explícitamente
-        $sql = "INSERT INTO usuarios (nombre, email, password, id_rol ) 
-                VALUES (:name, :email, :password, :role)";
+        // 3. Insertar usando las columnas de la V3.2
+        // Nota: 'estado' es 1 por defecto en la BD, 'avatar_url' es default.png
+        $sql = "INSERT INTO usuarios (id_rol, dni, nombres, email, telefono, password_hash) 
+                VALUES (:id_rol, :dni, :nombres, :email, :telefono, :password_hash)";
 
         $stmt = $this->db->prepare($sql);
 
-        // 4. Ejecutar
-        return $stmt->execute([
-            ':name'     => $data['name'],
-            ':email'    => $data['email'],
-            ':password' => $hash,
-            ':role'     => $role
-        ]);
+        try {
+            return $stmt->execute([
+                ':id_rol'        => $id_rol,
+                ':dni'           => $data['dni'],      // OBLIGATORIO EN V3.2
+                ':nombres'       => $data['nombres'],  // Ojo: es 'nombres', no 'name'
+                ':email'         => $data['email'] ?? null, // Puede ser null para operarios
+                ':telefono'      => $data['telefono'] ?? null,
+                ':password_hash' => $hash
+            ]);
+        } catch (PDOException $e) {
+            // Manejo básico de error (ej: DNI duplicado)
+            // En producción podrías loguear el error: error_log($e->getMessage());
+            return false;
+        }
     }
 }

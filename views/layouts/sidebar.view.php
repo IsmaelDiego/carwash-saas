@@ -342,7 +342,7 @@ $current_url = $_SERVER['REQUEST_URI'];
 
         <li class="menu-item ">
             <a
-                href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/html/vertical-menu-template/app-email.html"
+                href="https://demos.themeselection.com/sneat-bootstrap-html-admin-temaplate/html/vertical-menu-template/app-email.html"
                 target="_blank"
                 class="menu-link">
                 <i class="menu-icon tf-icons bx bx-support"></i>

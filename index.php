@@ -1,3 +1,4 @@
+
 <?php
 // Ubicación: index.php (En la raíz de tu proyecto)
 

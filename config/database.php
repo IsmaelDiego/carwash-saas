@@ -1,7 +1,7 @@
 <?php
 
 $host = 'localhost';
-$db   = 'carwash-saas';
+$db   = 'carwash-sys';
 $user = 'root';
 $pass = '';
 

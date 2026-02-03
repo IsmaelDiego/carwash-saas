@@ -2,85 +2,83 @@
 
 class Vehiculo
 {
-    private PDO $db;
+    private \PDO $db;
 
-    public function __construct(PDO $db)
+    public function __construct(\PDO $db)
     {
         $this->db = $db;
     }
 
-   public function getAll(): array
+    public function getAll(): array
     {
-        // Cruzamos la tabla vehiculos (v) con clientes (c) usando el id_cliente
         $sql = "SELECT 
                     v.id_vehiculo,
                     v.id_cliente,
                     v.placa,
-                    v.tipo,
+                    v.tipo_vehiculo_id,
                     v.marca,
                     v.modelo,
                     v.color,
                     v.observaciones,
                     v.fecha_registro,
-                    c.nombres AS cliente_nombres,
-                    c.apellidos AS cliente_apellidos,
-                    CONCAT(c.nombres, ' ', c.apellidos) AS propietario
+                    v.estado,
+                    COALESCE(c.nombres, 'Desconocido') AS cliente_nombres,
+                    COALESCE(c.apellidos, '') AS cliente_apellidos,
+                    CONCAT(COALESCE(c.nombres, ''), ' ', COALESCE(c.apellidos, '')) AS propietario,
+                    COALESCE(tv.nombre, 'No asignado') AS nombre_tipo
                 FROM vehiculos v
-                INNER JOIN clientes c ON v.id_cliente = c.id_cliente
-                ORDER BY v.id_vehiculo DESC 
-                LIMIT 1000";
+                LEFT JOIN clientes c ON v.id_cliente = c.id_cliente
+                LEFT JOIN tipo_vehiculo tv ON v.tipo_vehiculo_id = tv.id_tipo_vehiculo
+                ORDER BY v.id_vehiculo DESC";
 
         $stmt = $this->db->query($sql);
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    public function findByPlaca(string $placa)
-    {
-        $stmt = $this->db->prepare("SELECT * FROM vehiculos WHERE placa = :placa");
-        $stmt->execute([':placa' => $placa]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+
+    /**
+     * OBTENER TIPOS (Para el Select)
+     */
+    public function obtenerTiposVehiculo(): array
+    {
+        $sql = "SELECT id_tipo_vehiculo, nombre FROM tipo_vehiculo ORDER BY nombre ASC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * CREAR
+     */
     public function crearVehiculo(array $data): bool
     {
-        // Preparamos la consulta SQL para la tabla CLIENTES
         $sql = "INSERT INTO vehiculos (
-                    id_cliente, placa, tipo, marca, modelo, 
-                    color, observaciones
+                    id_cliente, placa, tipo_vehiculo_id, marca, modelo, 
+                    color, observaciones, fecha_registro, estado
                 ) VALUES (
-                    :id_cliente, :placa, :tipo, :marca, :modelo, 
-                    :color, :obs
+                    :id_cliente, :placa, :tipo_vehiculo_id, :marca, :modelo, 
+                    :color, :obs, NOW(), 1
                 )";
 
         $stmt = $this->db->prepare($sql);
-
-
-        // Ejecutamos pasando los datos exactos del formulario
         return $stmt->execute([
-            ':id_cliente'=> $data['id_cliente'],
-            ':placa'=> $data['placa'],
-            ':tipo'    => $data['tipo'], // Puede ser null
-            ':marca' => $data['marca'],
-            ':modelo'  => $data['modelo'],
-            ':color'   => $data['color'], // Viene 1 o 0 del Switch
-            ':obs'      => $data['observaciones'] 
+            ':id_cliente'       => $data['id_cliente'],
+            ':placa'            => strtoupper(trim($data['placa'])),
+            ':tipo_vehiculo_id' => $data['tipo_vehiculo_id'],
+            ':marca'            => strtoupper(trim($data['marca'])),
+            ':modelo'           => trim($data['modelo']),
+            ':color'            => trim($data['color']),
+            ':obs'              => trim($data['observaciones'])
         ]);
     }
 
-    public function eliminarVehiculo($id_vehiculo): bool
+    /**
+     * ACTUALIZAR
+     */
+    public function actualizarVehiculo(array $data): bool
     {
-        $sql = "DELETE FROM vehiculos WHERE id_vehiculo = :id_vehiculo";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':id_vehiculo' => $id_vehiculo]);
-    }
-
-     public function actualizarVehiculo(array $data): bool
-    {
-        // Solo actualizamos los campos que definimos como "Editables"
         $sql = "UPDATE vehiculos SET 
                     placa = :placa, 
-                    tipo = :tipo, 
+                    tipo_vehiculo_id = :tipo_vehiculo_id, 
                     marca = :marca, 
                     modelo = :modelo, 
                     color = :color, 
@@ -88,16 +86,33 @@ class Vehiculo
                 WHERE id_vehiculo = :id_vehiculo";
 
         $stmt = $this->db->prepare($sql);
-
         return $stmt->execute([
-            ':placa' => $data['placa'],
-            ':tipo' => $data['tipo'],
-            ':marca' => $data['marca'],
-            ':modelo' => $data['modelo'],
-            ':color' => $data['color'],
-            ':observaciones' => $data['observaciones'],
-            ':id_vehiculo' => $data['id_vehiculo']
+            ':placa'            => strtoupper(trim($data['placa'])),
+            ':tipo_vehiculo_id' => $data['tipo_vehiculo_id'],
+            ':marca'            => strtoupper(trim($data['marca'])),
+            ':modelo'           => trim($data['modelo']),
+            ':color'            => trim($data['color']),
+            ':observaciones'    => trim($data['observaciones']),
+            ':id_vehiculo'      => $data['id_vehiculo']
         ]);
     }
 
+    /**
+     * ELIMINAR (Lógico)
+     */
+    public function eliminarVehiculo($id_vehiculo): bool
+    {
+        $sql = "UPDATE vehiculos SET estado = 0 WHERE id_vehiculo = :id_vehiculo";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':id_vehiculo' => $id_vehiculo]);
+    }
+
+    // Auxiliares
+    public function findByPlaca(string $placa)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM vehiculos WHERE placa = :placa AND estado = 1");
+        $stmt->execute([':placa' => strtoupper($placa)]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
+?>

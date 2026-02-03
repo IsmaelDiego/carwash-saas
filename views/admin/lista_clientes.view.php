@@ -1,114 +1,131 @@
 <?php require VIEW_PATH . '/layouts/header.view.php'; ?>
 
+<style>
+  /* Ocultar buscador nativo */
+  .dataTables_filter {
+    display: none !important;
+  }
 
-<!-- Content wrapper -->
+  /* Paginación izquierda */
+  .dataTables_paginate {
+    display: flex !important;
+    justify-content: flex-start !important;
+    margin-top: 1.5rem !important;
+    padding-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  /* Info derecha */
+  .dataTables_info {
+    text-align: right !important;
+    margin-top: 1.5rem !important;
+    padding-top: 1rem;
+    color: #b0b0b0 !important;
+  }
+
+  /* Switch WhatsApp */
+  .switch-whatsapp {
+    cursor: pointer;
+    width: 3em !important;
+    height: 1.5em !important;
+  }
+
+  /* Tarjetas Detalle */
+  .detalle-card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  }
+
+  .detalle-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #8592a3;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .detalle-value {
+    font-size: 1rem;
+    color: #384551;
+    font-weight: 500;
+  }
+</style>
+
 <div class="content-wrapper">
-  <!-- Content -->
-
   <div class="container-fluid flex-grow-1 container-p-y">
 
     <div class="col-lg-12 mb-4">
       <div class="m-1">
-        <h5 class="card-header">LISTA DE CLIENTES</h5>
+        <h5 class="card-header border-bottom mb-3">GESTIÓN DE CLIENTES</h5>
 
-        <div class="box d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
           <nav aria-label="breadcrumb">
-            <ol class="breadcrumb breadcrumb-custom-icon mb-0">
-              <li class="breadcrumb-item text-primary">
-                <a href="#" class="text-primary">Clientes</a>
-                <i class="breadcrumb-icon icon-base bx bx-chevron-right align-middle"></i>
-              </li>
-              <li class="breadcrumb-item active text-primary">Lista de Clientes</li>
+            <ol class="breadcrumb mb-0">
+              <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/home">Inicio</a></li>
+              <li class="breadcrumb-item active text-primary">Clientes</li>
             </ol>
           </nav>
-          <div class="btns d-flex flex-wrap gap-2">
-            <button
-              type="button"
-              class="btn rounded-pill btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#modalRegistrar">
-              <i class="icon-base bx bx-plus"></i> &nbsp NUEVO
+
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn rounded-pill btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
+              <i class="bx bx-plus me-1"></i> NUEVO
             </button>
-            <button
-              class="btn rounded-pill btn-outline-secondary"
-              type="button"
-              data-bs-toggle="offcanvas"
-              data-bs-target="#offcanvasDark"
-              aria-controls="offcanvasDark">
-              <i class="icon-base bx bx-filter"></i> &nbsp FILTRAR
+
+            <button class="btn rounded-pill btn-dark shadow-sm" type="button" id="btnAbrirFiltro">
+              <i class="bx bx-search-alt me-1"></i> BUSCAR / FILTRAR
             </button>
-            <button class="btn rounded-pill btn-outline-secondary" type="button" id="btnExportar">
-              <i class="icon-base bx bx-export"></i> &nbsp EXPORTAR
+
+            <button class="btn rounded-pill btn-outline-success" type="button" id="btnExportar">
+              <i class="bx bxs-file-export me-1"></i> EXPORTAR
             </button>
           </div>
-
         </div>
       </div>
     </div>
 
-    <!-- Hoverable Table rows -->
-    <div class="card">
-      <div class="table-responsive text-nowrap">
+    <div class="card shadow-sm">
+      <div class="table-responsive text-nowrap px-3">
         <table class="table table-hover w-100" id="tablaClientes">
-          <thead>
+          <thead style="background-color: #0073CF; color: white;">
             <tr>
-              <th>Nombres</th>
-              <th>Apellidos</th>
-              <th>DNI</th>
-              <th>Sexo</th>
-              <th>Correo</th>
-              <th>Teléfono</th>
-              <th>Tel. Alt.</th>
-              <th>Fecha Registro</th>
-              <th>WhatsApp</th>
-              <th>Puntos</th>
-              <th>Observaciones</th>
-              <th>Acciones</th>
+              <th class="d-none">Nombres</th>
+              <th class="d-none">Apellidos</th>
+              <th class="d-none">DNI</th>
+              <th class="d-none">Teléfono</th>
+              <th class="d-none">Puntos</th>
+              <th class="d-none">Obs</th>
+              <th class="d-none">FechaRaw</th>
+
+              <th>Cliente</th>
+              <th class="text-center">Sexo</th>
+              <th class="text-center">WhatsApp</th>
+              <th class="text-center">Registro</th>
+              <th class="text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody class="table-border-bottom-0">
-
-          </tbody>
+          <tbody></tbody>
         </table>
       </div>
     </div>
+
   </div>
-  <!-- / Content -->
-
-
-
   <div class="content-backdrop fade"></div>
 </div>
-<!-- Content wrapper -->
+
 <script>
-  // 1. Definimos la variable GLOBALMENTE para que todos los JS la puedan ver
   const BASE_URL = "<?= BASE_URL ?>";
 </script>
 
-<?php
-
-require VIEW_PATH . '/partials/cliente/modals.php';
-
-require VIEW_PATH . '/partials/global/toasts.php';
-
-require VIEW_PATH . '/partials/cliente/filtros.php';
-?>
+<?php require VIEW_PATH . '/partials/cliente/modals.php'; ?>
 
 
+<?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
+<?php require VIEW_PATH . '/partials/cliente/filtros.php'; ?>
 
-<!-- footer -->
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 
 <script src="<?= BASE_URL ?>/public/js/admin/cliente.js"></script>
-
-
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
-
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>

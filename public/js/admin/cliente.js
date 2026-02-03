@@ -1,377 +1,295 @@
-document.addEventListener("DOMContentLoaded", () => {
-    
-    // ==========================================================
-    // 0. FUNCIÓN MAESTRA DEL TOAST (Usada por todo el sistema)
-    // ==========================================================
-    function mostrarToast(mensaje, tipo) {
-        const toastEl = document.getElementById('toastSistema');
-        const toastIcono = document.getElementById('toastIcono');
-        const toastTitulo = document.getElementById('toastTitulo');
-        const toastMensaje = document.getElementById('toastMensaje');
+const ClienteModule = {
+    tabla: null,
+    filtroOffcanvas: null, // Variable para guardar la instancia
 
-        toastEl.className = "bs-toast toast fade"; // Reset
-        
-        if (tipo === 'success') {
-            toastEl.classList.add('bg-success');
-            toastIcono.className = "icon-base bx bx-check-circle me-2";
-            toastTitulo.innerText = "¡Éxito!";
-        } else if (tipo === 'danger') {
-            toastEl.classList.add('bg-danger');
-            toastIcono.className = "icon-base bx bx-error-circle me-2";
-            toastTitulo.innerText = "Error";
-        } else if (tipo === 'warning') {
-            toastEl.classList.add('bg-warning');
-            toastIcono.className = "icon-base bx bx-info-circle me-2";
-            toastTitulo.innerText = "Atención";
-        }
+    init: function() {
+        this.initDataTable();
+        this.initEventosUI();
+        this.initFormularios();
+        // Solo fixes para MODALES, no para Offcanvas (Bootstrap maneja bien Offcanvas si no interferimos)
+        this.initModalFixes(); 
+    },
 
-        toastMensaje.innerText = mensaje;
-        new bootstrap.Toast(toastEl, { delay: 3000 }).show();
-    }
+    // 1. CONFIGURACIÓN TABLA
+    initDataTable: function() {
+        if (!$('#tablaClientes').length) return;
 
-
-    // ==========================================================
-    // 1. REGISTRAR CLIENTE
-    // ==========================================================
-    const registerForm = document.getElementById("registrarcliente");
-    if (registerForm) {
-        registerForm.addEventListener("submit", async (e) => {
-            e.preventDefault(); 
-            const submitBtn = registerForm.querySelector("button[type='submit']");
-            const originalBtnText = submitBtn.innerText;
-            
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Registrando...";
-
-            const formData = new FormData(registerForm);
-            const data = Object.fromEntries(formData.entries()); 
-
-            try {
-                const response = await fetch(`${BASE_URL}/admin/cliente/registrarcliente`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    mostrarToast("El cliente se ha guardado correctamente.", "success");
-                    
-                    if ($('#tablaClientes').length) {
-                        $('#tablaClientes').DataTable().ajax.reload(function() { tabla.columns.adjust().draw(); }, false); 
-                    }
-                    
-                    setTimeout(() => {
-                        bootstrap.Modal.getInstance(document.getElementById('modalRegistrar')).hide();
-                        registerForm.reset(); 
-                    }, 800); 
-
-                } else {
-                    mostrarToast(result.message || "No se pudo registrar.", "danger");
-                }
-            } catch (error) {
-                mostrarToast("Error de conexión con el servidor.", "warning");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = originalBtnText;
-            }
-        });
-    }
-
-    // ==========================================================
-    // 2. CONFIGURACIÓN DE TABLA DATATABLES
-    // ==========================================================
-    if ($('#tablaClientes').length) {
-        
-        var tabla = $('#tablaClientes').DataTable({
-            "destroy": true,
-            "scrollX": false,   
-            "autoWidth": false, 
-            "ajax": {
-                "url": `${BASE_URL}/admin/cliente/getall`,
-                "type": "GET"
+        this.tabla = $('#tablaClientes').DataTable({
+            "destroy": true, "processing": true, "responsive": true, "autoWidth": false, "ordering": true,
+            "ajax": { "url": `${BASE_URL}/admin/cliente/getall`, "type": "GET" },
+            // DOM: Paginación izquierda extrema, Info derecha
+            "dom": '<"row mx-2"<"col-md-12 my-2"l>>t<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
+            "language": {
+                "lengthMenu": " _MENU_ ",
+                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                "infoEmpty": "0 registros",
+                "infoFiltered": "(filtrado)",
+                "paginate": { "next": "Siguiente", "previous": "Anterior" },
+                "zeroRecords": `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="130" class="mb-3 opacity-75"><h5 class="fw-bold text-primary">No encontramos clientes</h5></div>`
             },
-            
-            "lengthChange": true,
-            "lengthMenu": [[10, 25, 50], ["10 registros", "25 registros", "50 registros"]],
-            "dom": '<"d-none"B><"px-4 pt-3"l>rt<"d-flex justify-content-between align-items-center px-4 pb-3"ip>', 
-            
-            // --- BOTÓN INVISIBLE DE EXCEL (DISEÑO PERSONALIZADO INFALIBLE) ---
-            "buttons": [{
-                extend: 'excelHtml5',
-                title: '', 
-                filename: 'Reporte_Clientes_' + new Date().toLocaleDateString().replace(/\//g, '-'),
-                exportOptions: { 
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 
-                    stripHtml: true,
-                    orthogonal: 'export' 
-                },
-                customize: function (xlsx) {
-                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    var styles = xlsx.xl['styles.xml'];
-
-                    // 1. CREAMOS NUESTRA PROPIA FUENTE (Blanca y Negrita)
-                    var fontCount = $('fonts font', styles).length;
-                    $('fonts', styles).append('<font><b /><color rgb="FFFFFFFF" /><sz val="11" /><name val="Calibri" /></font>');
-
-                    // 2. CREAMOS NUESTRO PROPIO FONDO (Azul Oscuro Puro)
-                    var fillCount = $('fills fill', styles).length;
-                    $('fills', styles).append('<fill><patternFill patternType="solid"><fgColor rgb="5F61E6" /><bgColor indexed="64" /></patternFill></fill>');
-
-                    // 3. CREAMOS EL ESTILO UNIENDO FUENTE Y FONDO
-                    var styleCount = $('cellXfs xf', styles).length;
-                    $('cellXfs', styles).append('<xf numFmtId="0" fontId="' + fontCount + '" fillId="' + fillCount + '" applyFont="1" applyFill="1" />');
-
-                    // 4. APLICAMOS EL ESTILO NUEVO A TODA LA CABECERA
-                    $('row:first c', sheet).attr('s', styleCount); 
-                }
-            }],
-
             "columns": [
+                { "data": "nombres", "visible": false, "defaultContent": "" },
+                { "data": "apellidos", "visible": false, "defaultContent": "" },
+                { "data": "dni", "visible": false, "defaultContent": "" },
+                { "data": "telefono", "visible": false, "defaultContent": "" },
+                { "data": "puntos_acumulados", "visible": false, "defaultContent": "0" },
+                { "data": "observaciones", "visible": false, "defaultContent": "" },
+                { "data": "fecha_registro", "visible": false, "defaultContent": "" },
+                // VISIBLES
                 { 
-                    "data": "nombres", 
+                    "data": null, 
                     "render": function(data, type, row) {
-                        if (type === 'display') {
-                            let correo = row.email ? row.email : 'Sin correo';
-                            return `<span class="fw-medium text-primary">${data} ${row.apellidos}</span><br>
-                                    <small class="text-muted">${correo}</small>`;
-                        }
-
-                        return data; 
+                        let n = row.nombres || ""; let a = row.apellidos || ""; let d = row.dni || "S/DNI";
+                        return `<div class="d-flex flex-column"><span class="fw-bold text-primary text-uppercase">${n} ${a}</span><small class="text-muted"><i class="bx bx-id-card"></i> ${d}</small></div>`;
                     }
                 },
-                { "data": "apellidos", "visible": false },
-                { "data": "dni_ruc", "render": function(data, type) { return type === 'display' ? `<span class="badge bg-label-dark">${data}</span>` : data; } },
-                { "data": "sexo", "visible": false },
-                { "data": "email", "visible": false },
-                { "data": "telefono_principal" },
-                { "data": "telefono_alternativo_w", "visible": false, "defaultContent": "-" },
                 { 
-                    "data": "fecha_registro", 
-                    "visible": true,
+                    "data": "sexo", "className": "text-center", "defaultContent": "-",
                     "render": function(data) {
-                        if(!data) return '-';
-                        let f = new Date(data);
-                        return `${f.getDate().toString().padStart(2, '0')}/${(f.getMonth()+1).toString().padStart(2, '0')}/${f.getFullYear()}`;
+                        if(data === 'Masculino') return '<span class="badge bg-label-info p-2" title="Masculino"><i class="bx bx-male fs-5"></i></span>';
+                        if(data === 'Femenino') return '<span class="badge bg-label-danger p-2" title="Femenino"><i class="bx bx-female fs-5"></i></span>';
+                        return '<span class="badge bg-label-secondary">-</span>';
                     }
                 },
                 { 
-                    "data": "estado_whatsapp",
-                    "render": function(data, type) {
-                        if (type === 'display') return data == 1 ? `<span class="badge bg-label-success"><i class='bx bxl-whatsapp'></i> ON</span>` : `<span class="badge bg-label-secondary">OFF</span>`;
-                        return data == 1 ? 'Sí' : 'No';
-                    }
-                },
-                { "data": "puntos", "className": "text-center", "render": function(data, type) { return type === 'display' ? `<span class="badge bg-warning text-dark">${data}</span>` : data; } },
-                { "data": "observaciones", "visible": false, "defaultContent": "Sin observaciones" },
-                { 
-                    "data": null,
+                    "data": "estado_whatsapp", "className": "text-center", "defaultContent": 0,
                     "render": function(data, type, row) {
-                        let rowData = encodeURIComponent(JSON.stringify(row));
-                        return `
-                        <div class="dropdown">
-                          <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded"></i></button>
-                          <div class="dropdown-menu">
-                            <a class="dropdown-item btn-ver" href="javascript:void(0);" data-json="${rowData}"><i class="bx bx-show-alt me-1 text-info"></i> Detalle</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item btn-editar" href="javascript:void(0);" data-json="${rowData}"><i class="bx bx-edit-alt me-1"></i> Editar</a>
-                            <a class="dropdown-item text-danger btn-eliminar" href="javascript:void(0);" data-json="${rowData}"><i class="bx bx-trash me-1"></i> Eliminar</a>
-                          </div>
-                        </div>`;
+                        let checked = data == 1 ? 'checked' : '';
+                        return `<div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input switch-whatsapp" type="checkbox" data-id="${row.id_cliente}" ${checked} style="cursor: pointer; transform: scale(1.2);"></div>`;
+                    }
+                },
+                { 
+                    "data": "fecha_registro", "className": "text-center", "defaultContent": "-",
+                    "render": function(data) { return data ? new Date(data).toLocaleDateString() : '-'; }
+                },
+                { 
+                    "data": null, "orderable": false, "className": "text-center",
+                    "render": function() {
+                        return `<div class="dropdown"><button class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded fs-4"></i></button><div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item btn-ver" href="javascript:void(0);"><i class="bx bx-show text-info me-2"></i> Ver Detalle</a><a class="dropdown-item btn-editar" href="javascript:void(0);"><i class="bx bx-edit text-warning me-2"></i> Editar</a><div class="dropdown-divider"></div><a class="dropdown-item btn-eliminar text-danger" href="javascript:void(0);"><i class="bx bx-trash me-2"></i> Eliminar</a></div></div>`;
                     }
                 }
             ],
-            
-            "ordering": true,
-            "language": {
-                "lengthMenu": "Mostrar _MENU_ registros",
-                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
-                "infoFiltered": "(filtrado de _MAX_ registros totales)",
-                "paginate": { "next": "Siguiente", "previous": "Anterior" },
-                "zeroRecords": `
-                <div class="text-center p-5">
-                    <img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="130" class="mb-3 opacity-75" alt="Sin resultados">
-                    <h5 class="fw-bold text-primary mb-1">No encontramos ningún cliente</h5>
-                    <span class="text-muted">.</span>
-                </div>`
-            }
+            "buttons": [{
+                extend: 'excelHtml5', className: 'd-none', filename: 'Reporte_Clientes',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6], orthogonal: 'export' },
+                customize: function (xlsx) { var sheet = xlsx.xl.worksheets['sheet1.xml']; $('row:first c', sheet).attr('s', '2'); }
+            }]
+        });
+    },
+
+    // 2. EVENTOS UI
+    // ==========================================================
+    // 2. EVENTOS UI (CORREGIDO PARA EVITAR DOBLE CAPA)
+    // ==========================================================
+    initEventosUI: function() {
+        const self = this;
+
+        // A. CONTROL MANUAL DEL FILTRO (OFFCANVAS)
+        // 1. Inicializamos la instancia UNA sola vez
+        var offcanvasEl = document.getElementById('offcanvasDark');
+        var filtroOffcanvas = new bootstrap.Offcanvas(offcanvasEl, { backdrop: true, scroll: true });
+
+        // 2. Botón Abrir (Ahora controlado 100% por JS, sin conflictos HTML)
+        $('#btnAbrirFiltro').on('click', function(e) {
+            e.preventDefault();
+            filtroOffcanvas.show();
         });
 
-
-        // ==========================================================
-        // 3. EVENTOS UI Y FILTROS (Offcanvas)
-        // ==========================================================
-
-        // A.1 CONFIGURACIÓN: CREAR EL FILTRO DE FECHAS INVISIBLE
-        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            let minDate = $('#filtroFechaInicio').val();
-            let maxDate = $('#filtroFechaFin').val();
-            
-            // La fecha está en la columna 7 (Oculta) en formato DD/MM/YYYY
-            let fechaTabla = data[7]; 
-            if (!fechaTabla || fechaTabla === '-') return true;
-
-            // Convertir "DD/MM/YYYY" de la tabla a Objeto Fecha (YYYY-MM-DD)
-            let partes = fechaTabla.split('/');
-            let rowDate = new Date(partes[2], partes[1] - 1, partes[0]);
-
-            // Validar si la fecha de la tabla es mayor o igual a "Fecha Inicio"
-            if (minDate) {
-                let min = new Date(minDate + 'T00:00:00');
-                if (rowDate < min) return false;
-            }
-            // Validar si la fecha de la tabla es menor o igual a "Fecha Fin"
-            if (maxDate) {
-                let max = new Date(maxDate + 'T23:59:59');
-                if (rowDate > max) return false;
-            }
-            return true; // Si cumple las condiciones, se muestra en la tabla
+        // 3. Botón Aplicar (Cierra el filtro)
+        $('#btnAplicarFiltros').on('click', function() {
+            let valor = $('#buscadorGlobal').val();
+            self.tabla.search(valor).draw();
+            filtroOffcanvas.hide();
         });
 
-        // A.2 EVENTO: DISPARAR FILTRO DE FECHAS AL CAMBIAR
-        $('#filtroFechaInicio, #filtroFechaFin').on('change', function() {
-            tabla.draw(); // Redibuja la tabla aplicando el filtro de arriba
-        });
-
-        // A.3 EVENTO: BUSCADOR GLOBAL DE TEXTO
-        $('#buscadorGlobal').on('keyup', function() {
-            tabla.search(this.value).draw();
-        });
-
-        // A.4 EVENTO: BOTÓN LIMPIAR FILTROS
+        // 4. Botón Limpiar (No cierra, solo limpia)
         $('#btnLimpiarFiltros').on('click', function() {
-            // 1. Limpiamos los inputs del HTML
-            $('#buscadorGlobal').val('');
-            $('#filtroFechaInicio').val('');
-            $('#filtroFechaFin').val('');
-            
-            // 2. Limpiamos la búsqueda interna de DataTables y redibujamos
-            tabla.search('').draw();
+            $('#buscadorGlobal').val(''); 
+            $('#filtroFechaInicio, #filtroFechaFin').val('');
+            self.tabla.search('').draw();
         });
 
-        $('#btnExportar').on('click', function() {
-            tabla.button('.buttons-excel').trigger(); 
-            mostrarToast("El reporte Excel se está descargando.", "success");
+        // 5. Búsqueda Instantánea
+        $('#buscadorGlobal').on('keyup', function(e) {
+            self.tabla.search(this.value).draw();
         });
 
-        // C. VER DETALLE (Código Corregido con todos los campos)
-        $('#tablaClientes tbody').on('click', '.btn-ver', function () {
-            let cliente = JSON.parse(decodeURIComponent($(this).attr('data-json')));
-            let fecha = cliente.fecha_registro ? new Date(cliente.fecha_registro).toLocaleDateString() : '-';
+        // B. FILTRO FECHAS (Plugin DataTables)
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            let min = $('#filtroFechaInicio').val(); 
+            let max = $('#filtroFechaFin').val();
+            let fechaStr = data[6]; // Fecha (Columna oculta 6)
+            if (!fechaStr) return true;
             
-            // Etiqueta bonita para el WhatsApp
-            let badgeWhatsapp = cliente.estado_whatsapp == 1 
-                ? `<span class="badge bg-success"><i class='bx bxl-whatsapp'></i> Activo</span>` 
-                : `<span class="badge bg-secondary">Inactivo</span>`;
+            let fecha = new Date(fechaStr);
+            if (min && new Date(min) > fecha) return false;
+            if (max && new Date(max) < fecha) return false;
+            return true;
+        });
+        
+        // Redibujar al cambiar fechas
+        $('#filtroFechaInicio, #filtroFechaFin').on('change', () => self.tabla.draw());
 
-            let htmlDetalle = `
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>Nombres:</strong> ${cliente.nombres}</li>
-                    <li class="list-group-item"><strong>Apellidos:</strong> ${cliente.apellidos}</li>
-                    <li class="list-group-item"><strong>DNI / RUC:</strong> ${cliente.dni_ruc}</li>
-                    <li class="list-group-item"><strong>Sexo:</strong> ${cliente.sexo}</li>
-                    <li class="list-group-item"><strong>Email:</strong> ${cliente.email || 'No registrado'}</li>
-                    <li class="list-group-item"><strong>Tel. Principal:</strong> ${cliente.telefono_principal}</li>
-                    <li class="list-group-item"><strong>Tel. Alternativo:</strong> ${cliente.telefono_alternativo_w || '-'}</li>
-                    <li class="list-group-item"><strong>WhatsApp:</strong> ${badgeWhatsapp}</li>
-                    <li class="list-group-item"><strong>Fecha de Registro:</strong> ${fecha}</li>
-                    <li class="list-group-item"><strong>Puntos acumulados:</strong> <span class="badge bg-warning text-dark">${cliente.puntos} pts</span></li>
-                    <li class="list-group-item"><strong>Observaciones:</strong> <br> ${cliente.observaciones || 'Sin observaciones'}</li>
-                </ul>`;
+        // C. SWITCH WHATSAPP
+        $('#tablaClientes tbody').on('change', '.switch-whatsapp', async function() {
+            const el = $(this);
+            el.prop('disabled', true);
+            try {
+                const res = await fetch(`${BASE_URL}/admin/cliente/cambiarestadowhatsapp`, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({id_cliente: el.data('id'), estado: el.is(':checked')?1:0})
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    self.mostrarToast("Estado actualizado", "success");
+                    // Recarga silenciosa
+                    self.tabla.ajax.reload(null, false); 
+                } else {
+                    el.prop('checked', !el.is(':checked')); 
+                    self.mostrarToast("No se pudo actualizar.", "danger");
+                }
+            } catch(e) {
+                el.prop('checked', !el.is(':checked'));
+                self.mostrarToast("Error de conexión.", "danger");
+            } finally {
+                el.prop('disabled', false);
+            }
+        });
+
+        // D. BOTÓN EXPORTAR
+        $('#btnExportar').on('click', () => self.tabla.button('.buttons-excel').trigger());
+
+        // Helper para obtener datos
+        function getData(el) {
+            let tr = $(el).closest('tr');
+            if(tr.hasClass('child')) tr = tr.prev();
+            return self.tabla.row(tr).data();
+        }
+
+        // E. VER DETALLE
+        $('#tablaClientes tbody').on('click', '.btn-ver', function() {
+            let data = getData(this);
+            let estadoBadge = data.estado_whatsapp == 1 ? '<span class="badge bg-success">ACTIVO</span>' : '<span class="badge bg-secondary">INACTIVO</span>';
             
-            $('#contenidoDetalle').html(htmlDetalle);
+            let nom = data.nombres || "";
+            let ape = data.apellidos || "";
+            let iniciales = (nom.charAt(0) + (ape.charAt(0)||"")).toUpperCase();
+            let avatarClass = data.sexo === 'Femenino' ? 'bg-label-danger text-danger' : 'bg-label-info text-info';
+
+            let html = `
+                <div class="row g-3">
+                    <div class="col-12 text-center mb-3">
+                        <div class="avatar avatar-xl mx-auto mb-2">
+                            <span class="avatar-initial rounded-circle ${avatarClass} fs-2 fw-bold">${iniciales}</span>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-dark">${nom} ${ape}</h4>
+                        <p class="text-muted mb-0">${data.dni}</p>
+                    </div>
+                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Teléfono</small><div class="detalle-value">${data.telefono||'-'}</div></div></div>
+                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Puntos</small><div class="detalle-value text-warning fw-bold">${data.puntos_acumulados||0}</div></div></div>
+                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">WhatsApp</small><div class="mt-1">${estadoBadge}</div></div></div>
+                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Registro</small><div class="small">${data.fecha_registro?new Date(data.fecha_registro).toLocaleDateString():'-'}</div></div></div>
+                    <div class="col-12"><label class="text-muted small fw-bold">OBSERVACIONES</label><div class="p-2 bg-light border rounded">${data.observaciones||'Sin observaciones'}</div></div>
+                </div>`;
+            
+            $('#contenidoDetalle').html(html);
             new bootstrap.Modal(document.getElementById('modalDetalle')).show();
         });
 
-        $('#tablaClientes tbody').on('click', '.btn-editar', function () {
-            let cliente = JSON.parse(decodeURIComponent($(this).attr('data-json')));
-            $('#edit_id_cliente').val(cliente.id_cliente);
-            $('#edit_dni').val(cliente.dni_ruc);
-            $('#edit_nombres').val(cliente.nombres);
-            $('#edit_apellidos').val(cliente.apellidos);
-            $('#edit_sexo').val(cliente.sexo);
-            $('#edit_puntos').val(cliente.puntos);
-            $('#edit_email').val(cliente.email);
-            $('#edit_tel1').val(cliente.telefono_principal);
-            $('#edit_tel2').val(cliente.telefono_alternativo_w);
-            $('#edit_observaciones').val(cliente.observaciones);
-            $('#edit_whatsapp').prop('checked', cliente.estado_whatsapp == 1);
+        // F. EDITAR
+        $('#tablaClientes tbody').on('click', '.btn-editar', function() {
+            let data = getData(this);
+            $('#edit_id_cliente').val(data.id_cliente);
+            $('#edit_dni').val(data.dni);
+            $('#edit_nombres').val(data.nombres);
+            $('#edit_apellidos').val(data.apellidos);
+            $('#edit_tel1').val(data.telefono);
+            $('#edit_sexo').val(data.sexo);
+            $('#edit_observaciones').val(data.observaciones);
+            $('#edit_whatsapp').prop('checked', data.estado_whatsapp == 1);
+            
             new bootstrap.Modal(document.getElementById('modalEditar')).show();
         });
 
-        $('#tablaClientes tbody').on('click', '.btn-eliminar', function () {
-            let cliente = JSON.parse(decodeURIComponent($(this).attr('data-json')));
-            $('#delete_id_cliente').val(cliente.id_cliente);
-            $('#nombre_eliminar').text(cliente.nombres + ' ' + cliente.apellidos);
+        // G. ELIMINAR
+        $('#tablaClientes tbody').on('click', '.btn-eliminar', function() {
+            let data = getData(this);
+            $('#delete_id_cliente').val(data.id_cliente);
+            $('#nombre_eliminar').text(`${data.nombres} ${data.apellidos}`);
             new bootstrap.Modal(document.getElementById('modalEliminar')).show();
         });
 
-        $('#modalDetalle, #modalEditar, #modalEliminar').on('hidden.bs.modal', function () {
+        // H. RENIEC
+        $('#btnBuscarDni').on('click', () => this.consultarReniec());
+        $('#dni').on('keypress', (e)=>{ if(e.which===13){ e.preventDefault(); this.consultarReniec(); }});
+    },
+
+    // 3. FORMULARIOS
+    initFormularios: function() {
+        const self = this;
+        const handleForm = async (formId, url, btnText, modalId, reset=false) => {
+            $(`#${formId}`).on('submit', async function(e) {
+                e.preventDefault();
+                let btn = $(this).find('button[type="submit"]');
+                btn.prop('disabled', true).text('Procesando...');
+                try {
+                    let formData = new FormData(this);
+                    if(!formData.has('estado_whatsapp')) formData.append('estado_whatsapp', 0);
+                    let res = await fetch(`${BASE_URL}${url}`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.fromEntries(formData)) });
+                    let data = await res.json();
+                    if(data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById(modalId)).hide();
+                        // Forzar limpieza de fondo modal solamente
+                        $('.modal-backdrop').remove(); 
+                        $('body').removeClass('modal-open').css('overflow','').css('padding-right','');
+                        
+                        self.tabla.ajax.reload(null, false);
+                        if(reset) this.reset();
+                        self.mostrarToast(data.message, "success");
+                    } else { self.mostrarToast(data.message, "danger"); }
+                } catch(err) { self.mostrarToast("Error", "danger"); }
+                finally { btn.prop('disabled', false).text(btnText); }
+            });
+        };
+        handleForm('registrarcliente', '/admin/cliente/registrarcliente', 'GUARDAR', 'modalRegistrar', true);
+        handleForm('formEditarCliente', '/admin/cliente/editarcliente', 'ACTUALIZAR', 'modalEditar');
+        handleForm('formEliminarCliente', '/admin/cliente/eliminarcliente', 'SÍ, ELIMINAR', 'modalEliminar');
+    },
+
+    // 4. FIXES MODALES SOLAMENTE (No tocar Offcanvas aquí)
+    initModalFixes: function() {
+        $('.modal').on('hidden.bs.modal', function () {
             $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open').css('overflow', 'auto');
+            $('body').removeClass('modal-open').css('overflow', 'auto').css('padding-right', '');
         });
+    },
 
+    mostrarToast: function(msg, tipo) {
+        let toastEl = document.getElementById('toastSistema');
+        toastEl.className = `bs-toast toast fade bg-${tipo} position-fixed top-0 end-0 m-3`;
+        toastEl.style.zIndex = "11000";
+        $('#toastMensaje').text(msg);
+        new bootstrap.Toast(toastEl).show();
+    },
 
-        // ==========================================================
-        // 4. AJAX EDITAR Y ELIMINAR
-        // ==========================================================
-        const formEditar = document.getElementById("formEditarCliente");
-        if (formEditar) {
-            formEditar.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const btnSubmit = formEditar.querySelector("button[type='submit']");
-                btnSubmit.disabled = true;
-                btnSubmit.innerText = "Guardando...";
+    consultarReniec: async function() {
+        let dni = $('#dni').val().trim();
+        let feedback = $('#dniFeedback');
+        if(dni.length !== 8) { feedback.html('<span class="text-danger">8 dígitos.</span>'); return; }
+        $('#btnBuscarDni').prop('disabled', true);
+        try {
+            let res = await fetch(`${BASE_URL}/api/dni`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({dni: dni}) });
+            let data = await res.json();
+            if(data.success) {
+                $('#nombres').val(data.data.nombres);
+                $('#apellidos').val(`${data.data.apellido_paterno} ${data.data.apellido_materno}`);
+                $('#nombres, #apellidos').prop('readonly', true);
+                feedback.html('<span class="text-success">Encontrado</span>');
+            } else { feedback.html('<span class="text-danger">No encontrado</span>'); $('#nombres, #apellidos').val('').prop('readonly', false); }
+        } catch(e) { feedback.html('<span class="text-danger">Error</span>'); }
+        finally { $('#btnBuscarDni').prop('disabled', false); }
+    }
+};
 
-                try {
-                    const response = await fetch(`${BASE_URL}/admin/cliente/editarcliente`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(Object.fromEntries(new FormData(formEditar).entries()))
-                    });
-
-                    const result = await response.json();
-                    if (response.ok && result.success) {
-                        tabla.ajax.reload(function() { tabla.columns.adjust().draw(); }, false); 
-                        bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
-                        mostrarToast(result.message, "success");
-                    } else {
-                        mostrarToast(result.message, "danger");
-                    }
-                } catch (error) { mostrarToast("Error de conexión.", "warning"); } 
-                finally { btnSubmit.disabled = false; btnSubmit.innerText = "GUARDAR CAMBIOS"; }
-            });
-        }
-
-        const formEliminar = document.getElementById("formEliminarCliente");
-        if (formEliminar) {
-            formEliminar.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const btnSubmit = formEliminar.querySelector("button[type='submit']");
-                btnSubmit.disabled = true;
-                btnSubmit.innerText = "Eliminando...";
-
-                try {
-                    const response = await fetch(`${BASE_URL}/admin/cliente/eliminarcliente`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(Object.fromEntries(new FormData(formEliminar).entries()))
-                    });
-
-                    const result = await response.json();
-                    if (response.ok && result.success) {
-                        tabla.ajax.reload(function() { tabla.columns.adjust().draw(); }, false); 
-                        bootstrap.Modal.getInstance(document.getElementById('modalEliminar')).hide();
-                        mostrarToast(result.message, "success");
-                    } else {
-                        mostrarToast(result.message, "danger");
-                    }
-                } catch (error) { mostrarToast("Error de conexión.", "warning"); } 
-                finally { btnSubmit.disabled = false; btnSubmit.innerText = "Sí, eliminar"; }
-            });
-        }
-
-    } // FIN DE IF TABLA CLIENTES
-}); // FIN DOMCONTENTLOADED
+document.addEventListener("DOMContentLoaded", () => { ClienteModule.init(); });

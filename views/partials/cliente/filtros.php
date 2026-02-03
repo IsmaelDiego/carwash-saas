@@ -1,40 +1,45 @@
-<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasDark" aria-labelledby="offcanvasDarkLabel" data-bs-theme="light">
-  <div class="offcanvas-header border-bottom">
-    <h4 class="offcanvas-title fw-bold" id="offcanvasDarkLabel"><i class="bx bx-filter-alt me-1"></i> Filtros</h4>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasDark" aria-labelledby="offcanvasDarkLabel">
+  
+  <div class="offcanvas-header bg-dark text-white">
+    <h5 id="offcanvasDarkLabel" class="offcanvas-title text-white">
+        <i class="bx bx-filter-alt me-2"></i> Filtros Avanzados
+    </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   
-  <div class="offcanvas-body my-auto">
-    <h6 class="text-muted mb-3 fw-semibold text-uppercase" style="font-size: 0.75rem;">Búsqueda por coincidencias</h6>
+  <div class="offcanvas-body">
+    
     <div class="mb-4">
-      <label for="buscadorGlobal" class="form-label">DNI, Nombres, Apellidos o Correo</label>
-      <div class="input-group input-group-merge">
-        <span class="input-group-text"><i class="bx bx-search"></i></span>
-        <input type="text" id="buscadorGlobal" class="form-control" placeholder="Escriba para buscar..." />
-      </div>
+        <label for="buscadorGlobal" class="form-label fw-bold text-dark">Buscador General</label>
+        <div class="input-group input-group-lg">
+            <span class="input-group-text bg-light"><i class="bx bx-search"></i></span>
+            <input type="text" id="buscadorGlobal" class="form-control bg-light" placeholder="Nombre, DNI..." autofocus>
+        </div>
+        <div class="form-text">Busca en tiempo real mientras escribes.</div>
     </div>
 
     <hr class="my-4">
 
-    <h6 class="text-muted mb-3 fw-semibold text-uppercase" style="font-size: 0.75rem;">Rango de Fechas</h6>
-    <div class="row g-3 mb-4">
-      <div class="col-6">
-        <label for="filtroFechaInicio" class="form-label">Fecha Inicio</label>
-        <input type="date" id="filtroFechaInicio" class="form-control" />
-      </div>
-      <div class="col-6">
-        <label for="filtroFechaFin" class="form-label">Fecha Fin</label>
-        <input type="date" id="filtroFechaFin" class="form-control" />
-      </div>
+    <h6 class="fw-bold mb-3 text-dark">Rango de Fechas</h6>
+    
+    <div class="mb-3">
+        <label for="filtroFechaInicio" class="form-label">Desde:</label>
+        <input type="date" id="filtroFechaInicio" class="form-control">
+    </div>
+    
+    <div class="mb-4">
+        <label for="filtroFechaFin" class="form-label">Hasta:</label>
+        <input type="date" id="filtroFechaFin" class="form-control">
     </div>
 
-    <div class="d-grid gap-2 mt-5">
-      <button type="button" class="btn btn-primary" data-bs-dismiss="offcanvas">
-        Aplicar y Cerrar
-      </button>
-      <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltros">
-        <i class="bx bx-refresh me-1"></i> Limpiar Filtros
-      </button>
+    <div class="d-grid gap-2 mt-auto">
+        <button type="button" class="btn btn-primary btn-lg" id="btnAplicarFiltros">
+            <i class="bx bx-check"></i> Listo / Cerrar
+        </button>
+        <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltros">
+            <i class="bx bx-refresh"></i> Limpiar Todo
+        </button>
     </div>
+
   </div>
 </div>

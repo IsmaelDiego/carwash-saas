@@ -3,79 +3,87 @@
 class AuthController
 {
     /**
-     * Maneja el inicio de sesión
+     * Maneja el inicio de sesión (Soporta Email o DNI)
      */
     public function login(): void
     {
-        // 1. Si el usuario ya está logueado, lo mandamos directo al Home (Router decidirá dashboard)
+        // 1. Si ya está logueado, al Home
         if (isset($_SESSION['user'])) {
             header('Location: ' . BASE_URL . '/home');
             exit;
         }
 
-        // 2. Si la petición es POST, asumimos que viene del JavaScript (fetch)
+        // 2. Proceso de Login (POST desde JS)
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
-            header('Content-Type: application/json'); // Respuesta siempre en JSON
+            header('Content-Type: application/json');
 
-            // Leer el cuerpo de la petición (JSON raw)
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
-            $email = $data['email'] ?? '';
-            $password = $data['password'] ?? '';
+            // El frontend puede enviar el campo como 'email' o 'identifier'
+            // Asumimos que el input del usuario llega aquí
+            $identifier = $data['email'] ?? $data['identifier'] ?? ''; 
+            $password   = $data['password'] ?? '';
 
-            // Validar campos vacíos
-            if (empty($email) || empty($password)) {
+            if (empty($identifier) || empty($password)) {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Email y contraseña son obligatorios']);
+                echo json_encode(['success' => false, 'message' => 'Usuario y contraseña obligatorios']);
                 return;
             }
 
             $userModel = new User($pdo);
-            
-            // Buscar usuario (El modelo debe filtrar por active = 1)
-            $user = $userModel->findByEmail($email);
+            $user = null;
 
-            // Verificar contraseña
-            if ($user && password_verify($password, $user['password'])) {
+            // ---------------------------------------------------------
+            // LÓGICA HÍBRIDA: ¿Es Email o DNI?
+            // ---------------------------------------------------------
+            if (strpos($identifier, '@') !== false) {
+                // Tiene arroba -> Es Admin usando Email
+                $user = $userModel->findByEmail($identifier);
+            } else {
+                // No tiene arroba -> Es Empleado usando DNI
+                $user = $userModel->findByDni($identifier);
+            }
+
+            // ---------------------------------------------------------
+            // VERIFICACIÓN DE PASSWORD (V3.2)
+            // ---------------------------------------------------------
+            // Nota: La columna en BD es 'password_hash'
+            if ($user && password_verify($password, $user['password_hash'])) {
                 
-                // Seguridad: Regenerar ID de sesión para evitar Session Fixation
                 session_regenerate_id(true);
 
-                // Guardar datos en sesión
+                // Guardamos datos usando las columnas de V3.2
                 $_SESSION['user'] = [
-                    'id'   => $user['id_usuario'],
-                    'name' => $user['nombre'],
-                    'role' => $user['id_rol'],
-                    'email' => $user['email'],
-                    'rolename' => $user['rol']   
-                    
+                    'id'       => $user['id_usuario'], // id_usuario
+                    'name'     => $user['nombres'],    // nombres
+                    'dni'      => $user['dni'],        // dni
+                    'role'     => $user['id_rol'],     // id_rol (1, 2 o 3)
+                    'rolename' => $user['rol_nombre'], // Viene del JOIN
+                    'avatar'   => $user['avatar_url'] ?? 'default.png'
                 ];
 
-                // Responder éxito a JS
                 echo json_encode([
                     'success'  => true,
                     'redirect' => BASE_URL . '/home'
                 ]);
             } else {
-                // Responder error a JS
                 http_response_code(401);
-                echo json_encode(['success' => false, 'message' => 'Credenciales inválidas o cuenta inactiva']);
+                echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas o usuario inactivo']);
             }
-            return; // Importante: Salir para no renderizar HTML
+            return;
         }
 
-        // 3. Si es GET, simplemente mostramos el formulario HTML
+        // 3. Mostrar vista
         require VIEW_PATH . '/auth/login.view.php';
     }
 
     /**
-     * Maneja el registro de usuarios
+     * Registro de usuarios (Adaptado a DNI y Nombres)
      */
     public function register(): void
     {
-        // Si ya está logueado, no debería ver el registro (opcional)
         if (isset($_SESSION['user'])) {
             header('Location: ' . BASE_URL . '/home');
             exit;
@@ -85,58 +93,64 @@ class AuthController
             global $pdo;
             header('Content-Type: application/json');
 
-            // Leer JSON
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
-            // Validaciones básicas
-            if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
+            // Validar campos requeridos para V3.2
+            // 'nombres', 'dni', 'password' son obligatorios. Email es opcional para operarios.
+            if (empty($data['nombres']) || empty($data['dni']) || empty($data['password'])) {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios']);
+                echo json_encode(['success' => false, 'message' => 'DNI, Nombre y Contraseña son obligatorios']);
                 return;
             }
 
             $userModel = new User($pdo);
 
-            // Verificar si el correo ya existe
-            // Nota: findByEmail suele filtrar activos, idealmente deberías tener un método checkEmailExists
-            // pero para este caso práctico, si encuentra uno, bloqueamos.
-            if ($userModel->findByEmail($data['email'])) {
-                http_response_code(409); // Conflict
-                echo json_encode(['success' => false, 'message' => 'El correo electrónico ya está registrado']);
+            // Verificar si el DNI ya existe (Primary Unique)
+            if ($userModel->findByDni($data['dni'])) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'Este DNI ya está registrado']);
                 return;
             }
 
-            // Intentar crear el usuario
+            // Preparar datos para el Modelo
+            // Por defecto, si se registran desde fuera, les damos rol 3 (Operario) o lo que definas.
+            $newUser = [
+                'id_rol'   => 3, // Default: Operario
+                'dni'      => $data['dni'],
+                'nombres'  => $data['nombres'],
+                'email'    => $data['email'] ?? null,
+                'telefono' => $data['telefono'] ?? null,
+                'password' => $data['password']
+            ];
+
             try {
-                if ($userModel->create($data)) {
+                if ($userModel->create($newUser)) {
                     echo json_encode([
                         'success' => true,
-                        'redirect' => BASE_URL . '/login' // JS redirigirá aquí
+                        'message' => 'Usuario registrado correctamente',
+                        'redirect' => BASE_URL . '/login'
                     ]);
                 } else {
-                    throw new Exception("Error al guardar en base de datos");
+                    throw new Exception("No se pudo crear el registro");
                 }
             } catch (Exception $e) {
                 http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
+                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
             }
             return;
         }
 
-        // Mostrar la vista de registro
         require VIEW_PATH . '/auth/register.view.php';
     }
 
     /**
-     * Cerrar sesión
+     * Cerrar sesión (Sin cambios mayores, solo limpieza)
      */
     public function logout(): void
     {
-        // 1. Vaciar array de sesión
         $_SESSION = [];
 
-        // 2. Invalidar la cookie de sesión (Borrado profundo)
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '', time() - 42000,
@@ -145,18 +159,10 @@ class AuthController
             );
         }
 
-        // 3. Destruir la sesión en el servidor
         session_destroy();
 
-        // ---------------------------------------------------------
-        // CAMBIO AQUÍ: En lugar de redirigir, cargamos la vista.
-        // ---------------------------------------------------------
-        // La sesión ya está destruida en este punto, así que es seguro.
-        
+        // Cargar vista de despedida
         require VIEW_PATH . '/auth/sign-out.view.php';
-        
-        // No necesitamos exit aquí porque es el final del script, 
-        // pero no está de más ponerlo.
         exit;
     }
 }

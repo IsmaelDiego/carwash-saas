@@ -1,68 +1,72 @@
 document.addEventListener("DOMContentLoaded", () => {
     const loginForm = document.getElementById("loginForm");
-    // Este elemento en tu HTML debe ser un <div id="loginMessage" class="alert" role="alert"></div>
     const messageBox = document.getElementById("loginMessage");
 
-    // Función auxiliar para gestionar los colores y mensajes
     function showAlert(message, type) {
-        // Aseguramos que sea visible
+        if (!messageBox) return;
         messageBox.style.display = "block";
-        // Asignamos las clases de Bootstrap: alert-success (verde), alert-danger (rojo), alert-warning (amarillo)
         messageBox.className = `alert alert-${type} text-center`;
         messageBox.innerText = message;
     }
 
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
-            e.preventDefault(); // 1. Evita el envío tradicional
+            e.preventDefault();
 
-            // UI: Ocultar alertas previas y mostrar estado de carga en el botón
-            messageBox.style.display = "none";
+            if (messageBox) messageBox.style.display = "none";
             const submitBtn = loginForm.querySelector("button[type='submit']");
             const originalBtnText = submitBtn.innerText;
             
             submitBtn.disabled = true;
             submitBtn.innerText = "Verificando...";
 
-            // 2. Capturar datos del formulario
+            // 1. Capturar datos
             const formData = new FormData(loginForm);
             const data = Object.fromEntries(formData.entries());
 
+            // --- ADAPTACIÓN: Asegurar compatibilidad con AuthController ---
+            // Tu PHP busca $data['email'] O $data['identifier'].
+            // Si en tu HTML el input se llama "usuario", "dni", "user", etc.,
+            // lo mapeamos a 'identifier' para que el PHP lo entienda siempre.
+            
+            // Buscamos el valor del input principal (asumiendo que es el primero o tiene nombre específico)
+            const userValue = data.email || data.dni || data.identifier || data.usuario;
+            
+            const payload = {
+                identifier: userValue, // Enviamos como 'identifier' genérico
+                password: data.password
+            };
+
             try {
-                // 3. Enviar petición al backend
                 const response = await fetch(`${BASE_URL}/login`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload) // Enviamos el payload limpio
                 });
 
-                const result = await response.json();
+                let result;
+                try {
+                    result = await response.json();
+                } catch (err) {
+                    throw new Error("El servidor no devolvió JSON");
+                }
 
                 if (response.ok && result.success) {
-                    // 4. Éxito: Mostrar alerta VERDE
                     showAlert("¡Bienvenido! Redirigiendo...", "success");
-                    
                     setTimeout(() => {
                         window.location.href = result.redirect; 
-                    }, 1500); // 1.5 segundos para que el usuario vea el mensaje verde
+                    }, 1500); 
                 } else {
-                    // 5. Error Lógico (Credenciales mal): Mostrar alerta ROJA
-                    showAlert(result.message || "Credenciales incorrectas o usuario inactivo", "danger");
-                    
-                    // Reactivar botón para intentar de nuevo
+                    // El PHP devuelve 401 si falla, entra aquí si response.ok es false
+                    // O si response.ok es true pero success false (depende de tu lógica exacta, cubrimos ambos)
+                    showAlert(result.message || "Credenciales incorrectas", "danger");
                     submitBtn.disabled = false;
                     submitBtn.innerText = originalBtnText;
                 }
 
             } catch (error) {
                 console.error("Error:", error);
-                
-                // 6. Error de Conexión (Fetch falló): Mostrar alerta AMARILLA
                 showAlert("Error de conexión con el servidor", "warning");
-
-                // Reactivar botón
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalBtnText;
             }

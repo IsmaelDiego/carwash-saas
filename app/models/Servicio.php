@@ -1,212 +1,86 @@
 <?php
-// Ubicación: app/models/Servicio.php
 
-use PDO;
+class Servicio {
+    private $pdo;
 
-class Servicio
-{
-    private PDO $db;
-
-    public function __construct(PDO $db)
-    {
-        $this->db = $db;
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
     }
 
-    /**
-     * Obtener todos los servicios con sus precios por tipo de vehículo
-     */
-    public function getAll(): array
-    {
-        $sql = "SELECT * FROM servicios ORDER BY nombre ASC";
-        $stmt = $this->db->query($sql);
-        $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Agregar precios por tipo de vehículo a cada servicio
-        foreach ($servicios as &$servicio) {
-            $servicio['precios'] = $this->getPreciosByServicio($servicio['id_servicio']);
-        }
-
-        return $servicios;
+    // LISTAR TODOS
+    public function getAll() {
+        try {
+            $stmt = $this->pdo->query("SELECT * FROM servicios ORDER BY nombre ASC");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) { return []; }
     }
 
-    /**
-     * Obtener solo servicios activos
-     */
-    public function getActivos(): array
-    {
-        $sql = "SELECT * FROM servicios WHERE estado = 1 ORDER BY nombre ASC";
-        $stmt = $this->db->query($sql);
-        $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($servicios as &$servicio) {
-            $servicio['precios'] = $this->getPreciosByServicio($servicio['id_servicio']);
-        }
-
-        return $servicios;
-    }
-
-    /**
-     * Obtener un servicio por ID
-     */
-    public function findById(int $id)
-    {
-        $stmt = $this->db->prepare("SELECT * FROM servicios WHERE id_servicio = :id");
-        $stmt->execute([':id' => $id]);
-        $servicio = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($servicio) {
-            $servicio['precios'] = $this->getPreciosByServicio($id);
-        }
-        
-        return $servicio;
-    }
-
-    /**
-     * Obtener precios por tipo de vehículo de un servicio
-     */
-    public function getPreciosByServicio(int $id_servicio): array
-    {
-        $sql = "SELECT sp.*, tv.nombre AS tipo_vehiculo 
-                FROM servicio_precios sp
-                INNER JOIN tipo_vehiculo tv ON sp.id_tipo_vehiculo = tv.id_tipo_vehiculo
-                WHERE sp.id_servicio = :id
-                ORDER BY tv.nombre ASC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':id' => $id_servicio]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Verificar si el nombre ya existe
-     */
-    public function existeNombre(string $nombre, ?int $exceptoId = null): bool
-    {
+    // VALIDAR NOMBRE DUPLICADO
+    public function existeNombre($nombre, $id_servicio = null) {
         $sql = "SELECT COUNT(*) FROM servicios WHERE nombre = :nombre";
         $params = [':nombre' => $nombre];
         
-        if ($exceptoId) {
+        if ($id_servicio) {
             $sql .= " AND id_servicio != :id";
-            $params[':id'] = $exceptoId;
+            $params[':id'] = $id_servicio;
         }
         
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchColumn() > 0;
     }
 
-    /**
-     * Crear nuevo servicio
-     */
-    public function crear(array $data): int
-    {
-        $sql = "INSERT INTO servicios (nombre, descripcion, duracion_minutos, estado) 
-                VALUES (:nombre, :descripcion, :duracion, :estado)";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':nombre' => $data['nombre'],
-            ':descripcion' => $data['descripcion'] ?? '',
-            ':duracion' => $data['duracion_minutos'] ?? 30,
-            ':estado' => $data['estado'] ?? 1
-        ]);
-
-        return (int) $this->db->lastInsertId();
+    // REGISTRAR
+    public function registrar($data) {
+        try {
+            $sql = "INSERT INTO servicios (nombre, precio_base, acumula_puntos, permite_canje, estado) 
+                    VALUES (:nombre, :precio_base, :acumula, :canje, 1)";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([
+                ':nombre'      => trim($data['nombre']),
+                ':precio_base' => $data['precio_base'],
+                // CORRECCIÓN: Verificamos si VALE 1, no solo si existe
+                ':acumula'     => (isset($data['acumula_puntos']) && $data['acumula_puntos'] == 1) ? 1 : 0,
+                ':canje'       => (isset($data['permite_canje']) && $data['permite_canje'] == 1) ? 1 : 0
+            ]);
+        } catch (Exception $e) { return false; }
     }
 
-    /**
-     * Actualizar servicio
-     */
-    public function actualizar(array $data): bool
-    {
-        $sql = "UPDATE servicios SET 
-                    nombre = :nombre, 
-                    descripcion = :descripcion, 
-                    duracion_minutos = :duracion, 
-                    estado = :estado 
-                WHERE id_servicio = :id";
-        
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':nombre' => $data['nombre'],
-            ':descripcion' => $data['descripcion'],
-            ':duracion' => $data['duracion_minutos'],
-            ':estado' => $data['estado'],
-            ':id' => $data['id_servicio']
-        ]);
+    // EDITAR (Usando id_servicio)
+    public function editar($data) {
+        try {
+            $sql = "UPDATE servicios SET 
+                        nombre = :nombre, 
+                        precio_base = :precio_base, 
+                        acumula_puntos = :acumula, 
+                        permite_canje = :canje 
+                    WHERE id_servicio = :id";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([
+                ':nombre'      => trim($data['nombre']),
+                ':precio_base' => $data['precio_base'],
+                // CORRECCIÓN: Verificamos si VALE 1
+                ':acumula'     => (isset($data['acumula_puntos']) && $data['acumula_puntos'] == 1) ? 1 : 0,
+                ':canje'       => (isset($data['permite_canje']) && $data['permite_canje'] == 1) ? 1 : 0,
+                ':id'          => $data['id_servicio']
+            ]);
+        } catch (Exception $e) { return false; }
     }
 
-    /**
-     * Eliminar servicio y sus precios
-     */
-    public function eliminar(int $id): bool
-    {
-        // Primero eliminar precios asociados
-        $this->eliminarPrecios($id);
-        
-        $sql = "DELETE FROM servicios WHERE id_servicio = :id";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':id' => $id]);
+    // ELIMINAR (Usando id_servicio)
+    public function eliminar($id) {
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM servicios WHERE id_servicio = :id");
+            return $stmt->execute([':id' => $id]);
+        } catch (Exception $e) { return false; }
     }
 
-    /**
-     * Guardar/Actualizar precio de servicio por tipo de vehículo
-     */
-    public function guardarPrecio(int $id_servicio, int $id_tipo_vehiculo, float $precio): bool
-    {
-        // Verificar si ya existe
-        $sql = "SELECT id FROM servicio_precios WHERE id_servicio = :id_servicio AND id_tipo_vehiculo = :id_tipo";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':id_servicio' => $id_servicio, ':id_tipo' => $id_tipo_vehiculo]);
-        
-        if ($stmt->fetch()) {
-            // Actualizar
-            $sql = "UPDATE servicio_precios SET precio = :precio 
-                    WHERE id_servicio = :id_servicio AND id_tipo_vehiculo = :id_tipo";
-        } else {
-            // Insertar
-            $sql = "INSERT INTO servicio_precios (id_servicio, id_tipo_vehiculo, precio) 
-                    VALUES (:id_servicio, :id_tipo, :precio)";
-        }
-        
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':id_servicio' => $id_servicio,
-            ':id_tipo' => $id_tipo_vehiculo,
-            ':precio' => $precio
-        ]);
-    }
-
-    /**
-     * Guardar múltiples precios para un servicio
-     */
-    public function guardarPrecios(int $id_servicio, array $precios): bool
-    {
-        foreach ($precios as $id_tipo => $precio) {
-            if ($precio > 0) {
-                $this->guardarPrecio($id_servicio, $id_tipo, $precio);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Eliminar todos los precios de un servicio
-     */
-    public function eliminarPrecios(int $id_servicio): bool
-    {
-        $sql = "DELETE FROM servicio_precios WHERE id_servicio = :id";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':id' => $id_servicio]);
-    }
-
-    /**
-     * Verificar si el servicio está siendo usado en órdenes
-     */
-    public function tieneOrdenesVinculadas(int $id): bool
-    {
-        $sql = "SELECT COUNT(*) FROM orden_servicios WHERE id_servicio = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetchColumn() > 0;
+    // CAMBIAR ESTADO
+    public function cambiarEstado($id, $estado) {
+        try {
+            $sql = "UPDATE servicios SET estado = :estado WHERE id_servicio = :id";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([':estado' => $estado, ':id' => $id]);
+        } catch (Exception $e) { return false; }
     }
 }

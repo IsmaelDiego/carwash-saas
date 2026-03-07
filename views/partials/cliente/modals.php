@@ -1,8 +1,8 @@
 <div class="modal fade" id="modalRegistrar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title text-white fw-bold"><i class='bx bx-user-plus'></i> NUEVO CLIENTE</h5>
+            <div class="modal-header bg-primary text-white p-5">
+                <h5 class="modal-title text-white fw-bold"><i class='bx bx-user-plus'></i> Nuevo cliente</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="registrarcliente">
@@ -24,9 +24,12 @@
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6"><label class="form-label">Teléfono</label><input type="text" id="telefono" name="telefono" class="form-control" placeholder="999888777"></div>
-                        <div class="col-md-6"><label class="form-label">Sexo</label><select class="form-select" id="sexo" name="sexo"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
+                        <div class="col-md-6"><label class="form-label">Sexo</label><select class="form-select" id="sexo" name="sexo">
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                            </select></div>
                     </div>
-                    <div class="row g-3 align-items-center mb-3 p-3 bg-lighter rounded mx-0">
+                    <div class="row g-3 align-items-center mb-3 p-3 bg-lighter rounded mx-0 mt-5">
                         <div class="col-md-6">
                             <div class="form-check form-switch"><input type="hidden" name="estado_whatsapp" value="0"><input class="form-check-input" type="checkbox" name="estado_whatsapp" value="1" checked style="transform: scale(1.3);"><label class="form-check-label ms-2 fw-bold text-dark">Activar Notificaciones WhatsApp</label></div>
                         </div>
@@ -60,9 +63,9 @@
 <div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-primary">
+
+            <div class="modal-header bg-primary text-white p-5">
+                <h5 class="modal-title fw-bold text-white">
                     <i class="bx bx-edit-alt me-2"></i> Actualizar Información
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -71,13 +74,13 @@
             <form id="formEditarCliente">
                 <div class="modal-body py-4">
                     <input type="hidden" id="edit_id_cliente" name="id_cliente">
-                    
+
                     <div class="bg-light  p-3 rounded mb-4 border">
                         <div class="d-flex align-items-center mb-3">
                             <i class='bx bx-lock-alt fs-4 me-2 text-secondary'></i>
                             <span class="fw-bold text-secondary text-uppercase small">Datos de Identificación (No editables)</span>
                         </div>
-                        
+
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label text-muted small fw-bold">DNI / RUC</label>
@@ -95,7 +98,7 @@
                     </div>
 
                     <h6 class="fw-bold text-dark mb-3 ps-1">Datos de Contacto y Preferencias</h6>
-                    
+
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Teléfono / Celular</label>
@@ -136,8 +139,8 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <input type="hidden" id="edit_puntos" name="puntos"> 
+
+                    <input type="hidden" id="edit_puntos" name="puntos">
                 </div>
 
                 <div class="modal-footer  border-top-0">
@@ -151,7 +154,7 @@
 
 <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-        <div class="modal-content border-top border-5 border-danger">
+        <div class="modal-content border-top">
             <div class="modal-body text-center p-4">
                 <div class="mb-3 text-danger"><i class='bx bx-trash' style='font-size: 4.5rem;'></i></div>
                 <h4 class="mb-2 fw-bold text-danger">¿Estás seguro?</h4>
@@ -162,7 +165,7 @@
                         <?php if ($_SESSION['user']['role'] == 1): ?>
                             <button type="submit" class="btn btn-danger btn-lg">SÍ, ELIMINAR</button>
                         <?php else: ?>
-                             <button type="button" class="btn btn-secondary" disabled>Acceso Restringido</button>
+                            <button type="button" class="btn btn-secondary" disabled>Acceso Restringido</button>
                         <?php endif; ?>
                         <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancelar</button>
                     </div>

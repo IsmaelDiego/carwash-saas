@@ -1,118 +1,110 @@
 <?php
 
-class Vehiculo
-{
-    private \PDO $db;
 
-    public function __construct(\PDO $db)
-    {
-        $this->db = $db;
+class Vehiculo {
+    private $pdo;
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
     }
 
-    public function getAll(): array
-    {
-        $sql = "SELECT 
-                    v.id_vehiculo,
-                    v.id_cliente,
-                    v.placa,
-                    v.tipo_vehiculo_id,
-                    v.marca,
-                    v.modelo,
-                    v.color,
-                    v.observaciones,
-                    v.fecha_registro,
-                    v.estado,
-                    COALESCE(c.nombres, 'Desconocido') AS cliente_nombres,
-                    COALESCE(c.apellidos, '') AS cliente_apellidos,
-                    CONCAT(COALESCE(c.nombres, ''), ' ', COALESCE(c.apellidos, '')) AS propietario,
-                    COALESCE(tv.nombre, 'No asignado') AS nombre_tipo
-                FROM vehiculos v
-                LEFT JOIN clientes c ON v.id_cliente = c.id_cliente
-                LEFT JOIN tipo_vehiculo tv ON v.tipo_vehiculo_id = tv.id_tipo_vehiculo
-                ORDER BY v.id_vehiculo DESC";
-
-        $stmt = $this->db->query($sql);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    // LISTAR TODOS (Relacionando Cliente y Categoría)
+    public function getAll() {
+        try {
+            $sql = "SELECT 
+                        v.id_vehiculo, 
+                        v.placa, 
+                        v.color, 
+                        v.observaciones, 
+                        v.fecha_registro,
+                        v.id_cliente,
+                        v.id_categoria,
+                        CONCAT(c.nombres, ' ', c.apellidos) as nombre_propietario,
+                        c.dni as dni_propietario,
+                        cat.nombre as nombre_categoria
+                    FROM vehiculos v
+                    INNER JOIN clientes c ON v.id_cliente = c.id_cliente
+                    INNER JOIN categorias_vehiculos cat ON v.id_categoria = cat.id_categoria
+                    ORDER BY v.id_vehiculo DESC";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return [];
+        }
     }
 
+    // VALIDAR PLACA DUPLICADA
+    public function existePlaca($placa, $id_vehiculo = null) {
+        $sql = "SELECT COUNT(*) FROM vehiculos WHERE placa = :placa";
+        $params = [':placa' => $placa];
 
-    /**
-     * OBTENER TIPOS (Para el Select)
-     */
-    public function obtenerTiposVehiculo(): array
-    {
-        $sql = "SELECT id_tipo_vehiculo, nombre FROM tipo_vehiculo ORDER BY nombre ASC";
-        $stmt = $this->db->query($sql);
+        if ($id_vehiculo) {
+            $sql .= " AND id_vehiculo != :id";
+            $params[':id'] = $id_vehiculo;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn() > 0;
+    }
+
+    // REGISTRAR
+    public function registrar($data) {
+        try {
+            $sql = "INSERT INTO vehiculos (id_cliente, id_categoria, placa, color, observaciones) 
+                    VALUES (:id_cliente, :id_categoria, :placa, :color, :observaciones)";
+            
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([
+                ':id_cliente'    => $data['id_cliente'],
+                ':id_categoria'  => $data['id_categoria'],
+                ':placa'         => strtoupper(trim($data['placa'])),
+                ':color'         => $data['color'] ?? null,
+                ':observaciones' => $data['observaciones'] ?? null
+            ]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // EDITAR
+    public function editar($data) {
+        try {
+            // Nota: Permitimos editar Categoría, Color y Observaciones. 
+            // Placa y Dueño suelen ser fijos, pero si necesitas cambiarlos, agrégalos aquí.
+            $sql = "UPDATE vehiculos SET 
+                        id_categoria = :id_categoria,
+                        color = :color,
+                        observaciones = :observaciones
+                    WHERE id_vehiculo = :id_vehiculo";
+            
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([
+                ':id_categoria'  => $data['id_categoria'],
+                ':color'         => $data['color'],
+                ':observaciones' => $data['observaciones'],
+                ':id_vehiculo'   => $data['id_vehiculo']
+            ]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // ELIMINAR
+    public function eliminar($id) {
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM vehiculos WHERE id_vehiculo = :id");
+            return $stmt->execute([':id' => $id]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // HELPER: OBTENER CATEGORÍAS (Para el Select)
+    public function getCategorias() {
+        $stmt = $this->pdo->query("SELECT * FROM categorias_vehiculos ORDER BY nombre ASC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-    /**
-     * CREAR
-     */
-    public function crearVehiculo(array $data): bool
-    {
-        $sql = "INSERT INTO vehiculos (
-                    id_cliente, placa, tipo_vehiculo_id, marca, modelo, 
-                    color, observaciones, fecha_registro, estado
-                ) VALUES (
-                    :id_cliente, :placa, :tipo_vehiculo_id, :marca, :modelo, 
-                    :color, :obs, NOW(), 1
-                )";
-
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':id_cliente'       => $data['id_cliente'],
-            ':placa'            => strtoupper(trim($data['placa'])),
-            ':tipo_vehiculo_id' => $data['tipo_vehiculo_id'],
-            ':marca'            => strtoupper(trim($data['marca'])),
-            ':modelo'           => trim($data['modelo']),
-            ':color'            => trim($data['color']),
-            ':obs'              => trim($data['observaciones'])
-        ]);
-    }
-
-    /**
-     * ACTUALIZAR
-     */
-    public function actualizarVehiculo(array $data): bool
-    {
-        $sql = "UPDATE vehiculos SET 
-                    placa = :placa, 
-                    tipo_vehiculo_id = :tipo_vehiculo_id, 
-                    marca = :marca, 
-                    modelo = :modelo, 
-                    color = :color, 
-                    observaciones = :observaciones 
-                WHERE id_vehiculo = :id_vehiculo";
-
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':placa'            => strtoupper(trim($data['placa'])),
-            ':tipo_vehiculo_id' => $data['tipo_vehiculo_id'],
-            ':marca'            => strtoupper(trim($data['marca'])),
-            ':modelo'           => trim($data['modelo']),
-            ':color'            => trim($data['color']),
-            ':observaciones'    => trim($data['observaciones']),
-            ':id_vehiculo'      => $data['id_vehiculo']
-        ]);
-    }
-
-    /**
-     * ELIMINAR (Lógico)
-     */
-    public function eliminarVehiculo($id_vehiculo): bool
-    {
-        $sql = "UPDATE vehiculos SET estado = 0 WHERE id_vehiculo = :id_vehiculo";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':id_vehiculo' => $id_vehiculo]);
-    }
-
-    // Auxiliares
-    public function findByPlaca(string $placa)
-    {
-        $stmt = $this->db->prepare("SELECT * FROM vehiculos WHERE placa = :placa AND estado = 1");
-        $stmt->execute([':placa' => strtoupper($placa)]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 }
-?>

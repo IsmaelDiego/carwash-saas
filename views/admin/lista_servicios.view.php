@@ -1,163 +1,127 @@
 <?php require VIEW_PATH . '/layouts/header.view.php'; ?>
 
-<!-- Content wrapper -->
+<style>
+    /* Ocultamos elementos nativos de DataTables que no queremos */
+    .dataTables_filter,
+    .dataTables_length {
+        display: none !important;
+    }
+
+    /* Ajuste de paginación */
+    .dataTables_paginate {
+        display: flex !important;
+        justify-content: flex-start !important;
+        margin-top: 1rem !important;
+    }
+
+    .dataTables_info {
+        text-align: right !important;
+        margin-top: 1rem !important;
+        color: #b0b0b0 !important;
+    }
+
+    .detalle-card {
+        background-color: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        height: 100%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .switch-estado {
+        cursor: pointer;
+        width: 3em !important;
+        height: 1.5em !important;
+    }
+</style>
+
 <div class="content-wrapper">
-    <!-- Content -->
     <div class="container-fluid flex-grow-1 container-p-y">
 
-        <!-- Header -->
         <div class="col-lg-12 mb-4">
             <div class="m-1">
-                <h3 class="card-header text-dark"><strong>CATÁLOGO DE SERVICIOS Y PRECIOS</strong></h3>
-                <div class="box d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <h5 class="card-header border-bottom mb-3">CATÁLOGO DE SERVICIOS</h5>
 
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb breadcrumb-custom-icon mb-0">
-                            <li class="breadcrumb-item text-primary">
-                                <a href="#" class="text-primary">Servicios</a>
-                                <i class="breadcrumb-icon icon-base bx bx-chevron-right align-middle"></i>
-                            </li>
-                            <li class="breadcrumb-item active text-primary">Gestión de Servicios</li>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <nav aria-label="breadcrumb" class="me-auto">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/home">Inicio</a></li>
+                            <li class="breadcrumb-item active text-primary">Servicios</li>
                         </ol>
                     </nav>
-                    
-                    <div class="btns d-flex flex-wrap gap-2">
-                        <button type="button" class="btn rounded-pill btn-primary" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
-                            <i class="icon-base bx bx-plus-circle"></i> &nbsp NUEVO SERVICIO
+
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+
+                        <div class="input-group" style="width: 50%;">
+                            <input type="text" id="buscadorGlobal" class="form-control " placeholder="Buscar servicio..." autocomplete="off">
+                            <span class="input-group-text"><i class="bx bx-search text-muted"></i></span>
+
+                        </div>
+
+                        <button type="button" class="btn  btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
+                            <i class="bx bx-plus me-1"></i> Nuevo Servicio
+                        </button>
+
+                        <button class="btn  btn-outline-success" type="button" id="btnExportar">
+                            <i class="bx bxs-file-export p-2"></i>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Filtro rápido -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body py-3">
-                <div class="d-flex flex-wrap align-items-center gap-3">
-                    <div class="flex-grow-1" style="max-width: 300px;">
-                        <div class="input-group input-group-merge">
-                            <span class="input-group-text"><i class="bx bx-search"></i></span>
-                            <input type="text" class="form-control" id="buscadorServicios" placeholder="Buscar servicio..." />
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary btn-filtro-estado active" data-estado="todos">Todos</button>
-                        <button type="button" class="btn btn-sm btn-outline-success btn-filtro-estado" data-estado="1">Activos</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary btn-filtro-estado" data-estado="0">Inactivos</button>
-                    </div>
-                </div>
+        <div class="card shadow-sm">
+    
+    <div class="card-body border-bottom p-3 badge bg-label-dark">
+        <div class="d-flex flex-wrap align-items-center gap-4">
+            <span class="fw-bold text-muted small text-uppercase"><i class="bx bx-info-circle me-1"></i> Leyenda:</span>
+            
+            <div class="d-flex align-items-center">
+                <span class="badge bg-label-primary me-2 p-1"><i class="bx bxs-star fs-6"></i></span>
+                <span class="small text-dark">Genera Puntos</span>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <span class="badge bg-label-warning me-2 p-1"><i class="bx bxs-gift fs-6"></i></span>
+                <span class="small text-dark">Permite Canje</span>
+            </div>
+            
+            <div class="d-flex align-items-center ms-auto">
+                <small class="text-muted fst-italic" style="font-size: 0.75rem;">* Los servicios inactivos no aparecen en caja.</small>
             </div>
         </div>
-
-        <!-- Cards de Servicios -->
-        <div class="row" id="contenedorServicios">
-            <?php if (empty($servicios)): ?>
-                <!-- Sin registros -->
-                <div class="col-12" id="sinRegistros">
-                    <div class="card">
-                        <div class="card-body text-center py-5">
-                            <img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="120" class="mb-3 opacity-75" alt="Sin servicios">
-                            <h5 class="fw-bold text-primary mb-1">No hay servicios registrados</h5>
-                            <p class="text-muted">Crea tu primer servicio para comenzar.</p>
-                        </div>
-                    </div>
-                </div>
-            <?php else: ?>
-                <?php foreach ($servicios as $servicio): ?>
-                    <div class="col-md-6 col-lg-4 mb-4 card-servicio" 
-                         data-nombre="<?= strtolower($servicio['nombre']) ?>" 
-                         data-estado="<?= $servicio['estado'] ?>">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-header d-flex align-items-center justify-content-between py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                                        <i class="bx bx-car-wash fs-4 text-primary"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="card-title mb-0 fw-bold"><?= htmlspecialchars($servicio['nombre']) ?></h5>
-                                        <small class="text-muted">
-                                            <i class="bx bx-time"></i> <?= $servicio['duracion_minutos'] ?? 30 ?> min
-                                        </small>
-                                    </div>
-                                </div>
-                                <!-- Dropdown Acciones -->
-                                <div class="dropdown">
-                                    <button class="btn btn-sm text-body-secondary p-0" type="button" data-bs-toggle="dropdown">
-                                        <i class="bx bx-dots-vertical-rounded fs-4"></i>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-end">
-                                        <a class="dropdown-item btn-editar" href="javascript:void(0);" 
-                                           data-id="<?= $servicio['id_servicio'] ?>">
-                                            <i class="bx bx-edit me-2"></i> Editar
-                                        </a>
-                                        <?php if ($_SESSION['user']['role'] == 1): ?>
-                                        <a class="dropdown-item text-danger btn-eliminar" href="javascript:void(0);" 
-                                           data-id="<?= $servicio['id_servicio'] ?>"
-                                           data-nombre="<?= htmlspecialchars($servicio['nombre']) ?>">
-                                            <i class="bx bx-trash me-2"></i> Eliminar
-                                        </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="card-body pt-3">
-                                <!-- Descripción -->
-                                <p class="text-muted small mb-3" style="min-height: 40px;">
-                                    <?= htmlspecialchars($servicio['descripcion'] ?: 'Sin descripción') ?>
-                                </p>
-
-                                <!-- Estado -->
-                                <div class="mb-3">
-                                    <?php if ($servicio['estado'] == 1): ?>
-                                        <span class="badge bg-success"><i class="bx bx-check-circle me-1"></i> Activo</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-secondary"><i class="bx bx-x-circle me-1"></i> Inactivo</span>
-                                    <?php endif; ?>
-                                </div>
-
-                                <!-- Precios por tipo de vehículo -->
-                                <h6 class="text-primary fw-bold mb-2">
-                                    <i class="bx bx-dollar-circle me-1"></i> Precios por Vehículo
-                                </h6>
-                                <ul class="list-group list-group-flush">
-                                    <?php if (!empty($servicio['precios'])): ?>
-                                        <?php foreach ($servicio['precios'] as $precio): ?>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
-                                                <span class="text-dark">
-                                                    <i class="bx bx-car me-1 text-muted"></i>
-                                                    <?= htmlspecialchars($precio['tipo_vehiculo']) ?>
-                                                </span>
-                                                <span class="fw-bold text-success">S/ <?= number_format($precio['precio'], 2) ?></span>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <li class="list-group-item text-muted text-center px-0 py-2">
-                                            <small>Sin precios configurados</small>
-                                        </li>
-                                    <?php endif; ?>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-
     </div>
-    <!-- / Content -->
+
+    <div class="table-responsive text-nowrap px-3">
+        <table class="table table-hover w-100 my-3" id="tablaServicios">
+            <thead class="bg-primary">
+                <tr>
+                    <th class="d-none">ID</th>
+                    <th class="d-none">Acumula</th>
+                    <th class="d-none">Canje</th>
+
+                    <th style="color: #f0f0f0;">Nombre Servicio</th>
+                    <th style="color: #f0f0f0;"> Precio Base</th>
+                    <th class="text-center" style="color: #f0f0f0;">Reglas</th>
+                    <th class="text-center" style="color: #f0f0f0;">Estado</th>
+                    <th class="text-center" style="color: #f0f0f0;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 </div>
-<!-- / Content wrapper -->
+    </div>
+    <div class="content-backdrop fade"></div>
+</div>
 
 <script>
     const BASE_URL = "<?= BASE_URL ?>";
-    const TIPOS_VEHICULO = <?= json_encode($tiposVehiculo) ?>;
 </script>
 
 <?php require VIEW_PATH . '/partials/servicio/modals.php'; ?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
-
-<!-- footer -->
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 
 <script src="<?= BASE_URL ?>/public/js/admin/servicio.js"></script>

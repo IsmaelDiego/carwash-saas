@@ -2,218 +2,114 @@
 namespace Controllers\Admin;
 
 use Servicio;
-use TipoVehiculo;
-use Exception;
 
-class ServicioController
-{
+class ServicioController {
+
     public function __construct() {
-        requireAuth();
+        requireRole(1); // Solo Admin
     }
 
     public function index() {
-        $this->lista();
-    }
-
-    /**
-     * Mostrar vista principal de servicios
-     */
-    public function lista() {
-        global $pdo;
-        
-        // Obtener tipos de vehículo para los precios
-        $tipoVehiculoModel = new TipoVehiculo($pdo);
-        $tiposVehiculo = $tipoVehiculoModel->getActivos();
-        
-        // Obtener servicios con sus precios
-        $servicioModel = new Servicio($pdo);
-        $servicios = $servicioModel->getAll();
-        
+        requireAuth();
         require VIEW_PATH . '/admin/lista_servicios.view.php';
     }
 
-    /**
-     * API: Obtener todos los servicios (para AJAX)
-     */
+    // API: GET ALL
     public function getall() {
+        requireAuth();
         global $pdo;
         header('Content-Type: application/json');
-
-        $servicioModel = new Servicio($pdo);
-        $servicios = $servicioModel->getAll();
-
-        echo json_encode(['data' => $servicios]);
+        $model = new Servicio($pdo);
+        echo json_encode(['data' => $model->getAll()]);
     }
 
-    /**
-     * API: Obtener un servicio por ID
-     */
-    public function getone() {
-        global $pdo;
-        header('Content-Type: application/json');
-
-        $id = $_GET['id'] ?? 0;
-        
-        if (!$id) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'ID requerido']);
-            return;
-        }
-
-        $servicioModel = new Servicio($pdo);
-        $servicio = $servicioModel->findById($id);
-
-        if ($servicio) {
-            echo json_encode(['success' => true, 'data' => $servicio]);
-        } else {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Servicio no encontrado']);
-        }
-    }
-
-    /**
-     * API: Crear nuevo servicio
-     */
-    public function registrar() 
-    {
-        requireRole(1); // Solo admin
-        
+    // API: REGISTRAR
+    public function registrarservicio() {
+        requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
             header('Content-Type: application/json');
+            $input = json_decode(file_get_contents('php://input'), true);
 
-            $data = json_decode(file_get_contents('php://input'), true);
-
-            if (empty($data['nombre'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'El nombre del servicio es obligatorio.']);
-                return;
+            if (empty($input['nombre']) || empty($input['precio_base'])) {
+                echo json_encode(['success' => false, 'message' => 'Faltan datos obligatorios.']); return;
             }
 
-            $servicioModel = new Servicio($pdo);
-
-            if ($servicioModel->existeNombre($data['nombre'])) {
-                http_response_code(409);
-                echo json_encode(['success' => false, 'message' => 'Ya existe un servicio con ese nombre.']);
-                return;
+            $model = new Servicio($pdo);
+            
+            // Validar nombre único
+            if ($model->existeNombre($input['nombre'])) {
+                echo json_encode(['success' => false, 'message' => 'El nombre ya existe.']); return;
             }
 
-            try {
-                $id_servicio = $servicioModel->crear($data);
-                
-                if ($id_servicio) {
-                    // Guardar precios por tipo de vehículo
-                    if (!empty($data['precios']) && is_array($data['precios'])) {
-                        $servicioModel->guardarPrecios($id_servicio, $data['precios']);
-                    }
-                    
-                    echo json_encode(['success' => true, 'message' => 'Servicio creado exitosamente!', 'id' => $id_servicio]);
-                } else {
-                    throw new Exception("No se pudo crear el servicio.");
-                }
-            } catch (Exception $e) {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            if ($model->registrar($input)) {
+                echo json_encode(['success' => true, 'message' => 'Servicio creado.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al guardar.']);
             }
-            return;
         }
-
-        header('Location: ' . BASE_URL . '/admin/servicio/lista');
     }
 
-    /**
-     * API: Editar servicio
-     */
-    public function editar() 
-    {
-        requireRole(1);
-        
+    // API: EDITAR (Recibe id_servicio)
+    public function editarservicio() {
+        requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
             header('Content-Type: application/json');
+            $input = json_decode(file_get_contents('php://input'), true);
 
-            $data = json_decode(file_get_contents('php://input'), true);
-
-            if (empty($data['id_servicio']) || empty($data['nombre'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
-                return;
+            if (empty($input['id_servicio'])) {
+                echo json_encode(['success' => false, 'message' => 'ID no identificado.']); return;
             }
 
-            $servicioModel = new Servicio($pdo);
-
-            // Verificar nombre duplicado
-            if ($servicioModel->existeNombre($data['nombre'], $data['id_servicio'])) {
-                http_response_code(409);
-                echo json_encode(['success' => false, 'message' => 'Ya existe otro servicio con ese nombre.']);
-                return;
+            $model = new Servicio($pdo);
+            // Validar nombre único excluyendo el actual
+            if ($model->existeNombre($input['nombre'], $input['id_servicio'])) {
+                echo json_encode(['success' => false, 'message' => 'El nombre ya existe.']); return;
             }
 
-            try {
-                if ($servicioModel->actualizar($data)) {
-                    // Actualizar precios
-                    if (!empty($data['precios']) && is_array($data['precios'])) {
-                        $servicioModel->guardarPrecios($data['id_servicio'], $data['precios']);
-                    }
-                    
-                    echo json_encode(['success' => true, 'message' => 'Servicio actualizado correctamente!']);
-                } else {
-                    throw new Exception("No se detectaron cambios.");
-                }
-            } catch (Exception $e) {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            if ($model->editar($input)) {
+                echo json_encode(['success' => true, 'message' => 'Servicio actualizado.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Sin cambios o error.']);
             }
-            return;
         }
-
-        header('Location: ' . BASE_URL . '/admin/servicio/lista');
     }
 
-    /**
-     * API: Eliminar servicio
-     */
-    public function eliminar() 
-    {
-        requireRole(1);
-        
+    // API: ELIMINAR (Recibe id_servicio)
+    public function eliminarservicio() {
+        requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
             header('Content-Type: application/json');
-
-            $data = json_decode(file_get_contents('php://input'), true);
-
-            if (empty($data['id_servicio'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'ID no válido.']);
-                return;
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $model = new Servicio($pdo);
+            if ($model->eliminar($input['id_servicio'])) {
+                echo json_encode(['success' => true, 'message' => 'Servicio eliminado.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No se puede eliminar.']);
             }
-
-            $servicioModel = new Servicio($pdo);
-
-            // Verificar si tiene órdenes vinculadas
-            if ($servicioModel->tieneOrdenesVinculadas($data['id_servicio'])) {
-                http_response_code(409);
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'No se puede eliminar: Este servicio tiene órdenes asociadas.'
-                ]);
-                return;
-            }
-
-            try {
-                if ($servicioModel->eliminar($data['id_servicio'])) {
-                    echo json_encode(['success' => true, 'message' => 'Servicio eliminado correctamente.']);
-                } else {
-                    throw new Exception("No se pudo eliminar.");
-                }
-            } catch (Exception $e) {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
-            }
-            return;
         }
+    }
 
-        header('Location: ' . BASE_URL . '/admin/servicio/lista');
+    // API: CAMBIAR ESTADO
+    public function cambiarestado() {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            global $pdo;
+            header('Content-Type: application/json');
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $model = new Servicio($pdo);
+            // Validar booleano
+            $nuevoEstado = $input['estado'] == 1 ? 1 : 0;
+            
+            if ($model->cambiarEstado($input['id_servicio'], $nuevoEstado)) {
+                echo json_encode(['success' => true, 'message' => 'Estado actualizado.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al cambiar estado.']);
+            }
+        }
     }
 }

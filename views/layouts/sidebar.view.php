@@ -1,6 +1,6 @@
-<?php 
+<?php
 // Obtenemos la URL actual en la que está el usuario
-$current_url = $_SERVER['REQUEST_URI']; 
+$current_url = $_SERVER['REQUEST_URI'];
 ?>
 
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
@@ -126,7 +126,7 @@ $current_url = $_SERVER['REQUEST_URI'];
 
         <li class="menu-item <?= strpos($current_url, '/admin/cliente') !== false ? 'active open' : '' ?>">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-user-pin"></i>
+                <i class="menu-icon tf-icons bx bx-user"></i>
                 <div class="text-truncate">Clientes</div>
             </a>
             <ul class="menu-sub">
@@ -151,39 +151,39 @@ $current_url = $_SERVER['REQUEST_URI'];
                 </li>
             </ul>
         </li>
-        
+
         <li class="menu-header small text-uppercase">
-            <span class="menu-header-text">Servicios</span>
+            <span class="menu-header-text">Gestión Estratégica</span>
         </li>
 
-        <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-candles"></i>
-                <div class="text-truncate" data-i18n="Account Settings">Servicios</div>
+        <li class="menu-item <?= strpos($current_url, '/admin/servicio') !== false ? 'active' : '' ?>">
+            <a
+                href="<?= BASE_URL ?>/admin/servicio"
+                class="menu-link">
+                <i class="menu-icon tf-icons bx bx-badge-check"></i>
+                <div class="text-truncate" data-i18n="Servicios">Servicios</div>
             </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Gestion de Servicios</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Precio por vehículo</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Selección de Servicios</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Paquetes / Combos</div>
-                    </a>
-                </li>
-            </ul>
         </li>
+
+        <li class="menu-item <?= strpos($current_url, '/admin/promocion') !== false ? 'active' : '' ?>">
+            <a
+                href="<?= BASE_URL ?>/admin/promocion"
+                class="menu-link">
+                <i class="menu-icon tf-icons bx bx-gift"></i>
+                <div class="text-truncate" data-i18n="Promociones">Promociones</div>
+            </a>
+        </li>
+
+        <li class="menu-item <?= strpos($current_url, '/admin/temporada') !== false ? 'active' : '' ?>">
+            <a
+                href="<?= BASE_URL ?>/admin/temporada"
+                class="menu-link">
+                <i class="menu-icon tf-icons bx bx-calendar-star"></i>
+                <div class="text-truncate" data-i18n="Temporadas">Temporadas</div>
+            </a>
+        </li>
+
+
 
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Caja y Pagos</span>
@@ -191,7 +191,7 @@ $current_url = $_SERVER['REQUEST_URI'];
 
         <li class="menu-item">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-box"></i>
+                <i class="menu-icon tf-icons bx bx-calculator"></i>
                 <div class="text-truncate" data-i18n="Account Settings"> Caja</div>
             </a>
             <ul class="menu-sub">

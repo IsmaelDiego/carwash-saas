@@ -4,8 +4,8 @@
 // ==========================================================
 namespace Controllers\Admin;
 
-use Cliente;   // Importamos Modelo
 use Exception; // Importamos Excepciones PHP
+use Cliente;
 
 class ClienteController
 {

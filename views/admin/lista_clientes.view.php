@@ -75,7 +75,7 @@
               <i class="bx bx-plus me-1"></i> NUEVO
             </button>
 
-            <button class="btn rounded-pill btn-dark shadow-sm" type="button" id="btnAbrirFiltro">
+            <button class="btn rounded-pill btn-outline-secondary" type="button" id="btnAbrirFiltro">
               <i class="bx bx-search-alt me-1"></i> BUSCAR / FILTRAR
             </button>
 
@@ -90,21 +90,21 @@
     <div class="card shadow-sm">
       <div class="table-responsive text-nowrap px-3">
         <table class="table table-hover w-100" id="tablaClientes">
-          <thead style="background-color: #0073CF; color: white;">
-            <tr>
+          <thead class="bg-primary">
+            <tr style="color: #f0f0f0;">
               <th class="d-none">Nombres</th>
               <th class="d-none">Apellidos</th>
               <th class="d-none">DNI</th>
               <th class="d-none">Teléfono</th>
-              <th class="d-none">Puntos</th>
               <th class="d-none">Obs</th>
               <th class="d-none">FechaRaw</th>
 
-              <th>Cliente</th>
-              <th class="text-center">Sexo</th>
-              <th class="text-center">WhatsApp</th>
-              <th class="text-center">Registro</th>
-              <th class="text-center">Acciones</th>
+              <th style="color: #f0f0f0;">Cliente</th>
+              <th style="color: #f0f0f0;" class="text-center">Sexo</th>
+              <th style="color: #f0f0f0;" class="text-center">WhatsApp</th>
+              <th style="color: #f0f0f0;" class="text-center">Puntos</th>
+              <th style="color: #f0f0f0;" class="text-center">Registro</th>
+              <th style="color: #f0f0f0;" class="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody></tbody>

@@ -1,110 +1,145 @@
 <div class="modal fade" id="modalRegistrar" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title text-primary fw-bold">NUEVO VEHÍCULO</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white fw-bold"><i class='bx bxs-car'></i> NUEVO VEHÍCULO</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="registrarvehiculo">
-                    
+            <form id="registrarVehiculo">
+                <div class="modal-body">
                     <div class="mb-4">
-                        <label class="form-label fw-bold">Propietario</label>
-                        <input type="hidden" id="id_cliente" name="id_cliente">
-                        <div id="btnAbrirSelect" class="form-select d-flex justify-content-between align-items-center" style="cursor: pointer;">
-                            <span id="textoSelect" class="text-muted">Seleccione un cliente...</span>
-                            <i id="btnLimpiarSelect" class='bx bx-x text-danger d-none fs-5' style="z-index: 10;"></i>
-                        </div>
-                        <div id="menuSelect" class="position-absolute w-100 bg-white border rounded shadow-lg d-none mt-1" style="z-index: 2000;">
-                            <div class="p-2 border-bottom bg-light">
-                                <input type="text" id="inputBuscador" class="form-control" placeholder="Buscar...">
-                            </div>
-                            <ul id="listaClientes" class="list-group list-group-flush m-0" style="max-height: 200px; overflow-y: auto;"></ul>
-                        </div>
+                        <label class="form-label text-primary fw-bold">Propietario</label>
+                        <select class="form-select form-select-lg" name="id_cliente" required>
+                            <option value="">Seleccione un cliente...</option>
+                            <?php foreach($clientes as $c): ?>
+                                <option value="<?= $c['id_cliente'] ?>">
+                                    <?= $c['nombres'] . ' ' . $c['apellidos'] ?> (<?= $c['dni'] ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
-                    <div class="row g-4 mb-3">
+                    <div class="divider text-start"><div class="divider-text">Datos del Vehículo</div></div>
+
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Placa</label>
-                            <input type="text" id="placa" name="placa" class="form-control text-uppercase font-monospace" required>
+                            <label class="form-label fw-bold">Placa</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class='bx bx-hash'></i></span>
+                                <input type="text" class="form-control text-uppercase fw-bold" name="placa" placeholder="ABC-123" required>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Tipo de Vehículo</label>
-                            <select class="form-select" id="tipo_vehiculo_id" name="tipo_vehiculo_id" required>
-                                <option value="">Cargando...</option>
+                            <label class="form-label fw-bold">Categoría</label>
+                            <select class="form-select" name="id_categoria" required>
+                                <?php foreach($categorias as $cat): ?>
+                                    <option value="<?= $cat['id_categoria'] ?>"><?= $cat['nombre'] ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Color</label>
+                            <input type="text" class="form-control" name="color" placeholder="Ej. Rojo Metálico">
+                        </div>
+                    </div>
+                    <div class="mb-0"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">GUARDAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                    <div class="row g-4 mb-3">
-                        <div class="col-md-4"><label class="form-label">Marca</label><input type="text" name="marca" class="form-control text-uppercase" required></div>
-                        <div class="col-md-4"><label class="form-label">Modelo</label><input type="text" name="modelo" class="form-control" required></div>
-                        <div class="col-md-4"><label class="form-label">Color</label><input type="text" name="color" class="form-control" required></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <textarea name="observaciones" class="form-control" placeholder="Observaciones..."></textarea>
-                    </div>
-
-                    <div class="modal-footer px-0">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">GUARDAR</button>
-                    </div>
-                </form>
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-primary">FICHA DEL VEHÍCULO</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <div class="modal-body p-4" id="contenidoDetalle"></div>
+            <div class="modal-footer border-top p-2"><button type="button" class="btn btn-sm btn-secondary w-100" data-bs-dismiss="modal">Cerrar</button></div>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">EDITAR VEHÍCULO</h5>
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-primary"><i class="bx bx-edit-alt me-2"></i> Editar Vehículo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formEditarVehiculo">
-                <div class="modal-body">
+                <div class="modal-body py-4">
                     <input type="hidden" id="edit_id_vehiculo" name="id_vehiculo">
                     
-                    <div class="mb-3">
-                        <label class="form-label">Propietario</label>
-                        <input type="text" id="edit_propietario" class="form-control bg-light" readonly>
-                    </div>
-
-                    <div class="row g-4 mb-3">
-                        <div class="col-md-6"><label class="form-label">Placa</label><input type="text" id="edit_placa" name="placa" class="form-control text-uppercase" required></div>
-                        <div class="col-md-6">
-                            <label class="form-label">Tipo</label>
-                            <select class="form-select" id="edit_tipo_vehiculo_id" name="tipo_vehiculo_id" required></select>
+                    <div class="bg-light p-3 rounded mb-4 border">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class='bx bx-lock-alt fs-4 me-2 text-secondary'></i>
+                            <span class="fw-bold text-secondary text-uppercase small">Datos Principales (No editables)</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label text-muted small fw-bold">Propietario</label>
+                                <input type="text" id="edit_nombre_cliente" class="form-control-plaintext fw-bold text-dark px-2 border-bottom" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">Placa</label>
+                                <input type="text" id="edit_placa" class="form-control-plaintext fw-bold text-dark px-2 border-bottom text-uppercase" readonly>
+                            </div>
                         </div>
                     </div>
-                    <div class="row g-4 mb-3">
-                        <div class="col-md-4"><label>Marca</label><input type="text" id="edit_marca" name="marca" class="form-control" required></div>
-                        <div class="col-md-4"><label>Modelo</label><input type="text" id="edit_modelo" name="modelo" class="form-control" required></div>
-                        <div class="col-md-4"><label>Color</label><input type="text" id="edit_color" name="color" class="form-control" required></div>
+
+                    <h6 class="fw-bold text-dark mb-3 ps-1">Características</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Categoría</label>
+                            <select id="edit_id_categoria" name="id_categoria" class="form-select">
+                                <?php foreach($categorias as $cat): ?>
+                                    <option value="<?= $cat['id_categoria'] ?>"><?= $cat['nombre'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Color</label>
+                            <input type="text" id="edit_color" name="color" class="form-control">
+                        </div>
                     </div>
-                    <div class="mb-3"><textarea id="edit_observaciones" name="observaciones" class="form-control"></textarea></div>
+                    <div class="form-floating">
+                        <textarea class="form-control" id="edit_observaciones" name="observaciones" style="height: 80px"></textarea>
+                        <label>Observaciones</label>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">ACTUALIZAR</button>
+                <div class="modal-footer bg-light border-top-0">
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4"><i class='bx bx-save me-1'></i> Guardar Cambios</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalEliminar" tabindex="-1">
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content text-center p-4">
-            <h4 class="mb-2">¿Eliminar?</h4>
-            <p id="placa_eliminar" class="fw-bold"></p>
-            <form id="formEliminarVehiculo">
-                <input type="hidden" id="delete_id_vehiculo" name="id_vehiculo">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
-            </form>
+        <div class="modal-content border-top border-5 border-danger">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-danger"><i class='bx bx-trash' style='font-size: 4.5rem;'></i></div>
+                <h4 class="mb-2 fw-bold text-danger">¿Eliminar Vehículo?</h4>
+                <p class="text-muted mb-4">Placa: <strong id="placa_eliminar" class="text-dark fs-5"></strong></p>
+                <form id="formEliminarVehiculo">
+                    <input type="hidden" id="delete_id_vehiculo" name="id_vehiculo">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg">SÍ, ELIMINAR</button>
+                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

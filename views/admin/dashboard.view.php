@@ -1,555 +1,455 @@
 <?php require VIEW_PATH . '/layouts/header.view.php'; ?>
 
+<style>
+    /* ─── ANIMACIONES ─── */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
 
-<!-- Content wrapper -->
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    .dash-animate {
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    .dash-animate:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .dash-animate:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .dash-animate:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .dash-animate:nth-child(4) {
+        animation-delay: 0.2s;
+    }
+
+    /* ─── WELCOME BANNER ─── */
+    .welcome-banner {
+        background: linear-gradient(135deg, #1a237e 0%, #0d47a1 40%, #0288d1 100%);
+        border-radius: 16px;
+        padding: 28px 30px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 6px 24px rgba(13, 71, 161, 0.25);
+    }
+
+    .welcome-banner::before {
+        content: '\e9d0';
+        font-family: 'boxicons'!important;
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 8rem;
+        opacity: 0.08;
+        color: #fff;
+    }
+
+    .welcome-banner h4 {
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: #fff;
+    }
+
+    .welcome-banner p {
+        opacity: 0.85;
+        font-size: 0.9rem;
+    }
+
+
+
+    /* ─── KPI CARDS ─── */
+    .kpi-card {
+        border: none;
+        border-radius: 14px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .kpi-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    /* ─── ORDENES LIVE ─── */
+    .order-live {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .order-pill {
+        border-radius: 10px;
+        padding: 8px 14px;
+        text-align: center;
+        flex: 1;
+        min-width: 80px;
+    }
+
+    .order-pill .opv {
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+
+    .order-pill .opl {
+        font-size: 0.68rem;
+        font-weight: 600;
+    }
+
+    /* ─── TABLES ─── */
+    .dash-table th {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        color: #8592a3;
+        font-weight: 600;
+        border: 0;
+    }
+
+    .dash-table td {
+        vertical-align: middle;
+        border-color: #f4f4f4;
+        font-size: 0.85rem;
+    }
+</style>
+
 <div class="content-wrapper">
-    <!-- Content -->
     <div class="container-fluid flex-grow-1 container-p-y">
-        <div class="row">
-            <div class="col-xxl-8 mb-6 order-0">
-                <div class="card">
-                    <div class="d-flex align-items-start row">
-                        <div class="col-sm-7">
-                            <div class="card-body">
-                                <h5 class="card-title text-primary mb-3">BIENVENIDO <?= htmlspecialchars($_SESSION['user']['name']) ?>! 🤖</h5>
-                                <p class="mb-6">
-                                    Has realizado un 72 % más de ventas hoy.<br />Revisa tus estadísticas aquí.
-                                </p>
+        <?php
+        date_default_timezone_set('America/Lima');
+        $hora = date('H');
+        $saludo = $hora < 12 ? 'Buenos días' : ($hora < 18 ? 'Buenas tardes' : 'Buenas noches');
+        $nombre = $_SESSION['user']['name'] ?? '1';
+        $dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        $fecha = $dias[date('w')] . ' ' . date('d') . ' de ' . $meses[date('n') - 1] . ', ' . date('Y');
+        $oh = $dashData['ordenes_hoy'] ?? [];
+        ?>
 
-                                <p>⬇️⬇️⬇️⬇️⬇️⬇️</p>
-                            </div>
-                        </div>
-                        <div class="col-sm-5 text-center text-sm-left">
-                            <div class="card-body pb-0 px-0 px-md-6">
-                                <img
-                                    src="<?= BASE_URL ?>/TEMPLATE/assets/img/illustrations/man-with-laptop.png"
-                                    height="175"
-                                    alt="View Badge User" />
-                            </div>
-                        </div>
-                    </div>
+        <!-- ═══ WELCOME BANNER ═══ -->
+        <div class="welcome-banner mb-4 dash-animate">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h4 class="mb-2 fw-bolder"><?= $saludo ?>, <?= htmlspecialchars($nombre) ?> 👋</h4>
+                    <p class="mb-0"><i class="bx bx-calendar me-1"></i><?= ucfirst($fecha) ?></p>
                 </div>
-            </div>
-            <div class="col-xxl-4 col-lg-12 col-md-4 order-1">
-                <div class="row">
-                    <div class="col-lg-6 col-md-12 col-6 mb-6">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                                    <div class="avatar flex-shrink-0">
-                                        <img
-                                            src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/chart-success.png"
-                                            alt="chart success"
-                                            class="rounded" />
-                                    </div>
-                                    <div class="dropdown">
-                                        <button
-                                            class="btn p-0"
-                                            type="button"
-                                            id="cardOpt3"
-                                            data-bs-toggle="dropdown"
-                                            aria-haspopup="true"
-                                            aria-expanded="false">
-                                            <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
-                                        </button>
-                                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
-                                            <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                            <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mb-1">Ganacia</p>
-                                <h4 class="card-title mb-3">$12,628</h4>
-                                <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +72.80%</small>
-                            </div>
+                <div class="col-md-5">
+                    <div class="order-live mt-3 mt-md-0">
+                        <div class="order-pill bg-label-primary">
+                            <div class="opv"><?= $oh['en_cola'] ?? 0 ?></div>
+                            <div class="opl">En Cola</div>
                         </div>
-                    </div>
-                    <div class="col-lg-6 col-md-12 col-6 mb-6">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                                    <div class="avatar flex-shrink-0">
-                                        <img
-                                            src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/wallet-info.png"
-                                            alt="wallet info"
-                                            class="rounded" />
-                                    </div>
-                                    <div class="dropdown">
-                                        <button
-                                            class="btn p-0"
-                                            type="button"
-                                            id="cardOpt6"
-                                            data-bs-toggle="dropdown"
-                                            aria-haspopup="true"
-                                            aria-expanded="false">
-                                            <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
-                                        </button>
-                                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
-                                            <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                            <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mb-1">Ventas</p>
-                                <h4 class="card-title mb-3">$4,679</h4>
-                                <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +28.42%</small>
-                            </div>
+                        <div class="order-pill bg-label-warning">
+                            <div class="opv"><?= $oh['en_proceso'] ?? 0 ?></div>
+                            <div class="opl">Proceso</div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Total Revenue -->
-            <div class="col-12 col-xxl-8 order-2 order-md-3 order-xxl-2 mb-6 total-revenue">
-                <div class="card">
-                    <div class="row row-bordered g-0">
-                        <div class="col-lg-8">
-                            <div class="card-header d-flex align-items-center justify-content-between">
-                                <div class="card-title mb-0">
-                                    <h5 class="m-0 me-2">Ingresos Totales</h5>
-                                </div>
-                                <div class="dropdown">
-                                    <button
-                                        class="btn p-0"
-                                        type="button"
-                                        id="totalRevenue"
-                                        data-bs-toggle="dropdown"
-                                        aria-haspopup="true"
-                                        aria-expanded="false">
-                                        <i class="icon-base bx bx-dots-vertical-rounded icon-lg text-body-secondary"></i>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="totalRevenue">
-                                        <a class="dropdown-item" href="javascript:void(0);">Select All</a>
-                                        <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
-                                        <a class="dropdown-item" href="javascript:void(0);">Share</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="totalRevenueChart" class="px-3"></div>
+                        <div class="order-pill bg-label-success">
+                            <div class="opv"><?= $oh['por_cobrar'] ?? 0 ?></div>
+                            <div class="opl">Cobrar</div>
                         </div>
-                        <div class="col-lg-4">
-                            <div class="card-body px-xl-9 py-12 d-flex align-items-center flex-column">
-                                <div class="text-center mb-6">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-outline-primary">
-                                            <script>
-                                                document.write(new Date().getFullYear() - 1);
-                                            </script>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false">
-                                            <span class="visually-hidden">Toggle Dropdown</span>
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="javascript:void(0);">2021</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0);">2020</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0);">2019</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div id="growthChart"></div>
-                                <div class="text-center fw-medium my-6">62% de crecimiento de la empresa</div>
-
-                                <div class="d-flex gap-11 justify-content-between">
-                                    <div class="d-flex">
-                                        <div class="avatar me-2">
-                                            <span class="avatar-initial rounded-2 bg-label-primary"><i class="icon-base bx bx-dollar icon-lg text-primary"></i></span>
-                                        </div>
-                                        <div class="d-flex flex-column">
-                                            <small>
-                                                <script>
-                                                    document.write(new Date().getFullYear() - 1);
-                                                </script>
-                                            </small>
-                                            <h6 class="mb-0">$32.5k</h6>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex">
-                                        <div class="avatar me-2">
-                                            <span class="avatar-initial rounded-2 bg-label-info"><i class="icon-base bx bx-wallet icon-lg text-info"></i></span>
-                                        </div>
-                                        <div class="d-flex flex-column">
-                                            <small>
-                                                <script>
-                                                    document.write(new Date().getFullYear() - 2);
-                                                </script>
-                                            </small>
-                                            <h6 class="mb-0">$41.2k</h6>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!--/ Total Revenue -->
-            <div class="col-12 col-md-8 col-lg-12 col-xxl-4 order-3 order-md-2 profile-report">
-                <div class="row">
-                    <div class="col-6 mb-6 payments">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                                    <div class="avatar flex-shrink-0">
-                                        <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/paypal.png" alt="paypal" class="rounded" />
-                                    </div>
-                                    <div class="dropdown">
-                                        <button
-                                            class="btn p-0"
-                                            type="button"
-                                            id="cardOpt4"
-                                            data-bs-toggle="dropdown"
-                                            aria-haspopup="true"
-                                            aria-expanded="false">
-                                            <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
-                                        </button>
-                                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
-                                            <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                            <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mb-1">Pagos</p>
-                                <h4 class="card-title mb-3">$2,456</h4>
-                                <small class="text-danger fw-medium"><i class="icon-base bx bx-down-arrow-alt"></i> -14.82%</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 mb-6 transactions">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                                    <div class="avatar flex-shrink-0">
-                                        <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/cc-primary.png" alt="Credit Card" class="rounded" />
-                                    </div>
-                                    <div class="dropdown">
-                                        <button
-                                            class="btn p-0"
-                                            type="button"
-                                            id="cardOpt1"
-                                            data-bs-toggle="dropdown"
-                                            aria-haspopup="true"
-                                            aria-expanded="false">
-                                            <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
-                                        </button>
-                                        <div class="dropdown-menu" aria-labelledby="cardOpt1">
-                                            <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                            <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mb-1">Transacciones</p>
-                                <h4 class="card-title mb-3">$14,857</h4>
-                                <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +28.14%</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 mb-6 profile-report">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div
-                                    class="d-flex justify-content-between align-items-center flex-sm-row flex-column gap-10 flex-wrap">
-                                    <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
-                                        <div class="card-title mb-6">
-                                            <h5 class="text-nowrap mb-1">Perfil</h5>
-                                            <span class="badge bg-label-warning">Año 2022</span>
-                                        </div>
-                                        <div class="mt-sm-auto">
-                                            <span class="text-success text-nowrap fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> 68.2%</span>
-                                            <h4 class="mb-0">$84,686k</h4>
-                                        </div>
-                                    </div>
-                                    <div id="profileReportChart"></div>
-                                </div>
-                            </div>
+                        <div class="order-pill bg-label-info">
+                            <div class="opv"><?= $oh['finalizadas'] ?? 0 ?></div>
+                            <div class="opl">Listos</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <!-- Order Statistics -->
-            <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-6">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between">
-                        <div class="card-title mb-0">
-                            <h5 class="mb-1 me-2">Order Statistics</h5>
-                            <p class="card-subtitle">42.82k Total Sales</p>
-                        </div>
-                        <div class="dropdown">
-                            <button
-                                class="btn text-body-secondary p-0"
-                                type="button"
-                                id="orederStatistics"
-                                data-bs-toggle="dropdown"
-                                aria-haspopup="true"
-                                aria-expanded="false">
-                                <i class="icon-base bx bx-dots-vertical-rounded icon-lg"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="orederStatistics">
-                                <a class="dropdown-item" href="javascript:void(0);">Select All</a>
-                                <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
-                                <a class="dropdown-item" href="javascript:void(0);">Share</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-6">
-                            <div class="d-flex flex-column align-items-center gap-1">
-                                <h3 class="mb-1">8,258</h3>
-                                <small>Total Orders</small>
-                            </div>
-                            <div id="orderStatisticsChart"></div>
-                        </div>
-                        <ul class="p-0 m-0">
-                            <li class="d-flex align-items-center mb-5">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <span class="avatar-initial rounded bg-label-primary"><i class="icon-base bx bx-mobile-alt"></i></span>
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <h6 class="mb-0">Electronic</h6>
-                                        <small>Mobile, Earbuds, TV</small>
-                                    </div>
-                                    <div class="user-progress">
-                                        <h6 class="mb-0">82.5k</h6>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="d-flex align-items-center mb-5">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <span class="avatar-initial rounded bg-label-success"><i class="icon-base bx bx-closet"></i></span>
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <h6 class="mb-0">Fashion</h6>
-                                        <small>T-shirt, Jeans, Shoes</small>
-                                    </div>
-                                    <div class="user-progress">
-                                        <h6 class="mb-0">23.8k</h6>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="d-flex align-items-center mb-5">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <span class="avatar-initial rounded bg-label-info"><i class="icon-base bx bx-home-alt"></i></span>
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <h6 class="mb-0">Decor</h6>
-                                        <small>Fine Art, Dining</small>
-                                    </div>
-                                    <div class="user-progress">
-                                        <h6 class="mb-0">849k</h6>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="d-flex align-items-center">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <span class="avatar-initial rounded bg-label-secondary"><i class="icon-base bx bx-football"></i></span>
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <h6 class="mb-0">Sports</h6>
-                                        <small>Football, Cricket Kit</small>
-                                    </div>
-                                    <div class="user-progress">
-                                        <h6 class="mb-0">99</h6>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <!--/ Order Statistics -->
 
-            <!-- Expense Overview -->
-            <div class="col-md-6 col-lg-4 order-1 mb-6">
-                <div class="card h-100">
-                    <div class="card-header nav-align-top">
-                        <ul class="nav nav-pills flex-wrap row-gap-2" role="tablist">
-                            <li class="nav-item">
-                                <button
-                                    type="button"
-                                    class="nav-link active"
-                                    role="tab"
-                                    data-bs-toggle="tab"
-                                    data-bs-target="#navs-tabs-line-card-income"
-                                    aria-controls="navs-tabs-line-card-income"
-                                    aria-selected="true">
-                                    Income
-                                </button>
-                            </li>
-                            <li class="nav-item">
-                                <button type="button" class="nav-link" role="tab">Expenses</button>
-                            </li>
-                            <li class="nav-item">
-                                <button type="button" class="nav-link" role="tab">Profit</button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="card-body">
-                        <div class="tab-content p-0">
-                            <div class="tab-pane fade show active" id="navs-tabs-line-card-income" role="tabpanel">
-                                <div class="d-flex mb-6">
-                                    <div class="avatar flex-shrink-0 me-3">
-                                        <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/wallet.png" alt="User" />
-                                    </div>
-                                    <div>
-                                        <p class="mb-0">Total Balance</p>
-                                        <div class="d-flex align-items-center">
-                                            <h6 class="mb-0 me-1">$459.10</h6>
-                                            <small class="text-success fw-medium">
-                                                <i class="icon-base bx bx-chevron-up icon-lg"></i>
-                                                42.9%
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="incomeChart"></div>
-                                <div class="d-flex align-items-center justify-content-center mt-6 gap-3">
-                                    <div class="flex-shrink-0">
-                                        <div id="expensesOfWeek"></div>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0">Income this week</h6>
-                                        <small>$39k less than last week</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!--/ Expense Overview -->
 
-            <!-- Transactions -->
-            <div class="col-md-6 col-lg-4 order-2 mb-6">
-                <div class="card h-100">
-                    <div class="card-header d-flex align-items-center justify-content-between">
-                        <h5 class="card-title m-0 me-2">Transactions</h5>
-                        <div class="dropdown">
-                            <button
-                                class="btn text-body-secondary p-0"
-                                type="button"
-                                id="transactionID"
-                                data-bs-toggle="dropdown"
-                                aria-haspopup="true"
-                                aria-expanded="false">
-                                <i class="icon-base bx bx-dots-vertical-rounded icon-lg"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
-                                <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
-                                <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
-                                <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+
+        <!-- ═══ KPI CARDS ═══ -->
+        <div class="row mb-4">
+            <?php
+            $kpis = [
+                ['val' => 'S/ ' . number_format($oh['ingresos_hoy'] ?? 0, 2), 'lbl' => 'Ingresos Hoy', 'icon' => 'bx-dollar-circle', 'color' => 'success'],
+                ['val' => 'S/ ' . number_format($dashData['ingresos_mes'] ?? 0, 2), 'lbl' => 'Ingresos del Mes', 'icon' => 'bx-wallet', 'color' => 'primary'],
+                ['val' => $dashData['total_clientes'], 'lbl' => 'Clientes', 'icon' => 'bx-user', 'color' => 'info'],
+                ['val' => $dashData['total_puntos_clientes'], 'lbl' => 'Puntos Globales', 'icon' => 'bx-star', 'color' => 'warning'],
+                ['val' => $dashData['total_servicios'], 'lbl' => 'Servicios Activos', 'icon' => 'bx-badge-check', 'color' => 'success'],
+                ['val' => $dashData['total_productos'], 'lbl' => 'Productos Tienda', 'icon' => 'bx-package', 'color' => 'dark'],
+                ['val' => $dashData['total_promociones'], 'lbl' => 'Promos Activas', 'icon' => 'bx-gift', 'color' => 'danger', 'url' => '#'],
+                ['val' => $dashData['pagos_pendientes'], 'lbl' => 'Pagos Pendientes', 'icon' => 'bx-money', 'color' => 'success', 'url' => BASE_URL . '/admin/pago'],
+                ['val' => $dashData['permisos_pendientes'], 'lbl' => 'Permisos Pendientes', 'icon' => 'bx-calendar', 'color' => 'warning', 'url' => BASE_URL . '/admin/permiso'],
+                ['val' => $dashData['tokens_activos'], 'lbl' => 'Tokens de Seguridad', 'icon' => 'bx-key', 'color' => 'secondary', 'url' => '#'],
+            ];
+            foreach ($kpis as $i => $kpi): ?>
+                <div class="col-sm-6 col-md-4 col-xl-5th mb-3 dash-animate" style="flex: 1 0 20%;">
+                    <?php if(!empty($kpi['url']) && $kpi['url'] !== '#'): ?><a href="<?= $kpi['url'] ?>" style="text-decoration:none; color:inherit; display:block; height:100%;"><?php endif; ?>
+                    <div class="card kpi-card shadow-sm h-100" style="border:1px solid #f0f0f0; <?= (!empty($kpi['url']) && $kpi['url'] !== '#') ? 'cursor:pointer;' : '' ?>">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="kpi-icon bg-label-<?= $kpi['color'] ?> shadow-sm"><i class="bx <?= $kpi['icon'] ?> text-<?= $kpi['color'] ?>"></i></div>
+                                <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem"><?= $kpi['lbl'] ?></small>
+                                    <div class="kpi-value text-<?= $kpi['color'] ?>" style="font-size:1.4rem"><?= $kpi['val'] ?></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card-body pt-4">
-                        <ul class="p-0 m-0">
-                            <li class="d-flex align-items-center mb-6">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/paypal.png" alt="User" class="rounded" />
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <small class="d-block">Paypal</small>
-                                        <h6 class="fw-normal mb-0">Send money</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="fw-normal mb-0">+82.6</h6>
-                                        <span class="text-body-secondary">USD</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="d-flex align-items-center mb-6">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/wallet.png" alt="User" class="rounded" />
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <small class="d-block">Wallet</small>
-                                        <h6 class="fw-normal mb-0">Mac'D</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="fw-normal mb-0">+270.69</h6>
-                                        <span class="text-body-secondary">USD</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="d-flex align-items-center mb-6">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/chart.png" alt="User" class="rounded" />
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <small class="d-block">Transfer</small>
-                                        <h6 class="fw-normal mb-0">Refund</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="fw-normal mb-0">+637.91</h6>
-                                        <span class="text-body-secondary">USD</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="d-flex align-items-center mb-6">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/cc-primary.png" alt="User" class="rounded" />
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <small class="d-block">Credit Card</small>
-                                        <h6 class="fw-normal mb-0">Ordered Food</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="fw-normal mb-0">-838.71</h6>
-                                        <span class="text-body-secondary">USD</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="d-flex align-items-center mb-6">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/wallet.png" alt="User" class="rounded" />
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <small class="d-block">Wallet</small>
-                                        <h6 class="fw-normal mb-0">Starbucks</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="fw-normal mb-0">+203.33</h6>
-                                        <span class="text-body-secondary">USD</span>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="d-flex align-items-center">
-                                <div class="avatar flex-shrink-0 me-3">
-                                    <img src="<?= BASE_URL ?>/TEMPLATE/assets/img/icons/unicons/cc-warning.png" alt="User" class="rounded" />
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <small class="d-block">Mastercard</small>
-                                        <h6 class="fw-normal mb-0">Ordered Food</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="fw-normal mb-0">-92.45</h6>
-                                        <span class="text-body-secondary">USD</span>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
+                    <?php if(!empty($kpi['url']) && $kpi['url'] !== '#'): ?></a><?php endif; ?>
                 </div>
-            </div>
-            <!--/ Transactions -->
+            <?php endforeach; ?>
         </div>
+
+        <div class="row">
+            <!-- ═══ CHART: INGRESOS POR MES ═══ -->
+            <div class="col-lg-8 mb-4 dash-animate">
+                <div class="card shadow-sm" style="border:none;border-radius:14px">
+                    <div class="card-header border-0">
+                        <h6 class="mb-0 fw-bold"><i class="bx bx-dollar-circle text-success me-1"></i>Ingresos por Mes (6 meses)</h6>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div id="chartIngresosMes"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- ═══ CHART: VEHÍCULOS ═══ -->
+            <div class="col-lg-4 mb-4 dash-animate">
+                <div class="card shadow-sm h-100" style="border:none;border-radius:14px">
+                    <div class="card-header border-0">
+                        <h6 class="mb-0 fw-bold"><i class="bx bx-car text-info me-1"></i>Vehículos por Categoría</h6>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div id="chartVehiculos"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- ═══ ÚLTIMAS ÓRDENES ═══ -->
+            <div class="col-lg-7 mb-4 dash-animate">
+                <div class="card shadow-sm" style="border:none;border-radius:14px">
+                    <div class="card-header border-0 d-flex justify-content-between">
+                        <h6 class="mb-0 fw-bold"><i class="bx bx-receipt text-primary me-1"></i>Últimas Órdenes</h6>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="table-responsive">
+                            <table class="table dash-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Cliente</th>
+                                        <th>Placa</th>
+                                        <th>Estado</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!empty($dashData['ultimas_ordenes'])): ?>
+                                        <?php foreach ($dashData['ultimas_ordenes'] as $ord):
+                                            $est_colors = ['EN_COLA' => 'primary', 'EN_PROCESO' => 'warning', 'POR_COBRAR' => 'success', 'FINALIZADO' => 'secondary', 'ANULADO' => 'danger'];
+                                            $badge = $est_colors[$ord['estado']] ?? 'secondary';
+                                        ?>
+                                            <tr>
+                                                <td class="fw-bold">#<?= $ord['id_orden'] ?></td>
+                                                <td><i class="bx bxs-user-circle text-muted me-1"></i><?= htmlspecialchars($ord['cliente'] ?? '—') ?></td>
+                                                <td><span class="badge bg-label-info"><?= $ord['placa'] ?? '—' ?></span></td>
+                                                <td><span class="badge bg-label-<?= $badge ?>"><?= str_replace('_', ' ', $ord['estado']) ?></span></td>
+                                                <td class="text-end fw-bold">S/ <?= number_format($ord['total_final'] ?? 0, 2) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4"><i class="bx bx-receipt" style="font-size:2rem"></i><br>Sin órdenes aún</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ RESUMEN RÁPIDO ─── -->
+            <div class="col-lg-5 mb-4 dash-animate">
+                <div class="card shadow-sm h-100" style="border:none;border-radius:14px">
+                    <div class="card-header border-0">
+                        <h6 class="mb-0 fw-bold"><i class="bx bx-info-circle text-primary me-1"></i>Indicadores Clave</h6>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted"><i class="bx bx-phone text-success me-1"></i>WhatsApp Activos</span>
+                            <span class="fw-bold"><?= $dashData['clientes_whatsapp'] ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted"><i class="bx bx-calendar-star text-warning me-1"></i>Total Temporadas</span>
+                            <span class="fw-bold"><?= $dashData['total_temporadas'] ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted"><i class="bx bx-sun text-danger me-1"></i>Temporada Activa</span>
+                            <span class="fw-bold text-primary"><?= $dashData['temporada_activa']['nombre'] ?? 'Ninguna' ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted"><i class="bx bx-key text-warning me-1"></i>Tokens Activos</span>
+                            <span class="fw-bold text-warning"><?= $dashData['tokens_activos'] ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted"><i class="bx bx-receipt text-info me-1"></i>Órdenes Hoy</span>
+                            <span class="fw-bold"><?= $oh['total_hoy'] ?? 0 ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted"><i class="bx bxs-tag-x text-danger me-1"></i>Desc. x Promociones</span>
+                            <span class="fw-bold text-danger">- S/ <?= number_format($oh['descuentospromo_hoy'] ?? 0, 2) ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2">
+                            <span class="text-muted"><i class="bx bxs-gift text-warning me-1"></i>Canjes Reclamados</span>
+                            <span class="fw-bold text-warning">- S/ <?= number_format($oh['descuentospuntos_hoy'] ?? 0, 2) ?></span>
+                        </div>
+
+                        <hr>
+                        <h6 class="fw-bold mb-3 small text-uppercase"><i class="bx bx-badge-check text-success me-1"></i>Servicios</h6>
+                        <?php foreach ($dashData['servicios_populares'] as $serv): ?>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div>
+                                    <span class="badge bg-<?= $serv['estado'] ? 'success' : 'secondary' ?> me-1" style="width:8px;height:8px;border-radius:50%;padding:0;display:inline-block"></span>
+                                    <span class="small fw-semibold"><?= htmlspecialchars($serv['nombre']) ?></span>
+                                </div>
+                                <span class="small fw-bold text-primary">S/ <?= number_format($serv['precio_base'], 2) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ RECENT CLIENTS ═══ -->
+        <div class="row dash-animate">
+            <div class="col-12 mb-4">
+                <div class="card shadow-sm" style="border:none;border-radius:14px">
+                    <div class="card-header border-0">
+                        <h6 class="mb-0 fw-bold"><i class="bx bx-user-plus text-success me-1"></i>Últimos Clientes Registrados</h6>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="table-responsive">
+                            <table class="table dash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Teléfono</th>
+                                        <th>Puntos</th>
+                                        <th>Registrado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($dashData['ultimos_clientes'] as $cli): ?>
+                                        <tr>
+                                            <td class="fw-semibold"><i class="bx bxs-user text-primary me-1"></i><?= htmlspecialchars($cli['nombres'] . ' ' . $cli['apellidos']) ?></td>
+                                            <td><?= $cli['telefono'] ?: '—' ?></td>
+                                            <td><span class="badge bg-label-primary"><?= $cli['puntos_acumulados'] ?> pts</span></td>
+                                            <td class="text-muted small"><?= date('d/m/Y', strtotime($cli['fecha_registro'])) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <!-- / Content -->
+    <div class="content-backdrop fade"></div>
 </div>
 
-<!-- footer -->
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof ApexCharts === 'undefined') return;
+
+        // Chart: Ingresos por Mes
+        const ingresosMeses = <?= json_encode(array_column($dashData['ingresos_por_mes'], 'mes')) ?>;
+        const ingresosData = <?= json_encode(array_column($dashData['ingresos_por_mes'], 'total')) ?>;
+
+        new ApexCharts(document.querySelector('#chartIngresosMes'), {
+            series: [{
+                name: 'Ingresos',
+                data: ingresosData
+            }],
+            chart: {
+                type: 'area',
+                height: 280,
+                toolbar: { show: false },
+                fontFamily: 'Public Sans'
+            },
+            colors: ['#71dd37'],
+            fill: {
+                type: 'gradient',
+                gradient: { opacityFrom: 0.35, opacityTo: 0.05 }
+            },
+            stroke: { curve: 'smooth', width: 3 },
+            xaxis: { categories: ingresosMeses },
+            yaxis: {
+                labels: { formatter: (value) => 'S/ ' + value.toFixed(0) }
+            },
+            tooltip: {
+                y: { formatter: (value) => 'S/ ' + value.toFixed(2) }
+            },
+            dataLabels: { enabled: false },
+            grid: { borderColor: '#f0f0f0' }
+        }).render();
+
+        // Chart: Vehículos por Categoría
+        const vehLabels = <?= json_encode(array_column($dashData['vehiculos_por_categoria'], 'nombre')) ?>;
+        const vehData = <?= json_encode(array_map('intval', array_column($dashData['vehiculos_por_categoria'], 'cantidad'))) ?>;
+
+        new ApexCharts(document.querySelector('#chartVehiculos'), {
+            series: vehData,
+            chart: {
+                type: 'donut',
+                height: 260,
+                fontFamily: 'Public Sans'
+            },
+            labels: vehLabels,
+            colors: ['#696cff', '#03c3ec', '#71dd37', '#ffab00', '#ff3e1d'],
+            legend: {
+                position: 'bottom',
+                fontSize: '12px'
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '55%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                formatter: () => '<?= $dashData['total_vehiculos'] ?>'
+                            }
+                        }
+                    }
+                }
+            }
+        }).render();
+    });
+</script>

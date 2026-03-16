@@ -1,20 +1,20 @@
 <?php
-// Ubicación: app/core/autoload.php
+// app/core/autoload.php — Autoloader con rutas absolutas
 
 spl_autoload_register(function ($class) {
-    // Lista de carpetas donde PHP buscará tus clases (Modelos, Controladores, etc.)
+    // Rutas donde buscar clases (usando __DIR__ para compatibilidad Linux)
+    $basePath = dirname(__DIR__, 2); // Sube a la raíz del proyecto
+
     $paths = [
-        BASE_PATH . '/app/controllers/',
-        BASE_PATH . '/app/models/',
-        BASE_PATH . '/app/core/',
-        BASE_PATH . '/controllers/', // Por si tienes carpetas en la raíz
-        BASE_PATH . '/models/',
-        BASE_PATH . '/core/',
+        $basePath . '/app/controllers/',
+        $basePath . '/app/models/',
+        $basePath . '/app/core/',
     ];
 
     foreach ($paths as $path) {
-        if (file_exists($path . $class . '.php')) {
-            require_once $path . $class . '.php';
+        $file = $path . $class . '.php';
+        if (file_exists($file)) {
+            require_once $file;
             return;
         }
     }

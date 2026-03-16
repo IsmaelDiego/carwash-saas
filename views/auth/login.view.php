@@ -26,7 +26,7 @@
                     <div class="card-body">
                         <div class="app-brand justify-content-center">
                             <a href="<?= BASE_URL ?>" class="app-brand-link gap-2">
-                                <span class="app-brand-text demo text-heading fw-bold">CARWASH XP</span>
+                                <span class="app-brand-text demo text-heading fw-bold">CARWASH-SYS</span>
                             </a>
                         </div>
                         <h4 class="mb-1">Bienvenido! 👋</h4>

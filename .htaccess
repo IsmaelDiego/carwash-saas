@@ -1,16 +1,41 @@
 RewriteEngine On
 
-# Bloquear acceso directo a archivos PHP
-RewriteCond %{THE_REQUEST} \.php
-RewriteRule ^ - [F]
+# ══════════════════════════════════════════════
+# OPTIMIZADO PARA INFINITYFREE / SHARED HOSTING
+# ══════════════════════════════════════════════
 
-# Permitir archivos reales (css, js, imágenes)
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^ - [L]
+# 1. Archivos estáticos que NO EXISTEN → error 410 directo (sin tocar PHP)
+# Esto evita que imágenes rotas, fuentes faltantes, etc. consuman Entry Processes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif|ico|svg|webp|woff|woff2|ttf|eot|map)$ [NC]
+RewriteRule ^ - [G,L]
 
-# Permitir carpetas reales
+# 2. Si el archivo o directorio EXISTE → servirlo directamente (no PHP)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Enviar todo a index.php
-RewriteRule ^ index.php [QSA,L]
+# 3. Todo lo demás → index.php (Front Controller)
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# ══════════════════════════════════════════════
+# HEADERS DE CACHÉ PARA ASSETS ESTÁTICOS
+# Reduce peticiones repetidas al servidor
+# ══════════════════════════════════════════════
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 month"
+    ExpiresByType font/woff2 "access plus 1 month"
+    ExpiresByType font/woff "access plus 1 month"
+</IfModule>
+
+# Compresión GZIP (si el módulo está disponible)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>

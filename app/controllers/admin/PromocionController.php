@@ -63,6 +63,7 @@ class PromocionController {
         $activas = array_filter($recientes, function($p) { return $p['estado'] == 1; });
         
         echo json_encode([
+            'todas'     => $model->getAll(),
             'recientes' => array_values($recientes),
             'activas'   => array_values($activas)
         ]);

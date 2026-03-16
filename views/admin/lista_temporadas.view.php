@@ -7,76 +7,42 @@
     .card-active {
         background: #ffffff;
         border: 0;
+        border-radius: 1rem;
         border-left: 6px solid #696cff;
-        /* Acento de marca */
-        box-shadow: 0 0.375rem 1rem 0 rgba(50, 60, 90, 0.08);
-        transition: transform 0.2s;
+        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
     }
 
-    .card-active:hover {
-        transform: translateY(-2px);
-    }
+    .card-active:hover { transform: translateY(-3px); box-shadow: 0 0.8rem 2rem rgba(105, 108, 255, 0.15); }
 
-    /* Encabezado sutil dentro de la card */
     .card-header-active {
-        background: linear-gradient(90deg, rgba(200, 220, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+        background: linear-gradient(90deg, rgba(105, 108, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
         padding: 1.5rem;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f2f4;
     }
 
-    /* Stats limpias */
-    .stat-value {
-        font-size: 2rem;
+    .stat-value { font-size: 2.2rem; font-weight: 800; color: #32475c; line-height: 1; }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #a1acb8; font-weight: 700; }
+
+    .trend-badge {
+        font-size: 0.7rem;
         font-weight: 700;
-        color: #566a7f;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
     }
 
-    .stat-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #a1acb8;
-        font-weight: 600;
-    }
-
-    /* Indicadores de tendencia (Flechas) adaptados a fondo blanco */
-    .trend-up {
-        color: #28c76f;
-        background-color: rgba(40, 199, 111, 0.1);
-        padding: 2px 6px;
-        border-radius: 4px;
-    }
-
-    .trend-down {
-        color: #ff3e1d;
-        background-color: rgba(255, 62, 29, 0.1);
-        padding: 2px 6px;
-        border-radius: 4px;
-    }
-
-    /* Card Anterior (Grisáceo para diferenciar) */
     .card-prev {
-        background: #fdfdfd;
-        border: 1px solid #eaeaec;
+        background: #fcfcfd;
+        border: 1px dashed #d9dee3;
+        border-radius: 1rem;
     }
 
-    /* DataTables */
-    .dataTables_filter,
-    .dataTables_length {
-        display: none !important;
-    }
+    /* Tabla Estilo Premium */
+   
+    #tablaTemporadas tbody td { padding: 1rem; vertical-align: middle; }
 
-    .dataTables_paginate {
-        display: flex !important;
-        justify-content: flex-start !important;
-        margin-top: 1rem !important;
-    }
-
-    .dataTables_info {
-        text-align: right !important;
-        margin-top: 1rem !important;
-        color: #b0b0b0 !important;
-    }
+    .dataTables_paginate .pagination .page-link { border-radius: 8px; margin: 0 2px; border: none; background: #f0f2f4; color: #566a7f; }
+    .dataTables_paginate .pagination .active .page-link { background: #696cff; color: #fff; }
 </style>
 
 <div class="content-wrapper">
@@ -116,11 +82,14 @@
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-label-secondary" type="button" data-bs-toggle="dropdown"><i class="bx bx-cog me-1"></i> Opciones</button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item btn-editar-card" href="javascript:void(0);"
-                                            data-id="<?= $tActual['id_temporada'] ?>"
+                                   
+                                    <li><a class="dropdown-item btn-ver-dash" href="javascript:void(0);"
                                             data-nom="<?= $tActual['nombre'] ?>"
-                                            data-ini="<?= $tActual['fecha_inicio'] ?>">
-                                            <i class="bx bx-edit me-2"></i> Editar Datos</a></li>
+                                            data-ini="<?= $tActual['fecha_inicio'] ?>"
+                                            data-gen="<?= $sAct['gen'] ?>"
+                                            data-red="<?= $sAct['red'] ?>"
+                                            data-est="1">
+                                            <i class="bx bx-show me-2"></i> Ver Detalle</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -131,8 +100,8 @@
                                     <div class="d-flex flex-column h-100 ps-2">
                                         <span class="stat-label mb-2">Puntos Emitidos</span>
                                         <div class="d-flex align-items-center gap-3">
-                                            <span class="stat-value"><?= number_format($sAct['gen'], 0) ?></span>
-                                            <span class="small fw-bold <?= $varGen >= 0 ? 'trend-up' : 'trend-down' ?>">
+                                            <span class="stat-value text-dark"><?= number_format($sAct['gen'], 0) ?></span>
+                                            <span class="trend-badge <?= $varGen >= 0 ? 'bg-label-success text-success' : 'bg-label-danger text-danger' ?>">
                                                 <i class='bx <?= $varGen >= 0 ? 'bx-up-arrow-alt' : 'bx-down-arrow-alt' ?>'></i> <?= abs($varGen) ?>%
                                             </span>
                                         </div>
@@ -145,7 +114,7 @@
                                         <span class="stat-label mb-2">Canjes Realizados (Puntos)</span>
                                         <div class="d-flex align-items-center gap-3">
                                             <span class="stat-value text-dark"><?= number_format($sAct['red'], 0) ?></span>
-                                            <span class="small fw-bold <?= $varRed >= 0 ? 'trend-up' : 'trend-down' ?>">
+                                            <span class="trend-badge <?= $varRed >= 0 ? 'bg-label-success text-success' : 'bg-label-danger text-danger' ?>">
                                                 <i class='bx <?= $varRed >= 0 ? 'bx-up-arrow-alt' : 'bx-down-arrow-alt' ?>'></i> <?= abs($varRed) ?>%
                                             </span>
                                         </div>
@@ -223,28 +192,30 @@
             </div>
         </div>
 
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
-                <h5 class="mb-0 fw-bold text-primary"><i class="bx bx-list-ul me-1"></i> Historial Completo</h5>
+                <h5 class="mb-0 fw-bold text-primary"><i class="bx bx-list-ul me-1"></i> Historial de Periodos</h5>
                 <div class="d-flex gap-2">
-                    <div class="input-group input-group-sm" style="width: 250px;">
-                        <span class="input-group-text bg-light"><i class="bx bx-search"></i></span>
-                        <input type="text" id="buscadorGlobal" class="form-control bg-light" placeholder="Buscar registros...">
+                    <div class="input-group input-group-sm bg-white border rounded-pill px-2" style="width: 250px;">
+                        <span class="input-group-text border-0 bg-transparent text-muted"><i class="bx bx-search"></i></span>
+                        <input type="text" id="buscadorGlobal" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar temporada...">
                     </div>
-                    <button class="btn btn-sm btn-outline-success" id="btnExportar"><i class="bx bxs-file-export"></i></button>
+                    <button class="btn btn-sm btn-outline-success rounded-circle" id="btnExportar" title="Exportar Excel">
+                        <i class="bx bxs-file-export"></i>
+                    </button>
                 </div>
             </div>
             <div class="table-responsive text-nowrap px-3">
                 <table class="table table-hover w-100 my-3" id="tablaTemporadas">
-                    <thead class="bg-light">
+                    <thead class="bg-primary">
                         <tr>
-                            <th class="d-none">ID</th>
-                            <th>Temporada</th>
-                            <th>Periodo</th>
-                            <th>Puntos Gen.</th>
-                            <th>Canjes</th>
-                            <th class="text-center">Estado</th>
-                            <th class="text-center">Acciones</th>
+                            <th class="d-none" style="color: #f0f0f0;">ID</th>
+                            <th style="color: #f0f0f0;">Temporada</th>
+                            <th style="color: #f0f0f0;">Periodo de Vigencia</th>
+                            <th style="color: #f0f0f0;">Puntos Gen.</th>
+                            <th style="color: #f0f0f0;">Canjes</th>
+                            <th class="text-center" style="color: #f0f0f0;">Estado</th>
+                            <th class="text-center" style="color: #f0f0f0;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody></tbody>

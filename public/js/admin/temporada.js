@@ -6,37 +6,78 @@ const TemporadaModule = {
         this.initEventosUI();
         this.initFormularios();
         this.initVisualFixes();
+        this.initControlFechas(); 
+    },
+
+    initControlFechas: function() {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Registro
+        const inputInicio = $('input[name="fecha_inicio"]');
+        inputInicio.val(today).attr('min', today);
+        
+        // Edición
+        $('#edit_inicio').attr('min', today);
     },
 
     initDataTable: function() {
         if (!$('#tablaTemporadas').length) return;
 
         this.tabla = $('#tablaTemporadas').DataTable({
-            "destroy": true, "processing": true, "responsive": true, "autoWidth": false, "ordering": true,
+            "destroy": true, 
+            "processing": true, 
+            "responsive": true, 
+            "autoWidth": false, 
+            "ordering": true,
             "ajax": { "url": `${BASE_URL}/admin/temporada/getall`, "type": "GET" },
             "dom": 't<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
             "pageLength": 10,
-            "language": { "zeroRecords": "No hay historial", "paginate": { "next": ">", "previous": "<" } },
+            "language": { 
+                "zeroRecords": `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay historial de temporadas</h5></div>`, 
+                "paginate": { "next": "Sig.", "previous": "Ant." } 
+            },
             "columns": [
                 { "data": "id_temporada", "visible": false },
-                { "data": "nombre", "render": function(data) { return `<span class="fw-bold text-dark">${data}</span>`; } },
+                { "data": "nombre", "render": function(data) { return `<span class="fw-bold text-dark text-uppercase animate__animated animate__fadeIn">${data}</span>`; } },
                 { "data": null, "render": function(data, type, row) {
-                        let ini = new Date(row.fecha_inicio).toLocaleDateString();
-                        let fin = row.fecha_fin ? new Date(row.fecha_fin).toLocaleDateString() : '<span class="text-success fw-bold">Vigente</span>';
-                        return `<span class="small text-muted">${ini} — ${fin}</span>`;
+                        const ini = new Date(row.fecha_inicio.replace(/-/g, '/')).toLocaleDateString();
+                        const fin = row.fecha_fin ? new Date(row.fecha_fin.replace(/-/g, '/')).toLocaleDateString() : '<span class="badge bg-label-success">EN CURSO</span>';
+                        return `<div class="d-flex align-items-center animate__animated animate__fadeIn"><i class="bx bx-calendar-event me-2 text-primary"></i><span class="small text-muted">${ini} — ${fin}</span></div>`;
                     }
                 },
-                { "data": "puntos_generados", "render": function(data) { return `<span class="fw-bold text-primary">${parseFloat(data).toFixed(0)}</span>`; } },
-                { "data": "puntos_redimidos", "render": function(data) { return `<span class="fw-bold text-danger">${parseFloat(data).toFixed(0)}</span>`; } },
+                { "data": "puntos_gen", "render": function(data) { return `<span class="fw-bold text-primary animate__animated animate__fadeIn">${parseFloat(data).toLocaleString()}</span>`; } },
+                { "data": "puntos_red", "render": function(data) { return `<span class="fw-bold text-danger animate__animated animate__fadeIn">${parseFloat(data).toLocaleString()}</span>`; } },
                 { "data": "estado", "className": "text-center", "render": function(data) {
-                        return data == 1 ? '<span class="badge bg-label-success">ACTIVA</span>' : '<span class="badge bg-label-secondary">CERRADA</span>';
+                        return data == 1 ? '<span class="badge bg-label-success border-0 px-3 animate__animated animate__fadeIn">ACTIVA</span>' : '<span class="badge bg-label-secondary border-0 px-3 animate__animated animate__fadeIn">CERRADA</span>';
                     }
                 },
-                { "data": null, "className": "text-center", "render": function() {
-                        return `<button class="btn btn-sm btn-icon btn-ver text-info"><i class="bx bx-show fs-4"></i></button>`;
+                { "data": null, "className": "text-center", "render": function(data) {
+                        return `<div class="d-flex justify-content-center gap-1">
+                                    <button class="btn btn-sm btn-icon btn-ver text-info" title="Ver Detalles">
+                                        <i class="bx bx-show fs-4"></i>
+                                    </button>
+                                </div>`;
                     }
                 }
-            ]
+            ],
+            "buttons": [{
+                extend: 'excelHtml5',
+                className: 'd-none',
+                filename: 'Reporte_Temporadas',
+                title: '',
+                exportOptions: { columns: [1, 2, 3, 4, 5], orthogonal: 'export' },
+                customize: function(xlsx) {
+                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    var styles = xlsx.xl['styles.xml'];
+                    var fillIndex = $('fills fill', styles).length;
+                    $('fills', styles).append('<fill><patternFill patternType="solid"><fgColor rgb="FF00BFFF" /><bgColor indexed="64" /></patternFill></fill>');
+                    var fontIndex = $('fonts font', styles).length;
+                    $('fonts', styles).append('<font><b /><color rgb="FFFFFFFF" /><sz val="11" /><name val="Calibri" /></font>');
+                    var styleIndex = $('cellXfs xf', styles).length;
+                    $('cellXfs', styles).append('<xf numFmtId="0" fontId="' + fontIndex + '" fillId="' + fillIndex + '" applyFont="1" applyFill="1" />');
+                    $('row:first c', sheet).attr('s', styleIndex);
+                }
+            }]
         });
     },
 
@@ -47,10 +88,22 @@ const TemporadaModule = {
 
         // A. BOTONES DEL CARD SUPERIOR (EDITAR)
         $('.btn-editar-card').on('click', function() {
-            $('#edit_id_temporada').val($(this).data('id'));
-            $('#edit_nombre').val($(this).data('nom'));
-            $('#edit_inicio').val($(this).data('ini'));
-            $('#edit_fin').val($(this).data('fin'));
+            const id = $(this).data('id');
+            const nom = $(this).data('nom');
+            const ini = $(this).data('ini');
+            
+            $('#edit_id_temporada').val(id);
+            $('#edit_nombre').val(nom);
+            $('#edit_inicio').val(ini);
+
+            // Lógica de Bloqueo de Fechas
+            const today = new Date().toISOString().split('T')[0];
+            if(ini <= today) {
+                $('#edit_inicio').attr('readonly', true).css('background-color', '#f8f9fa');
+            } else {
+                $('#edit_inicio').attr('readonly', false).attr('min', today).css('background-color', '');
+            }
+
             new bootstrap.Modal(document.getElementById('modalEditar')).show();
         });
 
@@ -68,25 +121,66 @@ const TemporadaModule = {
             new bootstrap.Modal(document.getElementById('modalCerrar')).show();
         });
 
-        // C. VER DETALLE (TABLA INFERIOR)
+        // C. VER DETALLE (TABLA INFERIOR Y BOTÓN OJO)
         $('#tablaTemporadas tbody').on('click', '.btn-ver', function() {
             let tr = $(this).closest('tr'); if(tr.hasClass('child')) tr = tr.prev();
             let data = self.tabla.row(tr).data();
+            abrirDetalleGeneral(data);
+        });
+
+        // Evento para el botón de detalles en la card (si existiera o para uniformidad)
+        $(document).on('click', '.btn-ver-dash', function() {
+            const data = {
+                nombre: $(this).data('nom'),
+                fecha_inicio: $(this).data('ini'),
+                fecha_fin: null, // Indicará periodo en curso
+                puntos_gen: $(this).data('gen'),
+                puntos_red: $(this).data('red'),
+                estado: $(this).data('est')
+            };
+            abrirDetalleGeneral(data);
+        });
+
+        const abrirDetalleGeneral = (data) => {
+            const ini = new Date(data.fecha_inicio.replace(/-/g, '/')).toLocaleDateString();
+            const fin = data.fecha_fin ? new Date(data.fecha_fin.replace(/-/g, '/')).toLocaleDateString() : '<span class="badge bg-label-success">PERIODO EN CURSO</span>';
             
             let html = `
-                <div class="text-center mb-4">
-                    <h4 class="fw-bold text-primary">${data.nombre}</h4>
-                    <span class="badge bg-label-${data.estado==1?'success':'secondary'}">${data.estado==1?'ACTIVA':'CERRADA'}</span>
+                <div class="text-center mb-4 p-3 bg-label-primary rounded-3">
+                    <h4 class="fw-bold text-primary mb-1 text-uppercase">${data.nombre}</h4>
+                    <span class="badge bg-${data.estado==1?'success':'secondary'} shadow-sm px-3">${data.estado==1?'ACTIVA':'CERRADA'}</span>
                 </div>
-                <div class="row g-3">
-                    <div class="col-6"><div class="p-3 border rounded bg-light text-center"><small>Puntos Generados</small><h4 class="mb-0 text-primary">${data.puntos_generados}</h4></div></div>
-                    <div class="col-6"><div class="p-3 border rounded bg-light text-center"><small>Canjes Realizados</small><h4 class="mb-0 text-danger">${data.puntos_redimidos}</h4></div></div>
-                    <div class="col-6"><div class="p-2 border-bottom"><small>Inicio:</small> <span class="fw-bold">${data.fecha_inicio}</span></div></div>
-                    <div class="col-6"><div class="p-2 border-bottom"><small>Fin:</small> <span class="fw-bold">${data.fecha_fin||'-'}</span></div></div>
+                <div class="row g-4 mb-4">
+                    <div class="col-6">
+                        <div class="card shadow-none border bg-light h-100">
+                            <div class="card-body text-center p-3">
+                                <small class="text-muted d-block mb-1 text-uppercase fw-bold" style="font-size: 0.65rem;">Puntos Generados</small>
+                                <h3 class="mb-0 text-primary fw-bold">${parseFloat(data.puntos_gen).toLocaleString()}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card shadow-none border bg-light h-100">
+                            <div class="card-body text-center p-3">
+                                <small class="text-muted d-block mb-1 text-uppercase fw-bold" style="font-size: 0.65rem;">Canjes Realizados</small>
+                                <h3 class="mb-0 text-danger fw-bold">${parseFloat(data.puntos_red).toLocaleString()}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-group list-group-flush border-top border-bottom">
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted small"><i class="bx bx-calendar me-2"></i>Fecha de Apertura</span>
+                        <span class="fw-bold text-dark">${ini}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted small"><i class="bx bx-calendar-check me-2"></i>Fecha de Cierre</span>
+                        <span class="fw-bold text-dark">${fin}</span>
+                    </div>
                 </div>`;
             $('#contenidoDetalle').html(html);
             new bootstrap.Modal(document.getElementById('modalDetalle')).show();
-        });
+        };
     },
 
     initFormularios: function() {
@@ -155,7 +249,13 @@ const TemporadaModule = {
         });
     },
 
-    initVisualFixes: function() { $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow','auto'); },
+    initVisualFixes: function() { 
+        $('.modal-backdrop, .offcanvas-backdrop').remove(); 
+        $('body').removeClass('modal-open offcanvas-open').css({
+            'overflow': '',
+            'padding-right': ''
+        }); 
+    },
 
     mostrarToast: function(msg, tipo) {
         let toastEl = document.getElementById('toastSistema');

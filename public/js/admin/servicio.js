@@ -6,23 +6,31 @@ const ServicioModule = {
         this.initEventosUI();
         this.initFormularios();
         this.initVisualFixes();
+        // Stats: computar después de cada carga AJAX
+        const self = this;
+        $('#tablaServicios').on('xhr.dt', function() {
+            setTimeout(() => self.computeStats(), 100);
+        });
     },
 
     initDataTable: function() {
         if (!$('#tablaServicios').length) return;
 
         this.tabla = $('#tablaServicios').DataTable({
-            "destroy": true, "processing": true, "responsive": true, "autoWidth": false, "ordering": true,
+            "destroy": true,
+            "processing": true,
+            "responsive": true,
+            "autoWidth": false,
+            "ordering": true,
             "ajax": { "url": `${BASE_URL}/admin/servicio/getall`, "type": "GET" },
             
-            // DOM LIMPIO: Solo Tabla (t), Paginación (p) e Información (i). Sin "Mostrar 10 registros" (l).
-            "dom": 't<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
-            
-            "pageLength": 10, // Defecto 10, ya no se puede cambiar por interfaz
+            // DOM: Paginación Izquierda, Info Derecha
+            "dom": '<"row mx-2"<"col-md-12 my-2"l>>t<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
             
             "language": {
+                "lengthMenu": " _MENU_ ",
                 "info": "Mostrando _START_ a _END_ de _TOTAL_",
-                "zeroRecords": `<div class="text-center p-5"><h5 class="fw-bold text-primary">No se encontraron resultados</h5></div>`,
+                "zeroRecords": `<div class="text-center p-5"><h5 class="fw-bold text-primary">No hay vehículos registrados</h5></div>`,
                 "paginate": { "next": "Sig.", "previous": "Ant." }
             },
             "columns": [
@@ -189,6 +197,21 @@ const ServicioModule = {
     },
 
     initVisualFixes: function() { $('.modal-backdrop, .offcanvas-backdrop').remove(); $('body').removeClass('modal-open offcanvas-open').css('overflow','').css('padding-right',''); },
+
+    computeStats: function() {
+        if (!this.tabla) return;
+        const data = this.tabla.rows().data().toArray();
+        const total = data.length;
+        const activos = data.filter(r => r.estado == 1).length;
+        const puntos = data.filter(r => r.acumula_puntos == 1).length;
+        const canje = data.filter(r => r.permite_canje == 1).length;
+
+        const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+        el('stat_srv_total', total);
+        el('stat_srv_activos', activos);
+        el('stat_srv_puntos', puntos);
+        el('stat_srv_canje', canje);
+    },
 
     mostrarToast: function(msg, tipo) {
         let toastEl = document.getElementById('toastSistema');

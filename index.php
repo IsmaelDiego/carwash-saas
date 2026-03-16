@@ -1,33 +1,32 @@
-
 <?php
-// Ubicación: index.php (En la raíz de tu proyecto)
+// index.php — Punto de entrada principal (optimizado para producción)
 
 // 1. DEFINIR RAÍZ DEL PROYECTO
 define('BASE_PATH', __DIR__);
 
-// 2. CONFIGURACIONES BASE
+// 2. CONFIGURACIONES BASE (incluye ENV, error handler, rutas)
 require_once BASE_PATH . '/config/config.php';
+
+// 3. CONEXIÓN DB (Singleton — se carga 1 sola vez)
 require_once BASE_PATH . '/config/database.php';
 
-// 3. CARGA AUTOMÁTICA DE CLASES (Aquí llamas al archivo que acabamos de crear)
+// 4. AUTOLOADER
 require_once BASE_PATH . '/app/core/autoload.php';
 
-// 4. CARGA DE HELPERS (Funciones globales)
-// Nota: Los helpers no se cargan con el autoloader porque son funciones, no Clases.
-if (file_exists(BASE_PATH . '/helpers/auth_helper.php')) {
-    require_once BASE_PATH . '/helpers/auth_helper.php';
-} else {
-    require_once BASE_PATH . '/app/helpers/auth_helper.php';
-}
+// 5. HELPERS
+require_once BASE_PATH . '/app/helpers/auth_helper.php';
 
-// 5. SEGURIDAD Y SESIONES (Tu código de seguridad estaba excelente)
+// 6. SESIONES SEGURAS
 if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_httponly', 1); // Evita robo de sesión por JS
-    ini_set('session.use_strict_mode', 1); // Evita fijación de sesión
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_strict_mode', 1);
+    if (APP_ENV === 'production') {
+        ini_set('session.cookie_secure', 1);
+        ini_set('session.cookie_samesite', 'Strict');
+    }
     session_start();
 }
 
-// 6. ARRANCAR EL SISTEMA (Router)
-// Gracias al autoloader, ya no necesitas hacer require del Router.php
+// 7. ARRANCAR ROUTER
 $router = new Router();
 $router->run();

@@ -9,16 +9,7 @@
   
   <div class="offcanvas-body">
     
-    <div class="mb-4">
-        <label for="buscadorGlobal" class="form-label fw-bold text-dark">Buscador General</label>
-        <div class="input-group input-group-lg">
-            <span class="input-group-text bg-light"><i class="bx bx-search"></i></span>
-            <input type="text" id="buscadorGlobal" class="form-control bg-light" placeholder="Nombre, DNI..." autofocus>
-        </div>
-        <div class="form-text">Busca en tiempo real mientras escribes.</div>
-    </div>
 
-    <hr class="my-4">
 
     <h6 class="fw-bold mb-3 text-dark">Rango de Fechas</h6>
     

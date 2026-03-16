@@ -8,6 +8,11 @@ const ClienteModule = {
     this.initFormularios();
     // Solo fixes para MODALES, no para Offcanvas (Bootstrap maneja bien Offcanvas si no interferimos)
     this.initModalFixes();
+    // Stats: computar después de cada carga AJAX de DataTables
+    const self = this;
+    $('#tablaClientes').on('xhr.dt', function() {
+        setTimeout(() => self.computeStats(), 100);
+    });
   },
 
   // 1. CONFIGURACIÓN TABLA
@@ -53,11 +58,11 @@ const ClienteModule = {
           className: "text-center",
           defaultContent: "-",
           render: function (data) {
-            if (data === "M")
+            if (data === "M" || data === "Masculino")
               return '<span class="badge bg-label-info p-2" title="Masculino"><i class="bx bx-male fs-5"></i></span>';
-            if (data === "F")
+            if (data === "F" || data === "Femenino")
               return '<span class="badge bg-label-danger p-2" title="Femenino"><i class="bx bx-female fs-5"></i></span>';
-            return '<span class="badge bg-label-secondary">-</span>';
+            return '<span class="badge bg-label-secondary" title="Sin especificar">-</span>';
           },
         },
         {
@@ -133,6 +138,26 @@ const ClienteModule = {
     });
   },
 
+  computeStats: function() {
+      if (!this.tabla) return;
+      const data = this.tabla.rows().data().toArray();
+      const total = data.length;
+      const whatsapp = data.filter(r => r.estado_whatsapp == 1).length;
+      const puntos = data.reduce((acc, r) => acc + (parseInt(r.puntos_acumulados) || 0), 0);
+      const now = new Date();
+      const mes = data.filter(r => {
+          if (!r.fecha_registro) return false;
+          const f = new Date(r.fecha_registro);
+          return f.getMonth() === now.getMonth() && f.getFullYear() === now.getFullYear();
+      }).length;
+
+      const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+      el('stat_cli_total', total);
+      el('stat_cli_whatsapp', whatsapp);
+      el('stat_cli_puntos', puntos);
+      el('stat_cli_mes', mes);
+  },
+
   // 2. EVENTOS UI
   // ==========================================================
   // 2. EVENTOS UI (CORREGIDO PARA EVITAR DOBLE CAPA)
@@ -177,12 +202,13 @@ const ClienteModule = {
     $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
       let min = $("#filtroFechaInicio").val();
       let max = $("#filtroFechaFin").val();
-      let fechaStr = data[6]; // Fecha (Columna oculta 6)
+      let fechaStr = data[5]; // Fecha (Columna oculta 5: fecha_registro)
       if (!fechaStr) return true;
 
-      let fecha = new Date(fechaStr);
-      if (min && new Date(min) > fecha) return false;
-      if (max && new Date(max) < fecha) return false;
+      // Normalizar fechas para comparación (solo YYYY-MM-DD)
+      let fv = new Date(fechaStr).getTime();
+      if (min && new Date(min).getTime() > fv) return false;
+      if (max && new Date(max).getTime() < fv) return false;
       return true;
     });
 
@@ -261,10 +287,10 @@ const ClienteModule = {
                 <div class="row g-3">
                     <div class="col-12 text-center mb-3">
                         <div class="avatar avatar-xl mx-auto mb-2">
-                            <span class="avatar-initial rounded-circle ${avatarClass} fs-2 fw-bold">${iniciales}</span>
+                            <span class="avatar-initial rounded-circle ${avatarClass} fs-3 fw-bold">${iniciales}</span>
                         </div>
                         <h4 class="fw-bold mb-0 text-dark">${nom} ${ape}</h4>
-                        <p class="text-muted mb-0">${data.dni}</p>
+                        <p class="text-muted mb-0 text-primary">${data.dni}</p>
                     </div>
                     <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Teléfono</small><div class="detalle-value">${data.telefono || "-"}</div></div></div>
                     <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Puntos</small><div class="detalle-value text-warning fw-bold">${data.puntos_acumulados || 0}</div></div></div>
@@ -285,7 +311,13 @@ const ClienteModule = {
       $("#edit_nombres").val(data.nombres);
       $("#edit_apellidos").val(data.apellidos);
       $("#edit_tel1").val(data.telefono);
-      $("#edit_sexo").val(data.sexo);
+      
+      // Normalizar sexo para el Select
+      let sexoNorm = data.sexo;
+      if (sexoNorm === "Masculino") sexoNorm = "M";
+      if (sexoNorm === "Femenino") sexoNorm = "F";
+      $("#edit_sexo").val(sexoNorm || "-");
+
       $("#edit_observaciones").val(data.observaciones);
       $("#edit_whatsapp").prop("checked", data.estado_whatsapp == 1);
 
@@ -373,14 +405,23 @@ const ClienteModule = {
     );
   },
 
-  // 4. FIXES MODALES SOLAMENTE (No tocar Offcanvas aquí)
+  // 4. FIXES MODALES SOLAMENTE
   initModalFixes: function () {
+    const self = this;
+    
+    // Al cerrar cualquier modal, limpiar backdrops huérfanos
     $(".modal").on("hidden.bs.modal", function () {
       $(".modal-backdrop").remove();
-      $("body")
-        .removeClass("modal-open")
-        .css("overflow", "auto")
-        .css("padding-right", "");
+      $("body").removeClass("modal-open").css("overflow", "auto").css("padding-right", "");
+    });
+
+    // Resetear formulario de registro al cerrar
+    $("#modalRegistrar").on("hidden.bs.modal", function () {
+      const form = document.getElementById("registrarcliente");
+      if (form) form.reset();
+      $("#dniFeedback").html('Introduce el documento para autocompletar nombre.');
+      $("#nombres, #apellidos").prop("readonly", false).val("");
+      $("#btnBuscarDni").prop("disabled", false).html('<i class="bx bx-search fs-5"></i>');
     });
   },
 
@@ -395,33 +436,52 @@ const ClienteModule = {
   consultarReniec: async function () {
     let dni = $("#dni").val().trim();
     let feedback = $("#dniFeedback");
-    if (dni.length !== 8) {
-      feedback.html('<span class="text-danger">8 dígitos.</span>');
+    if (dni.length !== 8 && dni.length !== 11) {
+      feedback.html('<span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> Debe tener 8 (DNI) u 11 (RUC) dígitos.</span>');
       return;
     }
-    $("#btnBuscarDni").prop("disabled", true);
+
+    $("#btnBuscarDni").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>').prop("disabled", true);
+    feedback.html('<span class="text-primary fw-bold"><i class="bx bx-loader-circle bx-spin"></i> Consultando...</span>');
+
     try {
       let res = await fetch(`${BASE_URL}/api/dni`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dni: dni }),
       });
-      let data = await res.json();
-      if (data.success) {
-        $("#nombres").val(data.data.nombres);
-        $("#apellidos").val(
-          `${data.data.apellido_paterno} ${data.data.apellido_materno}`,
-        );
+      let obj = await res.json();
+      
+      if (obj.success) {
+        let n = "";
+        let a = "";
+        
+        // Es DNI
+        if (dni.length === 8 && obj.data) {
+          n = obj.data.nombres || "";
+          a = `${obj.data.apellido_paterno || ""} ${obj.data.apellido_materno || ""}`.trim();
+        } 
+        // Es RUC
+        else if (dni.length === 11 && obj.data) {
+          n = obj.data.nombre_o_razon_social || "";
+          a = "RUC"; 
+        }
+
+        $("#nombres").val(n);
+        $("#apellidos").val(a);
+        
+        // Bloquear temporalmente - se ve mejor que los datos no se alteren
         $("#nombres, #apellidos").prop("readonly", true);
-        feedback.html('<span class="text-success">Encontrado</span>');
+        feedback.html('<span class="text-success fw-bold"><i class="bx bx-check-circle"></i> ¡Datos encontrados!</span>');
       } else {
-        feedback.html('<span class="text-danger">No encontrado</span>');
+        feedback.html(`<span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> ${obj.message || "No encontrado"}</span>`);
         $("#nombres, #apellidos").val("").prop("readonly", false);
       }
     } catch (e) {
-      feedback.html('<span class="text-danger">Error</span>');
+      feedback.html('<span class="text-danger fw-bold"><i class="bx bx-wifi-off"></i> Error de conexión con el servidor.</span>');
+      $("#nombres, #apellidos").val("").prop("readonly", false);
     } finally {
-      $("#btnBuscarDni").prop("disabled", false);
+      $("#btnBuscarDni").html('<i class="bx bx-search fs-5"></i>').prop("disabled", false);
     }
   },
 };

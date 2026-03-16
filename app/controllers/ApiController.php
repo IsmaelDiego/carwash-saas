@@ -1,43 +1,46 @@
 <?php
 // Ubicación: app/controllers/ApiController.php
 
-class ApiController 
+class ApiController
 {
-    public function dni() 
+    public function dni()
     {
-        // 1. Cabecera de seguridad: Le decimos al navegador que devolveremos JSON
         header('Content-Type: application/json');
 
-        // 2. Solo permitimos peticiones POST (Seguridad)
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             echo json_encode(['success' => false, 'message' => 'Método no permitido']);
             exit;
         }
 
-        // 3. Capturar el DNI que envía el JavaScript
         $input = json_decode(file_get_contents('php://input'), true);
         $dni = $input['dni'] ?? '';
 
-        // 4. Validar que tenga 8 dígitos numéricos
-        if (strlen($dni) !== 8 || !is_numeric($dni)) {
-            echo json_encode(['success' => false, 'message' => 'DNI inválido']);
+        // 4. Validar que tenga 8 o 11 dígitos numéricos
+        $len = strlen($dni);
+        if (($len !== 8 && $len !== 11) || !is_numeric($dni)) {
+            echo json_encode(['success' => false, 'message' => 'El documento debe tener 8 (DNI) u 11 (RUC) dígitos válidos']);
             exit;
         }
 
-        // 5. Tu Token de apiperu.dev (Seguro en el servidor)
-        $token = 'bab6a5397a6adad7ee334fb5c30ebad3b2a81dea1a012dc3b8da82414e95cac1';
-
-        // 6. Preparar la consulta cURL
+        $token = '53d7b96a7831d87028c875ef76f5bccdb7ecb515eef69de6b975a467e0ac01c5';
         $curl = curl_init();
+
+        $endpoint = "https://apiperu.dev/api/dni";
         $params = json_encode(['dni' => $dni]);
 
+        // Si es RUC:
+        if ($len === 11) {
+            $endpoint = "https://apiperu.dev/api/ruc";
+            $params = json_encode(['ruc' => $dni]);
+        }
+
         curl_setopt_array($curl, array(
-            CURLOPT_URL => "https://apiperu.dev/api/dni",
+            CURLOPT_URL => $endpoint,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => "POST",
-            CURLOPT_SSL_VERIFYPEER => false, // Evita errores de certificados locales
             CURLOPT_POSTFIELDS => $params,
+            CURLOPT_SSL_VERIFYPEER => false, 
             CURLOPT_HTTPHEADER => [
                 'Accept: application/json',
                 'Content-Type: application/json',
@@ -45,16 +48,15 @@ class ApiController
             ],
         ));
 
-        // 7. Ejecutar y obtener respuesta
         $response = curl_exec($curl);
         $err = curl_error($curl);
         curl_close($curl);
 
-        // 8. Enviar respuesta al JavaScript
+        
         if ($err) {
             echo json_encode(['success' => false, 'message' => 'Error de conexión: ' . $err]);
         } else {
-            echo $response; // Devolvemos el JSON tal cual nos lo da la API
+            echo $response; 
         }
         exit;
     }

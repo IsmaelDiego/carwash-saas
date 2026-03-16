@@ -67,25 +67,19 @@ $current_url = $_SERVER['REQUEST_URI'];
 
 
     <ul class="menu-inner py-1">
-        <!-- Dashboards -->
-
+        <!-- Dashboard -->
         <li class="menu-item <?= strpos($current_url, '/admin/dashboard') !== false ? 'active' : '' ?>">
-            <a
-                href="<?= BASE_URL ?>/admin/dashboard"
-                target="_blank"
-                class="menu-link hide-url">
+            <a href="<?= BASE_URL ?>/admin/dashboard" class="menu-link hide-url">
                 <i class="menu-icon tf-icons bx bx-home"></i>
-                <div class="text-truncate" data-i18n="Email">Dashboard</div>
+                <div class="text-truncate">Dashboard</div>
             </a>
         </li>
 
-        <li class="menu-item ">
-            <a
-                href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/html/vertical-menu-template/app-email.html"
-                target="_blank"
-                class="menu-link ">
-                <i class="menu-icon tf-icons bx bx-history"></i>
-                <div class="text-truncate" data-i18n="Email">Resumen del Día</div>
+        <!-- Finanzas -->
+        <li class="menu-item <?= strpos($current_url, '/admin/finanzas') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/finanzas" class="menu-link hide-url">
+                <i class="menu-icon tf-icons bx bx-line-chart"></i>
+                <div class="text-truncate">Finanzas</div>
             </a>
         </li>
 
@@ -94,62 +88,28 @@ $current_url = $_SERVER['REQUEST_URI'];
             <span class="menu-header-text">Operaciones</span>
         </li>
 
-        <!-- Pages -->
-        <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <!-- Ordenes de Servicio -->
+        <li class="menu-item <?= strpos($current_url, '/admin/orden') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/orden" class="menu-link hide-url">
                 <i class="menu-icon tf-icons bx bx-customize"></i>
-                <div class="text-truncate" data-i18n="Account Settings">Ordenes de Servicio</div>
+                <div class="text-truncate">Órdenes de Servicio</div>
             </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="pages-account-settings-account.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Account">Nueva orden</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-notifications.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Notifications">Ordenes en proceso</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Ordenes finalizadas</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Historial de ordenes</div>
-                    </a>
-                </li>
-            </ul>
         </li>
 
-        <li class="menu-item <?= strpos($current_url, '/admin/cliente') !== false ? 'active open' : '' ?>">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <!-- Clientes -->
+        <li class="menu-item <?= strpos($current_url, '/admin/cliente') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/cliente/lista" class="menu-link hide-url">
                 <i class="menu-icon tf-icons bx bx-user"></i>
                 <div class="text-truncate">Clientes</div>
             </a>
-            <ul class="menu-sub">
-                <li class="menu-item <?= strpos($current_url, '/admin/cliente/lista') !== false ? 'active' : '' ?>">
-                    <a href="<?= BASE_URL ?>/admin/cliente/lista" class="menu-link hide-url">
-                        <div class="text-truncate">Lista de clientes</div>
-                    </a>
-                </li>
-            </ul>
         </li>
 
-        <li class="menu-item <?= strpos($current_url, '/admin/vehiculo') !== false ? 'active open' : '' ?>">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <!-- Vehículos -->
+        <li class="menu-item <?= strpos($current_url, '/admin/vehiculo') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/vehiculo/lista" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-car"></i>
                 <div class="text-truncate">Vehículos</div>
             </a>
-            <ul class="menu-sub">
-                <li class="menu-item <?= strpos($current_url, '/admin/vehiculo/lista') !== false ? 'active' : '' ?>">
-                    <a href="<?= BASE_URL ?>/admin/vehiculo/lista" class="menu-link">
-                        <div class="text-truncate">Lista vehículo</div>
-                    </a>
-                </li>
-            </ul>
         </li>
 
         <li class="menu-header small text-uppercase">
@@ -157,196 +117,69 @@ $current_url = $_SERVER['REQUEST_URI'];
         </li>
 
         <li class="menu-item <?= strpos($current_url, '/admin/servicio') !== false ? 'active' : '' ?>">
-            <a
-                href="<?= BASE_URL ?>/admin/servicio"
-                class="menu-link">
+            <a href="<?= BASE_URL ?>/admin/servicio" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-badge-check"></i>
-                <div class="text-truncate" data-i18n="Servicios">Servicios</div>
+                <div class="text-truncate">Servicios</div>
             </a>
         </li>
 
         <li class="menu-item <?= strpos($current_url, '/admin/promocion') !== false ? 'active' : '' ?>">
-            <a
-                href="<?= BASE_URL ?>/admin/promocion"
-                class="menu-link">
+            <a href="<?= BASE_URL ?>/admin/promocion" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-gift"></i>
-                <div class="text-truncate" data-i18n="Promociones">Promociones</div>
+                <div class="text-truncate">Promociones</div>
             </a>
         </li>
 
         <li class="menu-item <?= strpos($current_url, '/admin/temporada') !== false ? 'active' : '' ?>">
-            <a
-                href="<?= BASE_URL ?>/admin/temporada"
-                class="menu-link">
+            <a href="<?= BASE_URL ?>/admin/temporada" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-calendar-star"></i>
-                <div class="text-truncate" data-i18n="Temporadas">Temporadas</div>
+                <div class="text-truncate">Temporadas</div>
             </a>
         </li>
 
-
+        <li class="menu-item <?= strpos($current_url, '/admin/producto') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/producto" class="menu-link hide-url">
+                <i class="menu-icon tf-icons bx bx-store-alt"></i>
+                <div class="text-truncate">Productos Tienda</div>
+            </a>
+        </li>
 
         <li class="menu-header small text-uppercase">
-            <span class="menu-header-text">Caja y Pagos</span>
+            <span class="menu-header-text">Personal y RRHH</span>
         </li>
 
-        <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-calculator"></i>
-                <div class="text-truncate" data-i18n="Account Settings"> Caja</div>
-            </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="pages-account-settings-account.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Account">Apertura de Caja</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Movimientos de Caja</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Cierre de Caja</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Registrar Pago</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Historial de Pago</div>
-                    </a>
-                </li>
-            </ul>
-        </li>
-
-
-        <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <!-- Personal -->
+        <li class="menu-item <?= strpos($current_url, '/admin/empleado') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/empleado" class="menu-link hide-url">
                 <i class="menu-icon tf-icons bx bx-group"></i>
-                <div class="text-truncate" data-i18n="Account Settings">Personal</div>
+                <div class="text-truncate">Personal</div>
             </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="pages-account-settings-account.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Account">Registrar Empleado</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Lista de empleados</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Servicios por Empleado</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Turnos</div>
-                    </a>
-                </li>
-            </ul>
         </li>
 
-        <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-grid-alt"></i>
-                <div class="text-truncate" data-i18n="Account Settings">Inventario</div>
+        <li class="menu-item <?= strpos($current_url, '/admin/pago') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/pago" class="menu-link hide-url">
+                <i class="menu-icon tf-icons bx bx-money"></i>
+                <div class="text-truncate">Control de Pagos</div>
             </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="pages-account-settings-account.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Account">Registrar Producto</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Stock actual</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Entradas / Salidas</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Registrar Consumo</div>
-                    </a>
-                </li>
-            </ul>
         </li>
 
-        <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-flag"></i>
-                <div class="text-truncate" data-i18n="Account Settings">Reportes</div>
+        <li class="menu-item <?= strpos($current_url, '/admin/permiso') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/permiso" class="menu-link hide-url">
+                <i class="menu-icon tf-icons bx bx-calendar"></i>
+                <div class="text-truncate">Control de Permisos</div>
             </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="pages-account-settings-account.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Account">Ventas</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Servicios</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Clientes</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Empleados</div>
-                    </a>
-                </li>
-            </ul>
         </li>
 
-        <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">Sistema</span>
+        </li>
+
+
+        <!-- Configuración -->
+        <li class="menu-item <?= strpos($current_url, '/admin/configuracion') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/configuracion" class="menu-link hide-url">
                 <i class="menu-icon tf-icons bx bx-cog"></i>
-                <div class="text-truncate" data-i18n="Account Settings">Configuración</div>
-            </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="pages-account-settings-account.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Account">Usuarios</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Roles y Permisos</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Datos del Carwash</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="pages-account-settings-connections.html" class="menu-link">
-                        <div class="text-truncate" data-i18n="Connections">Parametros</div>
-                    </a>
-                </li>
-            </ul>
-        </li>
-
-        <li class="menu-item ">
-            <a
-                href="https://demos.themeselection.com/sneat-bootstrap-html-admin-temaplate/html/vertical-menu-template/app-email.html"
-                target="_blank"
-                class="menu-link">
-                <i class="menu-icon tf-icons bx bx-support"></i>
-                <div class="text-truncate" data-i18n="Email">Ayuda y soporte</div>
+                <div class="text-truncate">Configuración del Sistema</div>
             </a>
         </li>
     </ul>

@@ -29,15 +29,73 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
 
-    .switch-estado {
-        cursor: pointer;
-        width: 3em !important;
-        height: 1.5em !important;
-    }
+  /* Switch Estado Custom */
+  .switch-estado {
+    cursor: pointer;
+    width: 3em !important;
+    height: 1.5em !important;
+    background-color: #e0e0e0 !important;
+    border-color: #d1d1d1 !important;
+    transition: all 0.3s ease;
+  }
+
+  .switch-estado:checked {
+    background-color: #25d366 !important;
+    border-color: #25d366 !important;
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.4);
+  }
+
+  .switch-estado:focus {
+    box-shadow: 0 0 0 0.25rem rgba(37, 211, 102, 0.25);
+  }
 </style>
 
 <div class="content-wrapper">
     <div class="container-fluid flex-grow-1 container-p-y">
+
+        <!-- ═══ STATS ═══ -->
+        <div class="row mb-4" id="statsServicios">
+            <div class="col-sm-6 col-md-3 mb-3">
+                <div class="card shadow-sm h-100" style="border:none;border-radius:14px;">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-label-primary shadow-sm" style="width:48px;height:48px;font-size:1.4rem;border-radius:12px;"><i class="bx bx-badge-check text-primary"></i></div>
+                        <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Total Servicios</small>
+                            <div class="fw-bold text-primary" id="stat_srv_total" style="font-size:1.4rem">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3 mb-3">
+                <div class="card shadow-sm h-100" style="border:none;border-radius:14px;">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-label-success shadow-sm" style="width:48px;height:48px;font-size:1.4rem;border-radius:12px;"><i class="bx bx-check-circle text-success"></i></div>
+                        <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Activos</small>
+                            <div class="fw-bold text-success" id="stat_srv_activos" style="font-size:1.4rem">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3 mb-3">
+                <div class="card shadow-sm h-100" style="border:none;border-radius:14px;">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-label-warning shadow-sm" style="width:48px;height:48px;font-size:1.4rem;border-radius:12px;"><i class="bx bx-star text-warning"></i></div>
+                        <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Con Puntos</small>
+                            <div class="fw-bold text-warning" id="stat_srv_puntos" style="font-size:1.4rem">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3 mb-3">
+                <div class="card shadow-sm h-100" style="border:none;border-radius:14px;">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-label-info shadow-sm" style="width:48px;height:48px;font-size:1.4rem;border-radius:12px;"><i class="bx bx-gift text-info"></i></div>
+                        <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Permite Canje</small>
+                            <div class="fw-bold text-info" id="stat_srv_canje" style="font-size:1.4rem">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="col-lg-12 mb-4">
             <div class="m-1">

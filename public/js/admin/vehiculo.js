@@ -6,7 +6,12 @@ const VehiculoModule = {
         this.initDataTable();
         this.initEventosUI();
         this.initFormularios();
-        this.initVisualFixes();
+        this.initBuscadorPropietario();
+        // Stats: computar después de cada carga AJAX
+        const self = this;
+        $('#tablaVehiculos').on('xhr.dt', function() {
+            setTimeout(() => self.computeStats(), 100);
+        });
     },
 
     // 1. DATA TABLE
@@ -25,7 +30,7 @@ const VehiculoModule = {
             "dom": '<"row mx-2"<"col-md-12 my-2"l>>t<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
             
             "language": {
-                "lengthMenu": "Mostrar _MENU_ vehículos",
+                "lengthMenu": " _MENU_ ",
                 "info": "Mostrando _START_ a _END_ de _TOTAL_",
                 "zeroRecords": `<div class="text-center p-5"><h5 class="fw-bold text-primary">No hay vehículos registrados</h5></div>`,
                 "paginate": { "next": "Sig.", "previous": "Ant." }
@@ -145,7 +150,7 @@ const VehiculoModule = {
 
         $('#btnAbrirFiltro').on('click', (e) => { e.preventDefault(); self.filtroOffcanvas.show(); });
         $('#btnAplicarFiltros').on('click', () => { 
-            self.tabla.search($('#buscadorGlobal').val()).draw(); 
+            self.tabla.draw(); 
             self.filtroOffcanvas.hide(); 
         });
         $('#buscadorGlobal').on('keyup', function() { self.tabla.search(this.value).draw(); });
@@ -154,6 +159,25 @@ const VehiculoModule = {
             $('#filtroFechaInicio, #filtroFechaFin').val(''); 
             self.tabla.search('').draw(); 
         });
+
+        // B. FILTRO FECHAS (Plugin DataTables)
+        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+            // Solo aplicar si estamos en la tabla de vehículos
+            if (settings.nTable.id !== 'tablaVehiculos') return true;
+
+            let min = $("#filtroFechaInicio").val();
+            let max = $("#filtroFechaFin").val();
+            let fechaStr = data[8]; // Fecha (Columna oculta 8: fecha_registro)
+            if (!fechaStr) return true;
+
+            let fv = new Date(fechaStr).getTime();
+            if (min && new Date(min).getTime() > fv) return false;
+            if (max && new Date(max).getTime() < fv) return false;
+            return true;
+        });
+
+        // Redibujar al cambiar fechas directamente
+        $("#filtroFechaInicio, #filtroFechaFin").on("change", () => self.tabla.draw());
         
         // Exportar Excel
         $('#btnExportar').on('click', () => self.tabla.button('.buttons-excel').trigger());
@@ -200,7 +224,7 @@ const VehiculoModule = {
                     </div>
                     
                     <div class="col-12 text-end">
-                        <small class="text-muted">Registrado: ${data.fecha_registro}</small>
+                        Registrado: <small class="text-muted fw-bold text-dark">${data.fecha_registro}</small>
                     </div>
                 </div>`;
             $('#contenidoDetalle').html(html);
@@ -264,8 +288,133 @@ const VehiculoModule = {
     },
 
     initVisualFixes: function() {
+        const self = this;
         $('.modal-backdrop, .offcanvas-backdrop').remove();
         $('body').removeClass('modal-open offcanvas-open').css('overflow','').css('padding-right','');
+
+        // Resetear formulario de registro al cerrar
+        $("#modalRegistrar").on("hidden.bs.modal", function () {
+            const form = document.getElementById("registrarVehiculo");
+            if (form) {
+                form.reset();
+                self.resetBuscadorPropietario();
+            }
+        });
+    },
+
+    // --- LÓGICA BUSCADOR PROPIETARIO (SELECT LITE) ---
+    clientesCache: [],
+    initBuscadorPropietario: function() {
+        const self = this;
+        const trigger = $('#selectTriggerPropietario');
+        const dropdown = $('#dropdownPropietarios');
+        const inputSearch = $('#inputSearchInterno');
+        const listaItems = $('#listaItemsPropietarios');
+        const txtDisplay = $('#txtSeleccionComun');
+        const hiddenId = $('#val_id_cliente');
+
+        // 1. Cargar y Ordenar por Recientes
+        const cargarClientes = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/admin/cliente/getall`);
+                const data = await res.json();
+                // Ordenar por ID descendente (más recientes primero)
+                self.clientesCache = (data.data || []).sort((a, b) => b.id_cliente - a.id_cliente);
+                self.renderItemsPropietarios(""); 
+            } catch(e) { console.error("Error cargando clientes:", e); }
+        };
+        cargarClientes();
+
+        // 2. Toggle Dropdown
+        trigger.on('click', function(e) {
+            e.stopPropagation();
+            dropdown.toggleClass('show');
+            if (dropdown.hasClass('show')) {
+                inputSearch.val('').focus();
+                self.renderItemsPropietarios(""); 
+            }
+        });
+
+        // 3. Filtrado Interno
+        inputSearch.on('input', function() {
+            self.renderItemsPropietarios($(this).val());
+        });
+
+        // Evitar cierre al hacer click dentro del buscador
+        dropdown.on('click', (e) => e.stopPropagation());
+
+        // 4. Seleccionar Item
+        listaItems.on('click', '.resultado-item', function() {
+            const id = $(this).data('id');
+            const nombre = $(this).data('nombre');
+
+            hiddenId.val(id);
+            txtDisplay.html(`<i class="bx bxs-user-check me-2 text-primary"></i> ${nombre}`);
+            dropdown.removeClass('show');
+            trigger.addClass('border-primary shadow-sm');
+        });
+
+        // Cerrar al click afuera
+        $(document).on('click', () => dropdown.removeClass('show'));
+    },
+
+    renderItemsPropietarios: function(query) {
+        const self = this;
+        const q = query.toLowerCase().trim();
+        const listaItems = $('#listaItemsPropietarios');
+        
+        let filtrados = [];
+        if (q === "") {
+            // Mostrar los 10 más recientes
+            filtrados = self.clientesCache.slice(0, 10);
+        } else {
+            // Filtrar y mostrar top 10 matches
+            filtrados = self.clientesCache.filter(c => 
+                (c.nombres + ' ' + c.apellidos).toLowerCase().includes(q) || 
+                c.dni.includes(q)
+            ).slice(0, 10);
+        }
+
+        if (filtrados.length > 0) {
+            let html = '';
+            filtrados.forEach(c => {
+                html += `
+                    <div class="resultado-item animate__animated animate__fadeIn animate__faster" data-id="${c.id_cliente}" data-nombre="${c.nombres} ${c.apellidos}">
+                        <span class="nombre text-dark">${c.nombres} ${c.apellidos}</span>
+                        <span class="dni text-muted"><i class="bx bx-id-card me-1"></i>${c.dni}</span>
+                    </div>`;
+            });
+            listaItems.html(html);
+        } else {
+            listaItems.html('<div class="p-3 text-center text-muted small">No se encontraron clientes</div>');
+        }
+    },
+
+    resetBuscadorPropietario: function() {
+        $('#val_id_cliente').val('');
+        $('#txtSeleccionComun').text('Seleccione al dueño...');
+        $('#selectTriggerPropietario').removeClass('border-primary shadow-sm');
+        $('#dropdownPropietarios').removeClass('show');
+    },
+
+    computeStats: function() {
+        if (!this.tabla) return;
+        const data = this.tabla.rows().data().toArray();
+        const total = data.length;
+        const categorias = new Set(data.map(r => r.nombre_categoria)).size;
+        const propietarios = new Set(data.map(r => r.id_cliente)).size;
+        const now = new Date();
+        const mes = data.filter(r => {
+            if (!r.fecha_registro) return false;
+            const f = new Date(r.fecha_registro);
+            return f.getMonth() === now.getMonth() && f.getFullYear() === now.getFullYear();
+        }).length;
+
+        const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+        el('stat_veh_total', total);
+        el('stat_veh_categorias', categorias);
+        el('stat_veh_propietarios', propietarios);
+        el('stat_veh_mes', mes);
     },
 
     mostrarToast: function(msg, tipo) {

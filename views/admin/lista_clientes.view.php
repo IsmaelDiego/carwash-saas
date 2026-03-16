@@ -1,8 +1,8 @@
 <?php require VIEW_PATH . '/layouts/header.view.php'; ?>
 
 <style>
-  /* Ocultar buscador nativo */
-  .dataTables_filter {
+  /* Ocultar buscador nativo y longitud */
+  .dataTables_filter, .dataTables_length {
     display: none !important;
   }
 
@@ -23,11 +23,24 @@
     color: #b0b0b0 !important;
   }
 
-  /* Switch WhatsApp */
+  /* Switch WhatsApp Custom */
   .switch-whatsapp {
     cursor: pointer;
     width: 3em !important;
     height: 1.5em !important;
+    background-color: #e0e0e0 !important; /* Gris por defecto */
+    border-color: #d1d1d1 !important;
+    transition: all 0.3s ease;
+  }
+
+  .switch-whatsapp:checked {
+    background-color: #25d366 !important; /* Verde WhatsApp */
+    border-color: #25d366 !important;
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.4);
+  }
+
+  .switch-whatsapp:focus {
+    box-shadow: 0 0 0 0.25rem rgba(37, 211, 102, 0.25);
   }
 
   /* Tarjetas Detalle */
@@ -58,29 +71,80 @@
 <div class="content-wrapper">
   <div class="container-fluid flex-grow-1 container-p-y">
 
+    <!-- ═══ STATS ═══ -->
+    <div class="row mb-4" id="statsClientes">
+        <div class="col-sm-6 col-md-3 mb-3">
+            <div class="card shadow-sm h-100" style="border:none;border-radius:14px;">
+                <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 bg-label-primary shadow-sm" style="width:48px;height:48px;font-size:1.4rem;border-radius:12px;"><i class="bx bx-group text-primary"></i></div>
+                    <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Total Clientes</small>
+                        <div class="fw-bold text-primary" id="stat_cli_total" style="font-size:1.4rem">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 mb-3">
+            <div class="card shadow-sm h-100" style="border:none;border-radius:14px;">
+                <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 bg-label-success shadow-sm" style="width:48px;height:48px;font-size:1.4rem;border-radius:12px;"><i class="bx bxl-whatsapp text-success"></i></div>
+                    <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Con WhatsApp</small>
+                        <div class="fw-bold text-success" id="stat_cli_whatsapp" style="font-size:1.4rem">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 mb-3">
+            <div class="card shadow-sm h-100" style="border:none;border-radius:14px;">
+                <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 bg-label-warning shadow-sm" style="width:48px;height:48px;font-size:1.4rem;border-radius:12px;"><i class="bx bx-star text-warning"></i></div>
+                    <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Puntos Totales</small>
+                        <div class="fw-bold text-warning" id="stat_cli_puntos" style="font-size:1.4rem">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 mb-3">
+            <div class="card shadow-sm h-100" style="border:none;border-radius:14px;">
+                <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 bg-label-info shadow-sm" style="width:48px;height:48px;font-size:1.4rem;border-radius:12px;"><i class="bx bx-calendar-plus text-info"></i></div>
+                    <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Este Mes</small>
+                        <div class="fw-bold text-info" id="stat_cli_mes" style="font-size:1.4rem">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="col-lg-12 mb-4">
       <div class="m-1">
-        <h5 class="card-header border-bottom mb-3">GESTIÓN DE CLIENTES</h5>
+        <h5 class="card-header border-bottom mb-3">
+          <i class="bx bx-group text-primary me-1"></i> GESTIÓN DE CLIENTES
+        </h5>
 
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-          <nav aria-label="breadcrumb">
+          <nav aria-label="breadcrumb" class="me-auto">
             <ol class="breadcrumb mb-0">
               <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/home">Inicio</a></li>
               <li class="breadcrumb-item active text-primary">Clientes</li>
             </ol>
           </nav>
 
-          <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn rounded-pill btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
-              <i class="bx bx-plus me-1"></i> NUEVO
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="input-group" style="width: 240px;">
+                <input type="text" id="buscadorGlobal" class="form-control" placeholder="Buscar cliente..." autocomplete="off">
+                <span class="input-group-text"><i class="bx bx-search text-muted"></i></span>
+            </div>
+
+            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
+              <i class="bx bx-plus me-1"></i> Nuevo Cliente
             </button>
 
-            <button class="btn rounded-pill btn-outline-secondary" type="button" id="btnAbrirFiltro">
-              <i class="bx bx-search-alt me-1"></i> BUSCAR / FILTRAR
+            <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
+              <i class="bx bx-filter-alt me-1"></i> Filtros
             </button>
 
-            <button class="btn rounded-pill btn-outline-success" type="button" id="btnExportar">
-              <i class="bx bxs-file-export me-1"></i> EXPORTAR
+            <button class="btn btn-outline-success" type="button" id="btnExportar">
+              <i class="bx bxs-file-export p-2"></i>
             </button>
           </div>
         </div>

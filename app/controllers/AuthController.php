@@ -23,7 +23,7 @@ class AuthController
 
             // El frontend puede enviar el campo como 'email' o 'identifier'
             // Asumimos que el input del usuario llega aquí
-            $identifier = $data['email'] ?? $data['identifier'] ?? ''; 
+            $identifier = $data['email'] ?? $data['identifier'] ?? '';
             $password   = $data['password'] ?? '';
 
             if (empty($identifier) || empty($password)) {
@@ -51,7 +51,7 @@ class AuthController
             // ---------------------------------------------------------
             // Nota: La columna en BD es 'password_hash'
             if ($user && password_verify($password, $user['password_hash'])) {
-                
+
                 session_regenerate_id(true);
 
                 // Guardamos datos usando las columnas de V3.2
@@ -116,7 +116,7 @@ class AuthController
             // Preparar datos para el Modelo
             // Por defecto, si se registran desde fuera, les damos rol 3 (Operario) o lo que definas.
             $newUser = [
-                'id_rol'   => 3, // Default: Operario
+                'id_rol'   => $data['id_rol'], // Default: Operario
                 'dni'      => $data['dni'],
                 'nombres'  => $data['nombres'],
                 'email'    => $data['email'] ?? null,
@@ -153,9 +153,14 @@ class AuthController
 
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
             );
         }
 

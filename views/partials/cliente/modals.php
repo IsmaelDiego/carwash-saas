@@ -1,8 +1,16 @@
 <div class="modal fade" id="modalRegistrar" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content shadow-lg" >
-            <div class="modal-header bg-primary px-4 py-4 position-relative">
-                <h5 class="modal-title text-white fw-bold d-flex align-items-center"><i class='bx bx-user-plus fs-3 me-2'></i> REGISTRAR NUEVO CLIENTE</h5>
+            <div class="modal-header bg-primary text-white p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                        <i class='bx bx-user-plus fs-3'></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title text-white fw-bold mb-0">REGISTRAR NUEVO CLIENTE</h5>
+                        <small class="text-white-50">Autocompleta usando RENIEC/SUNAT</small>
+                    </div>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="registrarcliente" class="">
@@ -83,9 +91,9 @@
                     </div>
 
                 </div>
-                <div class="modal-footer  px-4 py-3 border-top">
-                    <button type="button" class="btn btn-label-secondary fw-bold" data-bs-dismiss="modal"> Cancelar</button>
-                    <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm">CREAR CLIENTE</button>
+                <div class="modal-footer bg-white border-top p-4">
+                    <button type="button" class="btn btn-white fw-bold text-muted border px-4" data-bs-dismiss="modal">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm"><i class="bx bx-save me-2"></i>CREAR CLIENTE</button>
                 </div>
             </form>
         </div>
@@ -95,14 +103,22 @@
 <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content  shadow-lg">
-            <div class="modal-header bg-primary border-bottom px-4 pt-4 pb-3">
-                <h5 class="modal-title fw-bold text-white d-flex align-items-center"><i class="bx bx-id-card fs-4 me-2"></i> FICHA DE CLIENTE</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-info text-white p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-white text-info rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                        <i class="bx bx-id-card fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title text-white fw-bold mb-0">FICHA DE CLIENTE</h5>
+                        <small class="text-white-50">Información de contacto y puntaje</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <!-- Contenido dinámico desde JS -->
             <div class="modal-body p-4" id="contenidoDetalle"></div>
-            <div class="modal-footer bg-white border-top px-4 py-3">
-                <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm" data-bs-dismiss="modal"><i class="bx bx-check me-1"></i> Entendido</button>
+            <div class="modal-footer bg-white border-top p-4">
+                <button type="button" class="btn btn-white w-100 fw-bold border text-muted shadow-sm" data-bs-dismiss="modal">ENTENDIDO</button>
             </div>
         </div>
     </div>
@@ -112,9 +128,17 @@
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content  shadow-lg" >
 
-            <div class="modal-header bg-warning px-4 py-4 position-relative">
-                <h5 class="modal-title text-dark fw-bold d-flex align-items-center text-white"><i class="bx bx-edit fs-3 me-2"></i> ACTUALIZAR INFORMACIÓN AL CLIENTE</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-warning text-white p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-white text-warning rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                        <i class="bx bx-edit fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title text-white fw-bold mb-0">ACTUALIZAR INFORMACIÓN AL CLIENTE</h5>
+                        <small class="text-white-50">Modifica métodos de contacto y notas</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <form id="formEditarCliente">
@@ -193,9 +217,9 @@
                     <input type="hidden" id="edit_puntos" name="puntos">
                 </div>
 
-                <div class="modal-footer border-top px-4 py-3">
-                    <button type="button" class="btn btn-label-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning fw-bold px-4 text-dark shadow-sm text-white">GUARDAR CAMBIOS</button>
+                <div class="modal-footer bg-white border-top p-4">
+                    <button type="button" class="btn btn-white fw-bold text-muted border px-4" data-bs-dismiss="modal">CANCELAR</button>
+                    <button type="submit" class="btn btn-warning fw-bold px-4 text-white shadow-sm"><i class="bx bx-save me-2"></i>GUARDAR CAMBIOS</button>
                 </div>
             </form>
         </div>
@@ -205,26 +229,25 @@
 <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div class="modal-body p-5 text-center">
-                <!-- Icono de advertencia premium -->
-                <div class="mx-auto mb-4 d-flex align-items-center justify-content-center rounded-circle bg-label-danger" style="width: 80px; height: 80px; box-shadow: 0 0 20px rgba(255, 62, 29, 0.2);">
-                    <i class='bx bx-error-circle text-danger' style='font-size: 3.5rem;'></i>
+            <div class="modal-body p-4 text-center">
+                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-label-danger" style="width: 70px; height: 70px;">
+                    <i class='bx bx-error-circle text-danger' style='font-size: 3rem;'></i>
                 </div>
                 
-                <h4 class="fw-bold text-dark mb-2">¿Confirmar Baja?</h4>
+                <h4 class="fw-bold text-dark mb-1">¿Confirmar Baja?</h4>
                 <p class="text-muted mb-4 small">Estás a punto de retirar al cliente del sistema:<br>
-                   <span id="nombre_eliminar" class="badge bg-secondary text-white fs-6 mt-2 py-2 px-3 w-100 text-wrap text-uppercase shadow-sm"></span>
+                   <span id="nombre_eliminar" class="badge bg-white border border-danger-subtle text-danger fs-6 mt-3 py-2 px-3 w-100 text-wrap text-uppercase shadow-sm"></span>
                 </p>
 
                 <form id="formEliminarCliente">
                     <input type="hidden" id="delete_id_cliente" name="id_cliente">
-                    <div class="d-grid gap-3">
+                    <div class="d-grid gap-2">
                         <?php if ($_SESSION['user']['role'] == 1): ?>
-                            <button type="submit" class="btn btn-danger btn-lg shadow-sm fw-bold">SÍ, RETIRAR REGISTRO</button>
+                            <button type="submit" class="btn btn-danger fw-bold shadow-sm">SÍ, RETIRAR</button>
                         <?php else: ?>
-                            <button type="button" class="btn btn-secondary btn-lg fw-bold" disabled>ACCESO RESTRINGIDO</button>
+                            <button type="button" class="btn btn-secondary fw-bold" disabled>ACCESO RESTRINGIDO</button>
                         <?php endif; ?>
-                        <button type="button" class="btn btn-label-secondary fw-bold" data-bs-dismiss="modal">MANTENER CLIENTE</button>
+                        <button type="button" class="btn btn-white fw-bold text-muted border" data-bs-dismiss="modal">CANCELAR</button>
                     </div>
                 </form>
             </div>

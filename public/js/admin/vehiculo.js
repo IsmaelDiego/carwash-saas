@@ -32,7 +32,7 @@ const VehiculoModule = {
             "language": {
                 "lengthMenu": " _MENU_ ",
                 "info": "Mostrando _START_ a _END_ de _TOTAL_",
-                "zeroRecords": `<div class="text-center p-5"><h5 class="fw-bold text-primary">No hay vehículos registrados</h5></div>`,
+                "zeroRecords": `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay historial de vehículos</h5></div>`, 
                 "paginate": { "next": "Sig.", "previous": "Ant." }
             },
 
@@ -195,36 +195,41 @@ const VehiculoModule = {
         $('#tablaVehiculos tbody').on('click', '.btn-ver', function() {
             let data = getData(this);
             let html = `
+                <div class="text-center mb-4">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-label-info" style="width: 80px; height: 80px;">
+                        <span class="fs-1 fw-bold text-info"><i class="bx bx-car"></i></span>
+                    </div>
+                    <h4 class="fw-bold mb-1 text-dark text-uppercase">${data.placa}</h4>
+                    <div class="d-flex align-items-center justify-content-center mt-2">
+                        <span class="badge bg-warning text-dark px-3 py-2 shadow-sm rounded-pill"><i class="bx bx-shape-polygon me-1"></i>${data.nombre_categoria}</span>
+                    </div>
+                </div>
+                
                 <div class="row g-3">
-                    <div class="col-12 text-center mb-4">
-                        <span class="badge bg-warning text-dark fs-2 border border-dark px-4 py-2" style="font-family:monospace;">${data.placa}</span>
-                        <div class="mt-2 text-muted text-uppercase fw-bold">${data.nombre_categoria}</div>
-                    </div>
-                    
-                    <div class="col-6">
-                        <div class="p-3 border rounded bg-light h-100">
-                            <small class="text-uppercase text-muted fw-bold" style="font-size:0.7rem">Propietario</small>
-                            <div class="fw-bold text-dark fs-6 mt-1">${data.nombre_propietario}</div>
-                            <div class="small text-muted">${data.dni_propietario || ''}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-6">
-                        <div class="p-3 border rounded bg-light h-100">
-                            <small class="text-uppercase text-muted fw-bold" style="font-size:0.7rem">Color</small>
-                            <div class="fw-bold text-dark fs-6 mt-1">${data.color || '-'}</div>
-                        </div>
-                    </div>
-
                     <div class="col-12">
-                        <div class="p-3 border rounded">
-                            <small class="text-uppercase text-muted fw-bold" style="font-size:0.7rem">Observaciones</small>
-                            <p class="mb-0 mt-1">${data.observaciones || '<i>Sin observaciones</i>'}</p>
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-user text-primary"></i> Propietario</small>
+                            <span class="fw-bold text-dark fs-6">${data.nombre_propietario}</span>
+                            <span class="text-muted small"><i class="bx bx-id-card"></i> ${data.dni_propietario || 'No registrado'}</span>
                         </div>
                     </div>
-                    
-                    <div class="col-12 text-end">
-                        Registrado: <small class="text-muted fw-bold text-dark">${data.fecha_registro}</small>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-palette text-info"></i> Color</small>
+                            <span class="fw-semibold text-dark fs-6">${data.color || '-'}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-time text-secondary"></i> Registrado</small>
+                            <span class="fw-semibold text-dark fs-6 text-truncate">${new Date(data.fecha_registro.replace(/-/g, "/")).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-notepad text-warning"></i> Observaciones</small>
+                            <span class="text-muted small">${data.observaciones || '<i>Vehículo sin anotaciones previas o reportes de daños detallados en el momento de su inscripción.</i>'}</span>
+                        </div>
                     </div>
                 </div>`;
             $('#contenidoDetalle').html(html);

@@ -20,9 +20,14 @@ class PagoController {
     }
 
     public function index() {
-        $pagos = $this->pagoModel->getAll();
         $empleados = $this->empleadoModel->getAll();
         require VIEW_PATH . '/admin/rrhh_pagos.view.php';
+    }
+
+    public function getall() {
+        header('Content-Type: application/json');
+        $pagos = $this->pagoModel->getAll();
+        echo json_encode(['data' => $pagos]);
     }
 
     public function registrar() {
@@ -58,5 +63,12 @@ class PagoController {
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
         }
+    }
+
+    public function getstats() {
+        header('Content-Type: application/json');
+        $stats = $this->pagoModel->getEstadisticas();
+        echo json_encode($stats);
+        exit;
     }
 }

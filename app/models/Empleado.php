@@ -8,6 +8,17 @@ class Empleado {
     }
 
     // =========================================================
+    // . GET BY ID
+    // =========================================================
+    public function getById($id) {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE id_usuario = :id");
+            $stmt->execute([':id' => $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) { return false; }
+    }
+
+    // =========================================================
     // 1. LISTAR TODOS (Con nombre del Rol)
     // =========================================================
     public function getAll() {

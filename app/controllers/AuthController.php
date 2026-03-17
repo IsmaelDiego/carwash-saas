@@ -50,27 +50,32 @@ class AuthController
             // VERIFICACIÓN DE PASSWORD (V3.2)
             // ---------------------------------------------------------
             // Nota: La columna en BD es 'password_hash'
-            if ($user && password_verify($password, $user['password_hash'])) {
+            
+            if ($user) {
+                if (password_verify($password, $user['password_hash'])) {
+                    session_regenerate_id(true);
 
-                session_regenerate_id(true);
+                    // Guardamos datos usando las columnas de V3.2
+                    $_SESSION['user'] = [
+                        'id'       => $user['id_usuario'], // id_usuario
+                        'name'     => $user['nombres'],    // nombres
+                        'dni'      => $user['dni'],        // dni
+                        'role'     => $user['id_rol'],     // id_rol (1, 2 o 3)
+                        'rolename' => $user['rol_nombre'], // Viene del JOIN
+                        'avatar'   => $user['avatar_url'] ?? 'default.png'
+                    ];
 
-                // Guardamos datos usando las columnas de V3.2
-                $_SESSION['user'] = [
-                    'id'       => $user['id_usuario'], // id_usuario
-                    'name'     => $user['nombres'],    // nombres
-                    'dni'      => $user['dni'],        // dni
-                    'role'     => $user['id_rol'],     // id_rol (1, 2 o 3)
-                    'rolename' => $user['rol_nombre'], // Viene del JOIN
-                    'avatar'   => $user['avatar_url'] ?? 'default.png'
-                ];
-
-                echo json_encode([
-                    'success'  => true,
-                    'redirect' => BASE_URL . '/home'
-                ]);
+                    echo json_encode([
+                        'success'  => true,
+                        'redirect' => BASE_URL . '/home'
+                    ]);
+                } else {
+                    http_response_code(401);
+                    echo json_encode(['success' => false, 'message' => 'La contraseña es inválida.']);
+                }
             } else {
                 http_response_code(401);
-                echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas o usuario inactivo']);
+                echo json_encode(['success' => false, 'message' => 'El correo/DNI y contraseña son inválidos.']);
             }
             return;
         }
@@ -169,5 +174,45 @@ class AuthController
         // Cargar vista de despedida
         require VIEW_PATH . '/auth/sign-out.view.php';
         exit;
+    }
+
+    /**
+     * Verificar la contraseña del usuario actual (Seguridad Extra)
+     */
+    public function verifyPassword(): void
+    {
+        header('Content-Type: application/json');
+        if (!isset($_SESSION['user'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Sesión no iniciada']);
+            return;
+        }
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        $password = $data['password'] ?? '';
+
+        if (empty($password)) {
+            echo json_encode(['success' => false, 'message' => 'Contraseña requerida']);
+            return;
+        }
+
+        global $pdo;
+        $userModel = new User($pdo);
+        
+        // El usuario ya está logueado, usamos su ID de sesión
+        $userId = $_SESSION['user']['id'];
+        
+        // Necesitamos un método para buscar por ID o simplemente usar findByDni/Email
+        // Buscamos directamente en la BD por ID para estar seguros
+        $stmt = $pdo->prepare("SELECT password_hash FROM usuarios WHERE id_usuario = :id LIMIT 1");
+        $stmt->execute([':id' => $userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && password_verify($password, $user['password_hash'])) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Contraseña incorrecta']);
+        }
     }
 }

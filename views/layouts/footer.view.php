@@ -29,6 +29,8 @@
  </div>
  <!-- / Layout wrapper -->
 
+<?php require VIEW_PATH . '/partials/global/security_modal.php'; ?>
+
 
  <!-- Core JS -->
 
@@ -40,7 +42,7 @@
 
  <script src="<?= BASE_URL ?>/template/assets/vendor/js/menu.js"></script>
 
- <!-- endbuild -->
+
 
  <!-- Vendors JS -->
  <script src="<?= BASE_URL ?>/template/assets/vendor/libs/apex-charts/apexcharts.js"></script>
@@ -60,6 +62,8 @@
 
  <script src="<?= BASE_URL ?>/public/assets/vendor/datatables/js/datatables.js"></script>
  <script src="<?= BASE_URL ?>/public/assets/vendor/datatables/js/datatables.min.js"></script>
+
+ <!-- SWEETALERT2 -->
 
 
 

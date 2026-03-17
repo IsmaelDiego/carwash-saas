@@ -146,36 +146,40 @@ const TemporadaModule = {
             const fin = data.fecha_fin ? new Date(data.fecha_fin.replace(/-/g, '/')).toLocaleDateString() : '<span class="badge bg-label-success">PERIODO EN CURSO</span>';
             
             let html = `
-                <div class="text-center mb-4 p-3 bg-label-primary rounded-3">
-                    <h4 class="fw-bold text-primary mb-1 text-uppercase">${data.nombre}</h4>
-                    <span class="badge bg-${data.estado==1?'success':'secondary'} shadow-sm px-3">${data.estado==1?'ACTIVA':'CERRADA'}</span>
+                <div class="text-center mb-4">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-label-${data.estado==1?'success':'secondary'}" style="width: 80px; height: 80px;">
+                        <span class="fs-1 fw-bold text-${data.estado==1?'success':'secondary'}"><i class="bx ${data.estado==1?'bx-check-double':'bx-stop-circle'}"></i></span>
+                    </div>
+                    <h4 class="fw-bold mb-1 text-dark text-uppercase">${data.nombre}</h4>
+                    <div class="d-flex align-items-center justify-content-center mt-2">
+                        <span class="badge bg-label-${data.estado==1?'success':'secondary'} px-3 py-2"><i class="bx ${data.estado==1?'bx-check':'bx-lock-alt'} me-1"></i>${data.estado==1?'ACTIVA':'CERRADA'}</span>
+                    </div>
                 </div>
-                <div class="row g-4 mb-4">
+                
+                <div class="row g-3">
                     <div class="col-6">
-                        <div class="card shadow-none border bg-light h-100">
-                            <div class="card-body text-center p-3">
-                                <small class="text-muted d-block mb-1 text-uppercase fw-bold" style="font-size: 0.65rem;">Puntos Generados</small>
-                                <h3 class="mb-0 text-primary fw-bold">${parseFloat(data.puntos_gen).toLocaleString()}</h3>
-                            </div>
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-calendar"></i> Apertura</small>
+                            <span class="fw-semibold text-dark fs-6">${ini}</span>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="card shadow-none border bg-light h-100">
-                            <div class="card-body text-center p-3">
-                                <small class="text-muted d-block mb-1 text-uppercase fw-bold" style="font-size: 0.65rem;">Canjes Realizados</small>
-                                <h3 class="mb-0 text-danger fw-bold">${parseFloat(data.puntos_red).toLocaleString()}</h3>
-                            </div>
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-calendar-check"></i> Cierre</small>
+                            <span class="fw-semibold text-dark fs-6">${fin}</span>
                         </div>
                     </div>
-                </div>
-                <div class="list-group list-group-flush border-top border-bottom">
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span class="text-muted small"><i class="bx bx-calendar me-2"></i>Fecha de Apertura</span>
-                        <span class="fw-bold text-dark">${ini}</span>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-star"></i> Pts. Generados</small>
+                            <span class="fw-semibold text-primary fs-5">${parseFloat(data.puntos_gen).toLocaleString()}</span>
+                        </div>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span class="text-muted small"><i class="bx bx-calendar-check me-2"></i>Fecha de Cierre</span>
-                        <span class="fw-bold text-dark">${fin}</span>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-gift"></i> Tickets Canjeados</small>
+                            <span class="fw-semibold text-danger fs-5">${parseFloat(data.puntos_red).toLocaleString()}</span>
+                        </div>
                     </div>
                 </div>`;
             $('#contenidoDetalle').html(html);
@@ -200,7 +204,10 @@ const TemporadaModule = {
                     if(data.success) {
                         // Recargar página para actualizar cards y estado
                         if(formId === 'formEditarTemporada' || formId === 'registrarTemporada') {
-                            window.location.reload(); 
+                            bootstrap.Modal.getInstance(document.getElementById(modalId)).hide();
+                            self.initVisualFixes();
+                            self.mostrarToast(data.message, "success");
+                            setTimeout(() => { window.location.reload(); }, 1500);
                         } else {
                             bootstrap.Modal.getInstance(document.getElementById(modalId)).hide();
                             self.initVisualFixes();
@@ -209,7 +216,11 @@ const TemporadaModule = {
                         }
                     } else { self.mostrarToast(data.message, "danger"); }
                 } catch(err) { self.mostrarToast("Error", "danger"); }
-                finally { btn.prop('disabled', false).text(btnText); }
+                finally {
+                    if (formId !== 'formEditarTemporada' && formId !== 'registrarTemporada' || !data?.success) {
+                        btn.prop('disabled', false).text(btnText);
+                    }
+                }
             });
         };
 
@@ -237,7 +248,10 @@ const TemporadaModule = {
                 
                 if(data.success) {
                     // Al cerrar temporada, recargamos para que la UI cambie totalmente (Card activa desaparece)
-                    window.location.reload();
+                    bootstrap.Modal.getInstance(document.getElementById('modalCerrar')).hide();
+                    self.initVisualFixes();
+                    self.mostrarToast(data.message || "Se cerró la temporada correctamente", "success");
+                    setTimeout(() => { window.location.reload(); }, 1500);
                 } else {
                     self.mostrarToast(data.message, "danger");
                     btn.prop('disabled', false).text('SÍ, FINALIZAR AHORA');

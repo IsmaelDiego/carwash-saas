@@ -34,7 +34,7 @@ const ClienteModule = {
         infoEmpty: "0 registros",
         infoFiltered: "(filtrado)",
         paginate: { next: "Siguiente", previous: "Anterior" },
-        zeroRecords: `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="130" class="mb-3 opacity-75"><h5 class="fw-bold text-primary">No encontramos clientes</h5></div>`,
+        zeroRecords: `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay historial de clientes</h5></div>`, 
       },
       columns: [
         { data: "nombres", visible: false, defaultContent: "" },
@@ -284,19 +284,47 @@ const ClienteModule = {
           : "bg-label-info text-info";
 
       let html = `
-                <div class="row g-3">
-                    <div class="col-12 text-center mb-3">
-                        <div class="avatar avatar-xl mx-auto mb-2">
-                            <span class="avatar-initial rounded-circle ${avatarClass} fs-3 fw-bold">${iniciales}</span>
-                        </div>
-                        <h4 class="fw-bold mb-0 text-dark">${nom} ${ape}</h4>
-                        <p class="text-muted mb-0 text-primary">${data.dni}</p>
+                <div class="text-center mb-4">
+                    <div class="avatar avatar-xl mx-auto mb-3" style="width: 80px; height: 80px;">
+                        <span class="avatar-initial rounded-circle ${avatarClass} fs-1 fw-bold placeholder-glow shadow-sm">${iniciales}</span>
                     </div>
-                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Teléfono</small><div class="detalle-value">${data.telefono || "-"}</div></div></div>
-                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Puntos</small><div class="detalle-value text-warning fw-bold">${data.puntos_acumulados || 0}</div></div></div>
-                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">WhatsApp</small><div class="mt-1">${estadoBadge}</div></div></div>
-                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Registro</small><div class="small">${data.fecha_registro ? new Date(data.fecha_registro).toLocaleDateString() : "-"}</div></div></div>
-                    <div class="col-12"><label class="text-muted small fw-bold">OBSERVACIONES</label><div class="p-2 bg-light border rounded">${data.observaciones || "Sin observaciones"}</div></div>
+                    <h4 class="fw-bold mb-1 text-dark text-uppercase">${nom} ${ape}</h4>
+                    <div class="d-flex align-items-center justify-content-center mt-2">
+                        <span class="text-muted"><i class="bx bx-id-card me-1"></i>${data.dni}</span>
+                    </div>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-phone text-primary"></i> Teléfono</small>
+                            <span class="fw-bold text-dark fs-6">${data.telefono || "-"}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bxs-star text-warning"></i> Puntos</small>
+                            <span class="fw-bold text-warning fs-5">${data.puntos_acumulados || 0}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light text-center">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bxl-whatsapp text-success"></i> WhatsApp</small>
+                            <div class="mt-1">${estadoBadge}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-time text-secondary"></i> Registro</small>
+                            <span class="fw-semibold text-dark fs-6 text-truncate">${data.fecha_registro ? new Date(data.fecha_registro.replace(/-/g, "/")).toLocaleDateString() : "-"}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-notepad text-warning"></i> Observaciones</small>
+                            <span class="text-muted small">${data.observaciones || '<i>No hay observaciones adicionales para este cliente.</i>'}</span>
+                        </div>
+                    </div>
                 </div>`;
 
       $("#contenidoDetalle").html(html);

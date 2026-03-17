@@ -58,602 +58,296 @@
     }
 </style>
 
-<div class="content-wrapper">
+<div class="content-wrapper" data-base-url="<?= BASE_URL ?>">
     <div class="container-fluid flex-grow-1 container-p-y">
+        <!-- ═══ HEADER & FILTERS (Personal Style) ═══ -->
+        <div class="col-lg-12 mb-4">
+            <div class="m-1">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <nav aria-label="breadcrumb" class="me-auto">
+                        <ol class="breadcrumb mb-1">
+                            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/home">Inicio</a></li>
+                            <li class="breadcrumb-item active text-primary">Finanzas</li>
+                        </ol>
+                        <h4 class="fw-bold mb-0">Gestión de Finanzas</h4>
+                    </nav>
 
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-            <div>
-                <h5 class="fw-bold mb-1"><i class="bx bx-line-chart text-primary me-1"></i> Panel de Finanzas</h5>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/home">Inicio</a></li>
-                        <li class="breadcrumb-item active text-primary">Finanzas</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="d-flex gap-2">
-                <span class="badge bg-label-primary fs-6 py-2 px-3 d-flex align-items-center"><i class="bx bx-calendar me-2"></i><?= date('F Y') ?></span>
-                <button type="button" class="btn btn-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrarInsumo" onclick="document.getElementById('formRegistrarInsumo').reset(); document.getElementById('insumo_id').value='';">
-                    <i class="bx bx-plus me-1"></i> Nuevo Insumo
-                </button>
-                <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrarGasto">
-                    <i class="bx bx-plus me-1"></i> Nuevo Gasto
-                </button>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="input-group input-group-merge shadow-none border rounded" style="width: 260px;">
+                            <span class="input-group-text bg-white border-0"><i class="bx bx-search text-muted"></i></span>
+                            <input type="text" id="buscadorGlobal" class="form-control border-0 ps-0 bg-white" placeholder="Buscar en tablas...">
+                        </div>
+
+                        <!-- Selector Periodo -->
+                        <div class="input-group input-group-merge shadow-none border rounded" style="width: 220px;">
+                            <select id="filterMonth" class="form-select border-0 bg-white" onchange="cargarFinanzas()">
+                                <?php
+                                $nombres_meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                                for($m=1; $m<=12; $m++):
+                                    $sel = ($m == date('n')) ? 'selected' : '';
+                                    echo "<option value='$m' $sel>{$nombres_meses[$m-1]}</option>";
+                                endfor;
+                                ?>
+                            </select>
+                            <select id="filterYear" class="form-select border-0 border-start px-2 bg-white" style="max-width: 85px;" onchange="cargarFinanzas()">
+                                <?php
+                                for($y=2024; $y<=date('Y')+1; $y++):
+                                    $sel = ($y == date('Y')) ? 'selected' : '';
+                                    echo "<option value='$y' $sel>$y</option>";
+                                endfor;
+                                ?>
+                            </select>
+                        </div>
+
+                        <div class="d-flex gap-1 border-start ps-2">
+                            <button type="button" class="btn btn-primary shadow-sm" onclick="prepararNuevoGasto()" data-bs-toggle="modal" data-bs-target="#modalRegistrarGasto" title="Nuevo Gasto">
+                                <i class="bx bx-plus me-1"></i> Gasto
+                            </button>
+                            <button type="button" class="btn btn-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrarInsumo" title="Nuevo Insumo">
+                                <i class="bx bx-box me-1"></i> Insumo
+                            </button>
+                            <button type="button" class="btn btn-success shadow-sm" onclick="exportarGastos()" title="Exportar CSV">
+                                <i class="bx bx-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="monthBadgeStatus" class="mt-2 text-end"></div>
             </div>
         </div>
-
-        <!-- ═══ KPI CARDS ═══ -->
-        <div class="row mb-4" id="kpiCards">
-            <div class="col-sm-6 col-xl-3 mb-3">
-                <div class="card fin-card shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="fin-icon bg-label-success"><i class="bx bx-dollar-circle text-success"></i></div>
-                        <div>
-                            <div class="fin-val text-success" id="kIngHoy">S/ 0</div>
-                            <div class="fin-lbl">Ingresos Hoy</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3 mb-3">
-                <div class="card fin-card shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="fin-icon bg-label-primary"><i class="bx bx-wallet text-primary"></i></div>
-                        <div>
-                            <div class="fin-val text-primary" id="kIngMes">S/ 0</div>
-                            <div class="fin-lbl">Ingresos del Mes</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3 mb-3">
-                <div class="card fin-card shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="fin-icon bg-label-danger"><i class="bx bx-trending-down text-danger"></i></div>
-                        <div>
-                            <div class="fin-val text-danger" id="kGastos">S/ 0</div>
-                            <div class="fin-lbl">Gastos del Mes</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3 mb-3">
-                <div class="card fin-card shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="fin-icon bg-label-info"><i class="bx bx-group text-info"></i></div>
-                        <div>
-                            <div class="fin-val text-info" id="kPlanilla">S/ 0</div>
-                            <div class="fin-lbl">Planilla del Mes</div>
+  <!-- ═══ SECCIÓN DE TABLAS (OCULTA POR DEFECTO PARA ENFOQUE) ═══ -->
+        <div class="accordion mb-4 border-0 shadow-none" id="accordionTables">
+            <div class="accordion-item border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTables">
+                        <i class="bx bx-table me-2 text-primary"></i> Ver Detalle de Movimientos e Inventario
+                    </button>
+                </h2>
+                <div id="collapseTables" class="accordion-collapse collapse" data-bs-parent="#accordionTables">
+                    <div class="accordion-body p-4" style="background-color: #faf9ffff; border-bottom: 1px solid #1b1fffff;">
+                        <div class="row">
+                            <!-- ═══ HISTORIAL DE GASTOS ═══ -->
+                            <div class="col-xl-7 mb-4">
+                                <h6 class="fw-bold mb-3"><i class="bx bx-list-ul text-primary me-1"></i> Historial de Gastos</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-hover w-100 bg-white shadow-sm rounded-3" id="tbGastos">
+                                        <thead class="bg-primary">
+                                            <tr>
+                                                <th class="d-none">ID</th>
+                                                <th class="text-white">Fecha</th>
+                                                <th class="text-white">Descripción</th>
+                                                <th class="text-white">Tipo</th>
+                                                <th class="text-white">Monto</th>
+                                                <th class="text-white">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbodyGastos">
+                                            <!-- Cargado por AJAX -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- ═══ INVENTARIO DE INSUMOS ═══ -->
+                            <div class="col-xl-5 mb-4 border-start">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0"><i class="bx bx-box text-warning me-1"></i> Control de Insumos</h6>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover w-100 bg-white shadow-sm rounded-3" id="tbInsumos">
+                                        <thead class="bg-warning">
+                                            <tr>
+                                                <th class="d-none">ID</th>
+                                                <th class="text-white">Insumo</th>
+                                                <th class="text-white">Stock</th>
+                                                <th class="text-white">Costo</th>
+                                                <th class="text-white">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (isset($lista_insumos)): foreach ($lista_insumos as $ins): ?>
+                                                <tr>
+                                                    <td class="d-none"><?= $ins['id_insumo'] ?></td>
+                                                    <td class="small fw-bold"><?= htmlspecialchars($ins['nombre']) ?></td>
+                                                    <td>
+                                                        <span class="badge bg-label-<?= $ins['stock_actual'] <= 5 ? 'danger' : 'success' ?>">
+                                                            <?= $ins['stock_actual'] ?> <?= $ins['unidad_medida'] ?>
+                                                        </span>
+                                                    </td>
+                                                    <td class="small">S/ <?= number_format($ins['costo_unitario'], 2) ?></td>
+                                                    <td class="text-end">
+                                                        <div class="d-flex gap-1 justify-content-end">
+                                                            <?php 
+                                                                $js_name = htmlspecialchars(addslashes($ins['nombre']), ENT_QUOTES, 'UTF-8');
+                                                                $js_um = htmlspecialchars(addslashes($ins['unidad_medida']), ENT_QUOTES, 'UTF-8');
+                                                            ?>
+                                                            <button class="btn btn-sm btn-icon btn-label-warning" onclick='editarInsumo(<?= $ins["id_insumo"] ?>, "<?= $js_name ?>", "<?= $js_um ?>", <?= $ins["costo_unitario"] ?>, <?= $ins["stock_actual"] ?>)' title="Editar"><i class="bx bx-edit"></i></button>
+                                                            <button class="btn btn-sm btn-icon btn-label-danger" onclick="eliminarInsumo(<?= $ins['id_insumo'] ?>)" title="Eliminar"><i class="bx bx-trash"></i></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
+        <!-- ═══ BLOQUE 1: RESUMEN Y PUNTO DE EQUILIBRIO ═══ -->
         <div class="row mb-4">
-            <!-- ═══ PUNTO DE EQUILIBRIO ═══ -->
+            <!-- 1. Balance del Periodo (Explicado) -->
             <div class="col-lg-4 mb-3">
-                <div class="pe-card h-100 d-flex flex-column justify-content-center">
-                    <i class="bx bx-target-lock mb-2" style="font-size:2.5rem;opacity:0.8"></i>
-                    <div class="pe-lbl">Punto de Equilibrio Mensual</div>
-                    <div class="pe-val" id="puntoEq">S/ 0</div>
-                    <div class="pe-lbl mt-2">Ventas mínimas necesarias para cubrir costos</div>
-                    <div class="mt-2">
-                        <div class="progress" style="height:8px;background:rgba(255,255,255,0.2)">
-                            <div class="progress-bar bg-warning" id="peProgress" style="width:0%"></div>
-                        </div>
-                        <small class="mt-1 d-block" id="pePercentText">0% alcanzado</small>
+                <div class="card shadow-sm h-100 border-0 overflow-hidden" style="border-radius:14px;">
+                    <div class="bg-primary p-3 text-white">
+                        <h6 class="fw-bold mb-0 text-white"><i class="bx bx-wallet me-2"></i>1. Balance de Caja</h6>
+                        <small class="opacity-75">Resumen de lo que entró y salió.</small>
                     </div>
-                </div>
-            </div>
-
-            <!-- ═══ BALANCE RESUMEN ═══ -->
-            <div class="col-lg-4 mb-3">
-                <div class="card shadow-sm h-100" style="border:none;border-radius:14px">
                     <div class="card-body">
-                        <h6 class="fw-bold mb-3"><i class="bx bx-bar-chart-alt-2 text-primary me-1"></i>Balance del Mes</h6>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">Ingresos Brutos</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted" title="Total de dinero recibido por servicios">Ingresos Brutos <i class="bx bx-info-circle small"></i></span>
                             <span class="fw-bold text-success" id="bIngresos">S/ 0</span>
                         </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">(-) Gastos Fijos</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted" title="Gastos que no cambian (Alquiler, Luz, Internet)">Gastos Fijos <i class="bx bx-info-circle small"></i></span>
                             <span class="fw-bold text-danger" id="bGFijos">S/ 0</span>
                         </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">(-) Gastos Variables</span>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted" title="Gastos por uso (Insumos, reparaciones)">Gastos Variables <i class="bx bx-info-circle small"></i></span>
                             <span class="fw-bold text-danger" id="bGVariables">S/ 0</span>
                         </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">(-) Planilla</span>
+                        <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                            <span class="text-muted" title="Sueldos pagados a tu personal">Pago Personal <i class="bx bx-info-circle small"></i></span>
                             <span class="fw-bold text-danger" id="bPlanilla">S/ 0</span>
                         </div>
-                        <div class="d-flex justify-content-between py-2 mt-2">
-                            <span class="fw-bold fs-5">Utilidad Neta</span>
-                            <span class="fw-bold fs-5" id="bUtilidad">S/ 0</span>
+                        
+                        <div class="p-3 rounded-3 text-center mb-0" id="balanceUtilityContainer" style="background: rgba(105, 108, 255, 0.05);">
+                            <div class="small text-muted mb-1 fw-bold">UTILIDAD (GANANCIA REAL)</div>
+                            <div class="fw-bold fs-4" id="bUtilidad">S/ 0.00</div>
+                            <p class="small text-muted mb-0 mt-1" style="font-size: 0.7rem;">Esto es lo que queda libre para ti después de pagar todo.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ═══ MÉTODOS DE PAGO ═══ -->
+            <!-- 2. Punto de Equilibrio (Nueva Sección Explicada) -->
             <div class="col-lg-4 mb-3">
-                <div class="card shadow-sm h-100" style="border:none;border-radius:14px">
+                <div class="card shadow-sm h-100 border-0 overflow-hidden" style="border-radius:14px;">
+                    <div class="bg-warning p-3 text-dark">
+                        <h6 class="fw-bold mb-0"><i class="bx bx-target-lock me-2"></i>2. Punto de Equilibrio</h6>
+                        <small class="text-dark opacity-75">¿Cuánto necesito para no perder dinero?</small>
+                    </div>
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <div class="row text-center mb-3">
+                            <div class="col-6 border-end">
+                                <small class="text-muted d-block">Meta Mensual</small>
+                                <div class="fw-bold fs-4 text-warning" id="puntoEq">S/ 0.00</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Meta Diaria</small>
+                                <div class="fw-bold fs-4 text-dark" id="puntoEqDiario">S/ 0.00</div>
+                            </div>
+                        </div>
+                        <p class="small text-muted text-center mb-3">Este es el monto mínimo que debes generar para cubrir costos y planilla.</p>
+                        
+                        <div class="bg-white p-3 rounded-3 border shadow-none mt-auto">
+                            <div class="progress mb-2" style="height: 10px; background: #f0f0f0;">
+                                <div id="peProgress" class="progress-bar bg-warning" style="width: 0%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="fw-bold" id="pePercentText">0% Cubierto</span>
+                                <span class="text-muted" id="peStatusText">En proceso...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Análisis de Metas (Simulador) -->
+            <div class="col-lg-4 mb-3">
+                <div class="card shadow-sm h-100 border-0 overflow-hidden" style="border-radius:14px;">
+                    <div class="bg-info p-3 text-white">
+                        <h6 class="fw-bold mb-0 text-white"><i class="bx bx-bullseye me-2"></i>3. Análisis de Metas</h6>
+                        <small class="opacity-75">Simulación y proyección de crecimiento.</small>
+                    </div>
                     <div class="card-body">
-                        <h6 class="fw-bold mb-3"><i class="bx bx-credit-card text-primary me-1"></i>Distribución de Pagos</h6>
-                        <div id="chartMetodos"></div>
+                        <div id="projectionAlert" class="mb-3">
+                            <p class="small mb-2" id="projectionText">Analizando el rendimiento del mes...</p>
+                            <div class="fw-bold fs-4 text-info" id="projectionValue">S/ 0.00</div>
+                        </div>
+                        <div class="progress mt-2" style="height: 6px;">
+                            <div id="projectionProgress" class="progress-bar bg-info" style="width: 0%"></div>
+                        </div>
+                        <div class="mt-3 p-2 bg-label-info rounded small" id="metaHint">
+                            <i class="bx bx-bulb me-1"></i> <strong>Tip:</strong> Intenta que tus ingresos sean al menos 50% mayores que tus egresos para un crecimiento saludable.
+                        </div>
+                        <small class="d-block mt-2 text-muted text-center fw-bold" id="projectionStatus">Estado: Cargando...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ BLOQUE 2: DISTRIBUCIÓN Y TENDENCIAS ═══ -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-3">
+                <div class="card shadow-sm border-0 h-100" style="border-radius:14px">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="fw-bold mb-0 text-secondary"><i class="bx bx-credit-card me-1"></i>Distribución de Pagos</h6>
+                            <i class="bx bx-question-mark border rounded-circle p-1 text-muted" title="Muestra qué métodos de pago prefieren tus clientes." data-bs-toggle="tooltip"></i>
+                        </div>
+                        <div id="chartMetodos" style="min-height: 250px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-3">
+                <div class="card shadow-sm border-0 h-100" style="border-radius:14px">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="fw-bold mb-0 text-secondary"><i class="bx bx-pie-chart-alt me-1"></i>Desglose de Egresos</h6>
+                            <i class="bx bx-question-mark border rounded-circle p-1 text-muted" title="Divide tus gastos en Fijos, Variables y Sueldos para ver dónde gastas más." data-bs-toggle="tooltip"></i>
+                        </div>
+                        <div id="chartGastosPie" style="min-height: 250px;"></div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="row mb-4">
-            <!-- ═══ GRÁFICO INGRESOS VS GASTOS ═══ -->
-            <div class="col-lg-8 mb-3">
-                <div class="card chart-card shadow-sm">
-                    <div class="card-header border-0">
-                        <h6 class="fw-bold mb-0"><i class="bx bx-line-chart text-primary me-1"></i>Ingresos vs Gastos (6 Meses)</h6>
+            <div class="col-12">
+                <div class="card shadow-sm border-0" style="border-radius:14px">
+                    <div class="card-header border-0 bg-transparent pt-4 px-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="bx bx-line-chart text-primary me-1"></i>Evolución Mensual (Ingresos vs Gastos)</h6>
+                            <span class="badge bg-label-secondary small">Últimos 6 meses</span>
+                        </div>
                     </div>
-                    <div class="card-body pt-0">
-                        <div id="chartIngresosGastos" style="min-height:320px"></div>
-                    </div>
-                </div>
-            </div>
-            <!-- ═══ DESGLOSE GASTOS ═══ -->
-            <div class="col-lg-4 mb-3">
-                <div class="card chart-card shadow-sm h-100">
-                    <div class="card-header border-0">
-                        <h6 class="fw-bold mb-0"><i class="bx bx-pie-chart-alt text-danger me-1"></i>Desglose de Gastos</h6>
-                    </div>
-                    <div class="card-body pt-0">
-                        <div id="chartGastosPie" style="min-height:280px"></div>
+                    <div class="card-body px-4 pb-4">
+                        <div id="chartIngresosGastos" style="min-height:350px"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <!-- ═══ HISTORIAL DE GASTOS ═══ -->
-            <div class="col-12 mb-4">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0"><i class="bx bx-list-ul text-primary me-1"></i> Historial de Gastos Registrados</h6>
-                    </div>
-                    <div class="table-responsive text-nowrap px-3">
-                        <table class="table table-hover w-100 my-3" id="tbGastos" >
-                            <thead>
-                                <tr style="background-color: #f8f9fa;">
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">ID</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Descripción</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Tipo</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Monto</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Fecha</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Registrado Por</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (isset($historial_gastos) && count($historial_gastos) > 0): ?>
-                                    <?php foreach ($historial_gastos as $g): ?>
-                                        <tr>
-                                            <td><?= $g['id_gasto'] ?></td>
-                                            <td class="fw-bold"><?= htmlspecialchars($g['descripcion']) ?></td>
-                                            <td>
-                                                <?php if ($g['tipo_gasto'] == 'FIJO'): ?>
-                                                    <span class="badge bg-label-danger">Fijo</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-label-warning">Variable</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="fw-bold text-danger">S/ <?= number_format($g['monto'], 2) ?></td>
-                                            <td><?= date('d/m/Y', strtotime($g['fecha_gasto'])) ?></td>
-                                            <td class="text-muted small"><?= htmlspecialchars($g['registrador'] ?? 'Sistema') ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+      
 
-        <div class="row">
-            <!-- ═══ INVENTARIO DE INSUMOS ═══ -->
-            <div class="col-12 mb-4">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0"><i class="bx bx-box text-warning me-1"></i> Control de Insumos</h6>
-                    </div>
-                    <div class="table-responsive text-nowrap px-3">
-                        <table class="table table-hover w-100 my-3" id="tbInsumos">
-                            <thead>
-                                <tr style="background-color: #f8f9fa;">
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">ID</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Insumo</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">U. / Medida</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Costo Unit.</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Stock</th>
-                                    <th class="text-secondary fw-bold text-uppercase" style="font-size: 0.75rem;">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (isset($lista_insumos) && count($lista_insumos) > 0): ?>
-                                    <?php foreach ($lista_insumos as $i): ?>
-                                        <tr>
-                                            <td><?= $i['id_insumo'] ?></td>
-                                            <td class="fw-bold"><?= htmlspecialchars($i['nombre']) ?></td>
-                                            <td><span class="badge bg-label-info"><?= htmlspecialchars($i['unidad_medida']) ?></span></td>
-                                            <td class="fw-bold text-dark">S/ <?= number_format($i['costo_unitario'], 2) ?></td>
-                                            <td>
-                                                <?php if ($i['stock_actual'] <= 5): ?>
-                                                    <span class="badge bg-danger rounded-pill"><?= $i['stock_actual'] ?></span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-success rounded-pill"><?= $i['stock_actual'] ?></span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-icon rounded-pill text-primary" onclick="editarInsumo(<?= $i['id_insumo'] ?>, '<?= addslashes($i['nombre']) ?>', '<?= addslashes($i['unidad_medida']) ?>', <?= $i['costo_unitario'] ?>, <?= $i['stock_actual'] ?>)">
-                                                    <i class="bx bx-edit-alt"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
+    </div><!-- /container-fluid -->
     <div class="content-backdrop fade"></div>
-</div>
+</div><!-- /content-wrapper -->
 
-<!-- Modal Registrar Gasto -->
-<div class="modal fade" id="modalRegistrarGasto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="formRegistrarGasto">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bx bx-trending-down text-danger me-2"></i> Registrar Nuevo Gasto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Descripción del Gasto (Servicios, Insumos, etc.)</label>
-                        <input type="text" name="descripcion" class="form-control" required placeholder="Ej: Pago de Luz Marzo">
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Tipo de Gasto</label>
-                            <select name="tipo" class="form-select" required>
-                                <option value="VARIABLE">Gasto Variable (Insumos, Reparación)</option>
-                                <option value="FIJO">Gasto Fijo (Alquiler, Luz, Agua)</option>
-                            </select>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Origen (Opcional Insumo)</label>
-                            <select name="id_insumo" class="form-select">
-                                <option value="">Ninguno / Gastos Generales</option>
-                                <?php if (isset($lista_insumos)): foreach ($lista_insumos as $in): ?>
-                                        <option value="<?= $in['id_insumo'] ?>"><?= htmlspecialchars($in['nombre']) ?></option>
-                                <?php endforeach;
-                                endif; ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Monto (S/)</label>
-                            <input type="number" step="0.01" name="monto" class="form-control" required placeholder="0.00">
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Fecha de Gasto</label>
-                            <input type="date" name="fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Guardar Gasto</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Registrar Insumo -->
-<div class="modal fade" id="modalRegistrarInsumo" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="formRegistrarInsumo">
-                <input type="hidden" name="id_insumo" id="insumo_id">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bx bx-box text-warning me-2"></i> Registrar / Editar Insumo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nombre del Insumo</label>
-                        <input type="text" name="nombre" id="insumo_nombre" class="form-control" required placeholder="Ej: Champú Cera">
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Unidad de Medida</label>
-                            <input type="text" name="unidad_medida" id="insumo_um" class="form-control" placeholder="Galón, Unidad, etc" value="Unidad">
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Costo Referencial (S/)</label>
-                            <input type="number" step="0.01" name="costo_unitario" id="insumo_costo" class="form-control" required placeholder="0.00">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Stock Actual</label>
-                        <input type="number" name="stock_actual" id="insumo_stock" class="form-control" value="0">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning">Guardar Insumo</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
+<?php require VIEW_PATH . '/partials/finanzas/modals.php'; ?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 
 <style>
-    .dataTables_filter,
-    .dataTables_length {
-        display: none !important;
-    }
-
-    .dataTables_paginate {
-        display: flex !important;
-        justify-content: flex-start !important;
-        margin-top: 1.5rem !important;
-        padding-top: 1rem;
-        border-top: 1px solid #f0f0f0;
-    }
-
-    .dataTables_info {
-        text-align: right !important;
-        margin-top: 1.5rem !important;
-        padding-top: 1rem;
-        color: #b0b0b0 !important;
-    }
+    .dataTables_filter { display: block !important; margin-bottom: 1rem; }
+    .dataTables_length { display: block !important; padding-bottom: 0.5rem; }
+    .dataTables_length select { border-radius: 6px; border: 1px solid #eee; padding: 2px 5px; }
+    .dataTables_paginate { display: flex !important; justify-content: flex-end !important; margin-top: 1rem !important; }
+    .dataTables_info { color: #b0b0b0 !important; font-size: 0.8rem; margin-top: 1rem !important; }
+    .table-responsive { overflow-x: hidden !important; }
+    @media (max-width: 768px) { .table-responsive { overflow-x: auto !important; } }
 </style>
 
-<script>
-    const BASE_URL_FIN = "<?= BASE_URL ?>";
-
-    document.addEventListener('DOMContentLoaded', () => {
-        cargarFinanzas();
-        initTables();
-    });
-
-    async function cargarFinanzas() {
-        try {
-            const res = await fetch(`${BASE_URL_FIN}/admin/finanzas/getresumen`);
-            const json = await res.json();
-            if (!json.success) return;
-            const d = json.data;
-
-            const ing = d.ingresos || {};
-            const gas = d.gastos || {};
-            const planilla = parseFloat(d.planilla) || 0;
-
-            // KPIs
-            document.getElementById('kIngHoy').textContent = `S/ ${parseFloat(ing.ingresos_hoy || 0).toFixed(2)}`;
-            document.getElementById('kIngMes').textContent = `S/ ${parseFloat(ing.ingresos_mes || 0).toFixed(2)}`;
-            document.getElementById('kGastos').textContent = `S/ ${parseFloat(gas.gastos_total || 0).toFixed(2)}`;
-            document.getElementById('kPlanilla').textContent = `S/ ${planilla.toFixed(2)}`;
-
-            // Punto de equilibrio
-            const pe = parseFloat(d.punto_equilibrio) || 0;
-            document.getElementById('puntoEq').textContent = `S/ ${pe.toFixed(2)}`;
-            const ingMesValue = parseFloat(ing.ingresos_mes) || 0;
-            const pePercent = (pe > 0) ? Math.min(100, (ingMesValue / pe * 100)).toFixed(0) : 0;
-            document.getElementById('peProgress').style.width = `${pePercent}%`;
-            document.getElementById('pePercentText').textContent = `${pePercent}% alcanzado`;
-
-            // Balance
-            const gFijos = parseFloat(gas.gastos_fijos) || 0;
-            const gVars = parseFloat(gas.gastos_variables) || 0;
-            document.getElementById('bIngresos').textContent = `S/ ${ingMesValue.toFixed(2)}`;
-            document.getElementById('bGFijos').textContent = `S/ ${gFijos.toFixed(2)}`;
-            document.getElementById('bGVariables').textContent = `S/ ${gVars.toFixed(2)}`;
-            document.getElementById('bPlanilla').textContent = `S/ ${planilla.toFixed(2)}`;
-            const utilidad = ingMesValue - gFijos - gVars - planilla;
-            const elUtil = document.getElementById('bUtilidad');
-            elUtil.textContent = `S/ ${utilidad.toFixed(2)}`;
-            elUtil.classList.remove('text-success', 'text-danger');
-            elUtil.classList.add(utilidad >= 0 ? 'text-success' : 'text-danger');
-
-            if (typeof ApexCharts !== 'undefined') {
-                // Chart: Ingresos vs Gastos
-                const meses = d.ingresos_meses || [];
-                const gastosMeses = d.gastos_meses || [];
-                const labels = meses.map(m => m.mes);
-                const ingData = meses.map(m => parseFloat(m.total));
-                const gastosMap = {};
-                gastosMeses.forEach(g => {
-                    gastosMap[g.mes] = (gastosMap[g.mes] || 0) + parseFloat(g.total);
-                });
-                const gasData = labels.map(l => gastosMap[l] || 0);
-
-                new ApexCharts(document.getElementById('chartIngresosGastos'), {
-                    series: [{
-                        name: 'Ingresos',
-                        data: ingData
-                    }, {
-                        name: 'Gastos',
-                        data: gasData
-                    }],
-                    chart: {
-                        type: 'area',
-                        height: 320,
-                        toolbar: {
-                            show: false
-                        },
-                        fontFamily: 'Public Sans'
-                    },
-                    colors: ['#696cff', '#ff3e1d'],
-                    fill: {
-                        type: 'gradient',
-                        gradient: {
-                            opacityFrom: 0.3,
-                            opacityTo: 0.05
-                        }
-                    },
-                    xaxis: {
-                        categories: labels
-                    },
-                    yaxis: {
-                        labels: {
-                            formatter: v => 'S/ ' + v.toFixed(0)
-                        }
-                    },
-                    tooltip: {
-                        y: {
-                            formatter: v => 'S/ ' + v.toFixed(2)
-                        }
-                    }
-                }).render();
-
-                // Chart: Gastos Pie
-                new ApexCharts(document.getElementById('chartGastosPie'), {
-                    series: [gFijos, gVars, planilla],
-                    chart: {
-                        type: 'donut',
-                        height: 280
-                    },
-                    labels: ['Fijos', 'Variables', 'Planilla'],
-                    colors: ['#ff3e1d', '#ffab00', '#03c3ec'],
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: 'Gasto Total',
-                                        formatter: () => `S/ ${(gFijos + gVars + planilla).toFixed(0) }`
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }).render();
-
-                // Chart: Métodos de pago
-                const metodos = d.metodos_pago || [];
-                new ApexCharts(document.getElementById('chartMetodos'), {
-                    series: metodos.map(m => parseFloat(m.total)),
-                    chart: {
-                        type: 'donut',
-                        height: 200
-                    },
-                    labels: metodos.map(m => m.metodo_pago),
-                    colors: ['#71dd37', '#696cff', '#03c3ec', '#ffab00'],
-                    legend: {
-                        position: 'bottom'
-                    }
-                }).render();
-            }
-        } catch (e) {
-            console.error('Error cargando finanzas:', e);
-        }
-    }
-
-    function initTables() {
-        const lang = {
-            lengthMenu: " Mostrar _MENU_ registros",
-            info: "Mostrando _START_ a _END_ de _TOTAL_",
-            zeroRecords: "Sin registros found",
-            infoEmpty: "Sin registros",
-            paginate: {
-                next: "Sig",
-                previous: "Ant"
-            }
-        };
-
-        $('#tbGastos').DataTable({
-            language: lang,
-            order: [
-                [0, 'desc']
-            ],
-            columnDefs: [{
-                targets: [0],
-                visible: false
-            }]
-        });
-
-        $('#tbInsumos').DataTable({
-            language: lang,
-            order: [
-                [0, 'desc']
-            ],
-            columnDefs: [{
-                targets: [0],
-                visible: false
-            }]
-        });
-    }
-
-    function mostrarToast(msg, tipo) {
-        let toastEl = document.getElementById('toastSistema');
-        if (!toastEl) return;
-        toastEl.className = `bs-toast toast fade bg-${tipo} position-fixed top-0 end-0 m-3`;
-        document.getElementById('toastMensaje').textContent = msg;
-        new bootstrap.Toast(toastEl).show();
-    }
-
-    $(document).on('submit', '#formRegistrarGasto', function(e) {
-        e.preventDefault();
-        let btn = $(this).find('button[type="submit"]');
-        btn.prop('disabled', true).text('Guardando...');
-        $.post(`${BASE_URL_FIN}/admin/finanzas/registrargasto`, $(this).serialize(), function(res) {
-            if (res.success) {
-                mostrarToast(res.message, "success");
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                mostrarToast(res.message, "danger");
-                btn.prop('disabled', false).text('Guardar Gasto');
-            }
-        }, 'json').fail(() => {
-            mostrarToast('Error de comunicación.', 'danger');
-            btn.prop('disabled', false).text('Guardar Gasto');
-        });
-    });
-
-    $(document).on('submit', '#formRegistrarInsumo', function(e) {
-        e.preventDefault();
-        let btn = $(this).find('button[type="submit"]');
-        btn.prop('disabled', true).text('Guardando...');
-        $.post(`${BASE_URL_FIN}/admin/finanzas/registrarinsumo`, $(this).serialize(), function(res) {
-            if (res.success) {
-                mostrarToast(res.message, "success");
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                mostrarToast(res.message, "danger");
-                btn.prop('disabled', false).text('Guardar Insumo');
-            }
-        }, 'json').fail(() => {
-            mostrarToast('Error de comunicación.', 'danger');
-            btn.prop('disabled', false).text('Guardar Insumo');
-        });
-    });
-
-    function editarInsumo(id, nombre, um, costo, stock) {
-        $('#insumo_id').val(id);
-        $('#insumo_nombre').val(nombre);
-        $('#insumo_um').val(um);
-        $('#insumo_costo').val(costo);
-        $('#insumo_stock').val(stock);
-        new bootstrap.Modal(document.getElementById('modalRegistrarInsumo')).show();
-    }
-</script>
+<script src="<?= BASE_URL ?>/public/js/admin/finanzas.js"></script>

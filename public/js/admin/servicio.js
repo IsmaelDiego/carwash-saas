@@ -30,7 +30,7 @@ const ServicioModule = {
             "language": {
                 "lengthMenu": " _MENU_ ",
                 "info": "Mostrando _START_ a _END_ de _TOTAL_",
-                "zeroRecords": `<div class="text-center p-5"><h5 class="fw-bold text-primary">No hay vehículos registrados</h5></div>`,
+                "zeroRecords": `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay historial de servicios</h5></div>`, 
                 "paginate": { "next": "Sig.", "previous": "Ant." }
             },
             "columns": [
@@ -125,14 +125,35 @@ const ServicioModule = {
             let canje = data.permite_canje == 1 ? '<span class="text-primary fw-bold">SÍ</span>' : 'NO';
 
             let html = `
-                <div class="row g-3">
-                    <div class="col-12 text-center mb-3">
-                        <h2 class="fw-bold text-primary mb-0">${data.nombre}</h2>
-                        <div class="mt-2">${estadoHtml}</div>
+                <div class="text-center mb-4">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-label-primary" style="width: 80px; height: 80px;">
+                        <span class="fs-1 fw-bold text-primary"><i class="bx bx-layer"></i></span>
                     </div>
-                    <div class="col-12"><div class="detalle-card p-3 text-center"><small class="detalle-label">Precio Base</small><div class="fw-bold fs-3 text-dark">S/ ${data.precio_base}</div></div></div>
-                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Acumula Puntos</small><div>${acumula}</div></div></div>
-                    <div class="col-6"><div class="detalle-card p-3"><small class="detalle-label">Permite Canje</small><div>${canje}</div></div></div>
+                    <h4 class="fw-bold mb-1 text-dark text-uppercase">${data.nombre}</h4>
+                    <div class="d-flex align-items-center justify-content-center mt-2">
+                        ${estadoHtml}
+                    </div>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="border rounded p-3 d-flex flex-column text-center h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold text-uppercase mb-1" style="font-size: 0.75rem;"><i class="bx bx-money text-success"></i> Tarifa Base</small>
+                            <span class="fw-bold text-success fs-3">S/ ${parseFloat(data.precio_base).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light text-center">
+                            <small class="text-muted fw-bold text-uppercase mb-1" style="font-size: 0.75rem;"><i class="bx bxs-star text-warning"></i> Acumula Puntos</small>
+                            <span class="fw-semibold text-dark fs-6 mt-1">${acumula}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light text-center">
+                            <small class="text-muted fw-bold text-uppercase mb-1" style="font-size: 0.75rem;"><i class="bx bx-gift text-info"></i> Permite Canje</small>
+                            <span class="fw-semibold text-dark fs-6 mt-1">${canje}</span>
+                        </div>
+                    </div>
                 </div>`;
             $('#contenidoDetalle').html(html);
             new bootstrap.Modal(document.getElementById('modalDetalle')).show();

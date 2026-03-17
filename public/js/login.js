@@ -1,12 +1,48 @@
 document.addEventListener("DOMContentLoaded", () => {
     const loginForm = document.getElementById("loginForm");
     const messageBox = document.getElementById("loginMessage");
-
     function showAlert(message, type) {
         if (!messageBox) return;
         messageBox.style.display = "block";
         messageBox.className = `alert alert-${type} text-center`;
         messageBox.innerText = message;
+    }
+
+    const radios = document.querySelectorAll('input[name="login_type"]');
+    const identInput = document.getElementById('identifier');
+    const identLabel = document.getElementById('identLabel');
+
+    if (radios && identInput) {
+        radios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                identInput.value = ''; // Limpiar al cambiar
+                if (e.target.value === 'dni') {
+                    identLabel.innerText = "DNI";
+                    identInput.type = "text";
+                    identInput.inputMode = "numeric";
+                    identInput.placeholder = "Ej: 45892122";
+                    identInput.maxLength = 8;
+                    identInput.minLength = 8;
+                    identInput.pattern = "\\d{8}";
+                } else {
+                    identLabel.innerText = "Correo Electrónico";
+                    identInput.type = "email";
+                    identInput.inputMode = "email";
+                    identInput.placeholder = "Ej: admin@carwash.com";
+                    identInput.removeAttribute("maxLength");
+                    identInput.removeAttribute("minLength");
+                    identInput.removeAttribute("pattern");
+                }
+            });
+        });
+
+        // Filtrar números si está en modo DNI
+        identInput.addEventListener('input', function() {
+            const isDni = document.querySelector('input[name="login_type"]:checked').value === 'dni';
+            if (isDni) {
+                this.value = this.value.replace(/[^0-9]/g, ''); // Solo números
+            }
+        });
     }
 
     if (loginForm) {

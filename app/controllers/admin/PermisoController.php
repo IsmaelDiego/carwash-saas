@@ -20,9 +20,14 @@ class PermisoController{
     }
 
     public function index() {
-        $permisos = $this->permisoModel->getAll();
         $empleados = $this->empleadoModel->getAll();
         require VIEW_PATH . '/admin/rrhh_permisos.view.php';
+    }
+
+    public function getall() {
+        header('Content-Type: application/json');
+        $permisos = $this->permisoModel->getAll(null); // Traer todos para que Datatables filtre localmente
+        echo json_encode(['data' => $permisos]);
     }
 
     public function registrar() {
@@ -57,5 +62,12 @@ class PermisoController{
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
         }
+    }
+
+    public function getstats() {
+        header('Content-Type: application/json');
+        $stats = $this->permisoModel->getEstadisticas();
+        echo json_encode($stats);
+        exit;
     }
 }

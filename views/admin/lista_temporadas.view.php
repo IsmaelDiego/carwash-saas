@@ -111,14 +111,14 @@
 
                                 <div class="col-md-6">
                                     <div class="d-flex flex-column h-100 ps-4">
-                                        <span class="stat-label mb-2">Canjes Realizados (Puntos)</span>
+                                        <span class="stat-label mb-2">Canjes Realizados (Tickets)</span>
                                         <div class="d-flex align-items-center gap-3">
                                             <span class="stat-value text-dark"><?= number_format($sAct['red'], 0) ?></span>
                                             <span class="trend-badge <?= $varRed >= 0 ? 'bg-label-success text-success' : 'bg-label-danger text-danger' ?>">
                                                 <i class='bx <?= $varRed >= 0 ? 'bx-up-arrow-alt' : 'bx-down-arrow-alt' ?>'></i> <?= abs($varRed) ?>%
                                             </span>
                                         </div>
-                                        <small class="text-muted mt-2">Puntos redimidos por clientes</small>
+                                        <small class="text-muted mt-2">Tickets que usaron canje</small>
                                     </div>
                                 </div>
                             </div>
@@ -196,11 +196,11 @@
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
                 <h5 class="mb-0 fw-bold text-primary"><i class="bx bx-list-ul me-1"></i> Historial de Periodos</h5>
                 <div class="d-flex gap-2">
-                    <div class="input-group input-group-sm bg-white border rounded-pill px-2" style="width: 250px;">
-                        <span class="input-group-text border-0 bg-transparent text-muted"><i class="bx bx-search"></i></span>
-                        <input type="text" id="buscadorGlobal" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar temporada...">
+                    <div class="input-group" style="width: 240px;">
+                        <span class="input-group-text"><i class="bx bx-search text-muted"></i></span>
+                        <input type="text" id="buscadorGlobal" class="form-control" placeholder="Buscar temporada..." autocomplete="off">
                     </div>
-                    <button class="btn btn-sm btn-outline-success rounded-circle" id="btnExportar" title="Exportar Excel">
+                    <button class="btn btn-sm btn-outline-success" id="btnExportar" title="Exportar Excel">
                         <i class="bx bxs-file-export"></i>
                     </button>
                 </div>

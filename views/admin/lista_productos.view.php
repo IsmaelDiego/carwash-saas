@@ -43,8 +43,8 @@
     <div class="container-fluid flex-grow-1 container-p-y">
 
         <!-- ═══ STATS ═══ -->
-        <div class="row mb-4">
-            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+        <div class="row mb-4 g-3">
+            <div class="col-sm-6 col-md-4 col-xl">
                 <div class="card stat-prod-card shadow-sm h-100" style="border:1px solid #f0f0f0;">
                     <div class="card-body d-flex align-items-center gap-3 p-3">
                         <div class="stat-prod-icon bg-label-primary shadow-sm"><i class="bx bx-package text-primary"></i></div>
@@ -54,7 +54,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+            <div class="col-sm-6 col-md-4 col-xl">
                 <div class="card stat-prod-card shadow-sm h-100" style="border:1px solid #f0f0f0;">
                     <div class="card-body d-flex align-items-center gap-3 p-3">
                         <div class="stat-prod-icon bg-label-success shadow-sm"><i class="bx bx-check-circle text-success"></i></div>
@@ -64,7 +64,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+            <div class="col-sm-6 col-md-4 col-xl">
                 <div class="card stat-prod-card shadow-sm h-100" style="border:1px solid #f0f0f0;">
                     <div class="card-body d-flex align-items-center gap-3 p-3">
                         <div class="stat-prod-icon bg-label-warning shadow-sm"><i class="bx bx-error text-warning"></i></div>
@@ -74,7 +74,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+            <div class="col-sm-6 col-md-4 col-xl">
                 <div class="card stat-prod-card shadow-sm h-100" style="border:1px solid #f0f0f0;">
                     <div class="card-body d-flex align-items-center gap-3 p-3">
                         <div class="stat-prod-icon bg-label-danger shadow-sm"><i class="bx bx-x-circle text-danger"></i></div>
@@ -84,22 +84,22 @@
                     </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+            <div class="col-sm-6 col-md-4 col-xl">
+                <div class="card stat-prod-card shadow-sm h-100" style="border:1px solid #f0f0f0;">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                        <div class="stat-prod-icon bg-label-danger shadow-sm"><i class="bx bx-timer text-danger"></i></div>
+                        <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Por Vencer</small>
+                            <div class="fw-bold text-danger" id="stat_por_vencer" style="font-size:1.4rem">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-xl">
                 <div class="card stat-prod-card shadow-sm h-100" style="border:1px solid #f0f0f0;">
                     <div class="card-body d-flex align-items-center gap-3 p-3">
                         <div class="stat-prod-icon bg-label-info shadow-sm"><i class="bx bx-wallet text-info"></i></div>
                         <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Valor Inventario</small>
                             <div class="fw-bold text-info" id="stat_valor_inv" style="font-size:1.4rem">S/ 0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
-                <div class="card stat-prod-card shadow-sm h-100" style="border:1px solid #f0f0f0;">
-                    <div class="card-body d-flex align-items-center gap-3 p-3">
-                        <div class="stat-prod-icon bg-label-secondary shadow-sm"><i class="bx bx-trending-up text-secondary"></i></div>
-                        <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Valor Venta</small>
-                            <div class="fw-bold text-secondary" id="stat_valor_venta" style="font-size:1.4rem">S/ 0</div>
                         </div>
                     </div>
                 </div>
@@ -123,8 +123,8 @@
 
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <div class="input-group" style="width: 240px;">
-                            <input type="text" id="buscadorGlobal" class="form-control" placeholder="Buscar producto..." autocomplete="off">
                             <span class="input-group-text"><i class="bx bx-search text-muted"></i></span>
+                            <input type="text" id="buscadorGlobal" class="form-control" placeholder="Buscar producto..." autocomplete="off">
                         </div>
 
                         <select class="form-select" id="filtroStock" style="width: 160px;">
@@ -133,7 +133,12 @@
                             <option value="bajo_stock">Bajo stock</option>
                             <option value="sin_stock">Sin stock</option>
                         </select>
-
+                        <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
+                            <i class="bx bx-filter-alt me-1"></i> Filtros
+                        </button>
+                        <button class="btn btn-outline-success" type="button" id="btnExportar">
+                            <i class="bx bxs-file-export p-2"></i>
+                        </button>
                         <button class="btn btn-primary shadow-sm" id="btnNuevoProducto">
                             <i class="bx bx-plus me-1"></i> Nuevo Producto
                         </button>
@@ -148,14 +153,12 @@
                 <table class="table table-hover w-100 my-3" id="tablaProductos">
                     <thead class="bg-primary">
                         <tr>
+                            <th class="d-none">FechaRaw</th>
                             <th style="color: #f0f0f0;">ID</th>
                             <th style="color: #f0f0f0;">Producto</th>
-                            <th class="text-center" style="color: #f0f0f0;">P. Compra</th>
-                            <th class="text-center" style="color: #f0f0f0;">P. Venta</th>
-                            <th class="text-center" style="color: #f0f0f0;">Margen</th>
-                            <th class="text-center" style="color: #f0f0f0;">Stock</th>
-                            <th class="text-center" style="color: #f0f0f0;">Stock Mín.</th>
-                            <th class="text-center" style="color: #f0f0f0;">Estado</th>
+                            <th class="text-center" style="color: #f0f0f0;">Costos/Venta</th>
+                            <th class="text-center" style="color: #f0f0f0;">Disponibilidad (Stock)</th>
+                            <th class="text-center" style="color: #f0f0f0;">Caducidad / Estado</th>
                             <th class="text-center" style="color: #f0f0f0;">Acciones</th>
                         </tr>
                     </thead>
@@ -167,11 +170,13 @@
     </div>
 </div>
 
+<?php require VIEW_PATH . '/partials/producto/filtros.php'; ?>
+
 <!-- ═══ MODALES ═══ -->
 <?php require VIEW_PATH . '/partials/producto/modals.php'; ?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
 
-<?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
-
 <script> const BASE_URL = "<?= BASE_URL ?>"; </script>
 <script src="<?= BASE_URL ?>/public/js/admin/producto.js"></script>
+<?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
+

@@ -23,7 +23,7 @@ const EmpleadoModule = {
             "pageLength": 10,
             "language": {
                 "info": "Mostrando _START_ a _END_ de _TOTAL_",
-                "zeroRecords": `<div class="text-center p-5"><i class="bx bx-group text-muted" style="font-size:3rem"></i><h5 class="fw-bold text-primary mt-2">No se encontraron empleados</h5></div>`,
+                "zeroRecords": `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay historial de empleados</h5></div>`, 
                 "paginate": { "next": "Sig.", "previous": "Ant." }
             },
             "columns": [
@@ -233,6 +233,15 @@ const EmpleadoModule = {
     initEventosUI: function() {
         const self = this;
 
+        // EVENTOS RENIEC
+        $('#btnBuscarDniEmpleado').on('click', () => self.consultarReniec());
+        $('#reg_dni').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                self.consultarReniec();
+            }
+        });
+
         // BUSCADOR
         $('#buscadorGlobal').on('keyup', function() {
             self.tabla.search(this.value).draw();
@@ -245,6 +254,15 @@ const EmpleadoModule = {
 
         // EXPORTAR
         $('#btnExportar').on('click', () => self.tabla.button('.buttons-excel').trigger());
+
+        // NUEVO EMPLEADO: Verificar primero
+        $('#btnNuevoEmpleado').on('click', async function(e) {
+            e.preventDefault();
+            const password = await window.confirmByPassword();
+            if(password) {
+                $('#modalRegistrar').modal('show');
+            }
+        });
 
         // TOGGLE PASSWORD
         $(document).on('click', '.btn-toggle-pass', function() {
@@ -262,12 +280,20 @@ const EmpleadoModule = {
 
         // SWITCH ESTADO
         $('#tablaEmpleados tbody').on('change', '.switch-estado', async function() {
-            const el = $(this); el.prop('disabled', true);
+            const el = $(this); 
+            const isChecked = el.is(':checked');
+            el.prop('checked', !isChecked); // Revertir temporalmente
+            
+            const confirmed = await window.confirmByPassword();
+            if(!confirmed) return;
+
+            el.prop('checked', isChecked); // Restaurar si confirmó
+            el.prop('disabled', true);
             try {
                 const res = await fetch(`${BASE_URL}/admin/empleado/cambiarestado`, {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ id_usuario: el.data('id'), estado: el.is(':checked') ? 1 : 0 })
+                    body: JSON.stringify({ id_usuario: el.data('id'), estado: isChecked ? 1 : 0 })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -308,70 +334,87 @@ const EmpleadoModule = {
 
             const html = `
                 <div class="text-center mb-4">
-                    <div class="avatar-empleado bg-label-${color} mx-auto mb-2" style="width:64px;height:64px;font-size:1.5rem">
-                        ${d.nombres.charAt(0).toUpperCase()}
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-label-${color}" style="width: 80px; height: 80px;">
+                        <span class="fs-1 fw-bold text-${color}">${d.nombres.charAt(0).toUpperCase()}</span>
                     </div>
-                    <h4 class="fw-bold mb-1">${d.nombres}</h4>
-                    <span class="badge bg-label-${color} px-3 py-2"><i class="bx ${icono} me-1"></i>${d.rol_nombre}</span>
-                    <div class="mt-2">${estadoHtml}</div>
+                    <h4 class="fw-bold mb-1 text-dark">${d.nombres}</h4>
+                    <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
+                        <span class="badge bg-label-${color} px-3 py-2"><i class="bx ${icono} me-1"></i>${d.rol_nombre}</span>
+                        ${estadoHtml}
+                    </div>
                 </div>
                 <div class="row g-3">
                     <div class="col-6">
-                        <div class="bg-light rounded p-3 text-center">
-                            <small class="text-muted d-block">DNI</small>
-                            <span class="fw-bold font-monospace">${d.dni}</span>
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-id-card"></i> DNI</small>
+                            <span class="fw-semibold font-monospace text-dark fs-6">${d.dni}</span>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="bg-light rounded p-3 text-center">
-                            <small class="text-muted d-block">Teléfono</small>
-                            <span class="fw-semibold">${d.telefono || '—'}</span>
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-phone"></i> Teléfono</small>
+                            <span class="fw-semibold text-dark fs-6">${d.telefono || '—'}</span>
                         </div>
                     </div>
                     <div class="col-12">
-                        <div class="bg-light rounded p-3 text-center">
-                            <small class="text-muted d-block">Email</small>
-                            <span class="fw-semibold">${d.email || '—'}</span>
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-envelope"></i> Email</small>
+                            <span class="fw-semibold text-primary fs-6">${d.email || '—'}</span>
                         </div>
                     </div>
                     <div class="col-12">
-                        <div class="bg-light rounded p-3 text-center">
-                            <small class="text-muted d-block">Registrado</small>
-                            <span class="fw-semibold">${fecha}</span>
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-calendar"></i> Registrado el</small>
+                            <span class="fw-semibold text-dark fs-6">${fecha}</span>
                         </div>
                     </div>
                 </div>`;
             $('#contenidoDetalle').html(html);
-            new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+            $('#modalDetalle').modal('show');
         });
 
         // ─── EDITAR ───
-        $('#tablaEmpleados tbody').on('click', '.btn-editar', function() {
+        $('#tablaEmpleados tbody').on('click', '.btn-editar', async function() {
             const d = getData(this);
+
+            const password = await window.confirmByPassword();
+            if(!password) return;
+
             $('#edit_id_usuario').val(d.id_usuario);
             $('#edit_dni').val(d.dni);
             $('#edit_nombres').val(d.nombres);
             $('#edit_rol').val(d.id_rol);
             $('#edit_email').val(d.email || '');
             $('#edit_telefono').val(d.telefono || '');
-            new bootstrap.Modal(document.getElementById('modalEditar')).show();
+            $('#modalEditar').modal('show');
         });
 
         // ─── CAMBIAR CONTRASEÑA ───
-        $('#tablaEmpleados tbody').on('click', '.btn-password', function() {
+        $('#tablaEmpleados tbody').on('click', '.btn-password', async function() {
             const d = getData(this);
+
+            const password = await window.confirmByPassword();
+            if(!password) return;
+
             $('#pass_id_usuario').val(d.id_usuario);
             $('#pass_nombre_empleado').text(d.nombres);
             $('#nueva_password').val('');
-            new bootstrap.Modal(document.getElementById('modalPassword')).show();
+            $('#modalPassword').modal('show');
         });
 
         // ─── ELIMINAR ───
-        $('#tablaEmpleados tbody').on('click', '.btn-eliminar', function() {
+        $('#tablaEmpleados tbody').on('click', '.btn-eliminar', async function() {
             const d = getData(this);
+
+            const password = await window.confirmByPassword();
+            if(!password) return;
+
+            // Inyectar el password verificado para el backend
+            $('#delete_password_admin').val(password);
+
             $('#delete_id_usuario').val(d.id_usuario);
             $('#nombre_eliminar').text(d.nombres);
-            new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+            $('#modalEliminar').modal('show');
         });
     },
 
@@ -384,6 +427,7 @@ const EmpleadoModule = {
         const handleForm = async (formId, url, btnText, modalId, reset = false) => {
             $(`#${formId}`).on('submit', async function(e) {
                 e.preventDefault();
+
                 let btn = $(this).find('button[type="submit"]');
                 btn.prop('disabled', true).text('Procesando...');
                 try {
@@ -431,10 +475,17 @@ const EmpleadoModule = {
         $('.modal-backdrop, .offcanvas-backdrop').remove();
         $('body').removeClass('modal-open offcanvas-open').css('overflow', '').css('padding-right', '');
 
-        // Resetear formulario de registro al cerrar
-        $("#modalRegistrar").on("hidden.bs.modal", function () {
-            const form = document.querySelector('#modalRegistrar form');
+        // Resetear formularios al cerrar
+        $("#modalRegistrar, #modalEliminar, #modalPassword").on("hidden.bs.modal", function () {
+            const form = this.querySelector('form');
             if (form) form.reset();
+            
+            // Si es el modal de registro, reiniciar inputs y mensajes reniec
+            if (this.id === 'modalRegistrar') {
+                $("#dniFeedbackEmpleado").html('Introduce el DNI para autocompletar nombre.');
+                $("#reg_nombres").val("");
+                $("#btnBuscarDniEmpleado").prop("disabled", false).html('<i class="bx bx-search fs-5"></i>');
+            }
         });
     },
 
@@ -444,6 +495,52 @@ const EmpleadoModule = {
         toastEl.style.zIndex = "11000";
         $('#toastMensaje').text(msg);
         new bootstrap.Toast(toastEl).show();
+    },
+
+    consultarReniec: async function () {
+        let dni = $("#reg_dni").val().trim();
+        let feedback = $("#dniFeedbackEmpleado");
+        
+        if (dni.length !== 8 && dni.length !== 11) {
+            feedback.html('<span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> Debe tener 8 (DNI) u 11 (RUC) dígitos.</span>');
+            return;
+        }
+
+        $("#btnBuscarDniEmpleado").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>').prop("disabled", true);
+        feedback.html('<span class="text-primary fw-bold"><i class="bx bx-loader-circle bx-spin"></i> Consultando...</span>');
+
+        try {
+            let res = await fetch(`${BASE_URL}/api/dni`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ dni: dni }),
+            });
+            let obj = await res.json();
+          
+            if (obj.success) {
+                let n = "";
+                let a = "";
+                
+                if (dni.length === 8 && obj.data) {
+                    n = obj.data.nombres || "";
+                    a = `${obj.data.apellido_paterno || ""} ${obj.data.apellido_materno || ""}`.trim();
+                } else if (dni.length === 11 && obj.data) {
+                    n = obj.data.nombre_o_razon_social || "";
+                    a = "RUC"; 
+                }
+
+                $("#reg_nombres").val(`${n} ${a}`.trim().replace(/\s+/g, ' '));
+                feedback.html('<span class="text-success fw-bold"><i class="bx bx-check-circle"></i> ¡Datos encontrados!</span>');
+            } else {
+                feedback.html(`<span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> ${obj.message || "No encontrado"}</span>`);
+                $("#reg_nombres").val("");
+            }
+        } catch (e) {
+            feedback.html('<span class="text-danger fw-bold"><i class="bx bx-wifi-off"></i> Error de conexión con el servidor.</span>');
+            $("#reg_nombres").val("");
+        } finally {
+            $("#btnBuscarDniEmpleado").html('<i class="bx bx-search fs-5"></i>').prop("disabled", false);
+        }
     }
 };
 

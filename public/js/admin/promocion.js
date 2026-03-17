@@ -188,7 +188,7 @@ const PromocionModule = {
       language: {
         lengthMenu: " _MENU_ ",
         info: "Mostrando _START_ a _END_ de _TOTAL_",
-        zeroRecords: `<div class="text-center p-5"><h5 class="fw-bold text-primary">No hay promociones registradas</h5></div>`,
+        zeroRecords: `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay historial de promociones</h5></div>`,
         paginate: { next: "Sig.", previous: "Ant." },
       },
       columns: [
@@ -405,30 +405,45 @@ const PromocionModule = {
           : '<span class="badge bg-label-secondary">INACTIVA</span>';
 
       let html = `
-                <div class="row g-4 p-4 text-center border-bottom bg-white">
-                    <div class="col-12">
-                        <div class="discount-circle ${esP ? "bg-label-primary text-primary" : "bg-label-success text-success"} mx-auto mb-3" style="width: 80px; height: 80px; font-size: 1.5rem;">
-                            ${val}<span class="d-block text-danger m-1 fw-bold" style="font-size: 0.6rem;">OFF</span>
-                        </div>
-                        <h4 class="fw-bold text-dark mb-1">${data.nombre}</h4>
+                <div class="text-center mb-4">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle ${esP ? 'bg-label-primary' : 'bg-label-success'}" style="width: 80px; height: 80px;">
+                        <span class="fs-4 fw-bold text-${esP ? 'primary' : 'success'}">${val}</span>
+                    </div>
+                    <h4 class="fw-bold mb-1 text-dark text-uppercase">${data.nombre}</h4>
+                    <div class="d-flex align-items-center justify-content-center mt-2">
                         ${estado}
                     </div>
                 </div>
-                <div class="p-4">
-                    <div class="row g-3">
-                        <div class="col-6 ">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Periodo de Validez</label>
-                            <div class="small fw-bold"><i class="bx bx-calendar me-1"></i> ${new Date(data.fecha_inicio.replace(/-/g, "/")).toLocaleDateString()} al ${new Date(data.fecha_fin.replace(/-/g, "/")).toLocaleDateString()}</div>
+                
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-calendar"></i> Inicio</small>
+                            <span class="fw-semibold text-dark fs-6">${new Date(data.fecha_inicio.replace(/-/g, "/")).toLocaleDateString()}</span>
                         </div>
-                        <div class="col-6">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Restricción de Uso</label>
-                            <div class="small fw-bold"><i class="bx bx-lock-alt me-1"></i> ${data.solo_una_vez_por_cliente == 1 ? "Sólo 1 vez por cliente" : "Uso ilimitado por cliente"}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-calendar-check"></i> Fin</small>
+                            <span class="fw-semibold text-dark fs-6">${new Date(data.fecha_fin.replace(/-/g, "/")).toLocaleDateString()}</span>
                         </div>
-                        <div class="col-12 mt-3">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Nota Administrativa / Mensaje</label>
-                            <div class="p-3 bg-label-secondary rounded-4 small border border-light" style="min-height: 80px;">
-                                ${data.mensaje_whatsapp || "<em>Sin descripción adicional.</em>"}
-                            </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-user-check"></i> Restricción</small>
+                            <span class="fw-semibold text-dark fs-6">${data.solo_una_vez_por_cliente == 1 ? "Sólo 1 vez" : "Ilimitado"}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-purchase-tag"></i> Descuento</small>
+                            <span class="fw-semibold ${esP ? 'text-primary' : 'text-success'} fs-5">${val}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
+                            <small class="text-muted fw-bold mb-1"><i class="bx bx-note"></i> Nota / Mensaje</small>
+                            <span class="text-muted small">${data.mensaje_whatsapp || "<em>Sin descripción adicional.</em>"}</span>
                         </div>
                     </div>
                 </div>`;

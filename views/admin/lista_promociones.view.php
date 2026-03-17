@@ -251,9 +251,9 @@
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
                 <h5 class="mb-0 fw-bold text-primary"><i class="bx bx-list-ul me-1"></i> Historial General</h5>
                 <div class="d-flex gap-2">
-                    <div class="input-group input-group-sm bg-white border"style="width: 240px;" >
-                        <span class="input-group-text border-0 bg-transparent"><i class="bx bx-search"></i></span>
-                        <input type="text" id="buscadorGlobal" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar campaña...">
+                    <div class="input-group" style="width: 240px;">
+                        <span class="input-group-text"><i class="bx bx-search text-muted"></i></span>
+                        <input type="text" id="buscadorGlobal" class="form-control" placeholder="Buscar campaña..." autocomplete="off">
                     </div>
                     <button class="btn btn-sm btn-outline-success" id="btnExportar"><i class="bx bxs-file-export"></i></button>
                 </div>

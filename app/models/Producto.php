@@ -11,7 +11,7 @@ class Producto {
     // LISTAR TODOS
     // ════════════════════════════════════════
     public function getAll() {
-        $sql = "SELECT * FROM productos ORDER BY nombre ASC";
+        $sql = "SELECT p.*, DATE_FORMAT(p.fecha_registro, '%Y-%m-%d %H:%i:%s') as fecha_raw, DATE_FORMAT(p.fecha_registro, '%d/%m/%Y') as fecha FROM productos p ORDER BY p.nombre ASC";
         return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -28,15 +28,16 @@ class Producto {
     // REGISTRAR
     // ════════════════════════════════════════
     public function registrar($data) {
-        $sql = "INSERT INTO productos (nombre, precio_compra, precio_venta, stock_actual, stock_minimo)
-                VALUES (:nombre, :pc, :pv, :stock, :smin)";
+        $sql = "INSERT INTO productos (nombre, precio_compra, precio_venta, stock_actual, stock_minimo, fecha_caducidad)
+                VALUES (:nombre, :pc, :pv, :stock, :smin, :fcad)";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
             ':nombre' => trim($data['nombre']),
             ':pc'     => $data['precio_compra'],
             ':pv'     => $data['precio_venta'],
             ':stock'  => (int)($data['stock_actual'] ?? 0),
-            ':smin'   => (int)($data['stock_minimo'] ?? 5)
+            ':smin'   => (int)($data['stock_minimo'] ?? 5),
+            ':fcad'   => !empty($data['fecha_caducidad']) ? $data['fecha_caducidad'] : null
         ]);
     }
 
@@ -45,7 +46,7 @@ class Producto {
     // ════════════════════════════════════════
     public function editar($data) {
         $sql = "UPDATE productos SET nombre = :nombre, precio_compra = :pc, precio_venta = :pv,
-                    stock_actual = :stock, stock_minimo = :smin
+                    stock_actual = :stock, stock_minimo = :smin, fecha_caducidad = :fcad
                 WHERE id_producto = :id";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
@@ -54,6 +55,7 @@ class Producto {
             ':pv'     => $data['precio_venta'],
             ':stock'  => (int)($data['stock_actual'] ?? 0),
             ':smin'   => (int)($data['stock_minimo'] ?? 5),
+            ':fcad'   => !empty($data['fecha_caducidad']) ? $data['fecha_caducidad'] : null,
             ':id'     => $data['id_producto']
         ]);
     }
@@ -109,6 +111,7 @@ class Producto {
         $stats['con_stock'] = $this->pdo->query("SELECT COUNT(*) as total FROM productos WHERE stock_actual > 0")->fetch()['total'];
         $stats['bajo_stock'] = $this->pdo->query("SELECT COUNT(*) as total FROM productos WHERE stock_actual <= stock_minimo AND stock_actual > 0")->fetch()['total'];
         $stats['sin_stock'] = $this->pdo->query("SELECT COUNT(*) as total FROM productos WHERE stock_actual = 0")->fetch()['total'];
+        $stats['por_vencer'] = $this->pdo->query("SELECT COUNT(*) as total FROM productos WHERE fecha_caducidad IS NOT NULL AND fecha_caducidad <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)")->fetch()['total'];
         $stats['valor_inventario'] = $this->pdo->query("SELECT COALESCE(SUM(precio_compra * stock_actual), 0) as total FROM productos")->fetch()['total'];
         $stats['valor_venta'] = $this->pdo->query("SELECT COALESCE(SUM(precio_venta * stock_actual), 0) as total FROM productos")->fetch()['total'];
         return $stats;

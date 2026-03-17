@@ -54,4 +54,16 @@ class PagoEmpleado {
             return $stmt->execute([':estado' => $estado, ':fecha_pago' => $fecha_pago, ':id' => $id_pago]);
         } catch (Exception $e) { return false; }
     }
+
+    public function getEstadisticas() {
+        try {
+            $stats = [];
+            $stats['total'] = $this->pdo->query("SELECT COUNT(*) as total FROM pagos_empleados")->fetch()['total'];
+            $stats['pagados'] = $this->pdo->query("SELECT COUNT(*) as total FROM pagos_empleados WHERE estado = 'PAGADO'")->fetch()['total'];
+            $stats['pendientes'] = $this->pdo->query("SELECT COUNT(*) as total FROM pagos_empleados WHERE estado = 'PENDIENTE'")->fetch()['total'];
+            $stats['retrasados'] = $this->pdo->query("SELECT COUNT(*) as total FROM pagos_empleados WHERE estado = 'RETRASADO'")->fetch()['total'];
+            $stats['monto_total'] = $this->pdo->query("SELECT COALESCE(SUM(monto), 0) as total FROM pagos_empleados WHERE estado = 'PAGADO'")->fetch()['total'];
+            return $stats;
+        } catch (Exception $e) { return []; }
+    }
 }

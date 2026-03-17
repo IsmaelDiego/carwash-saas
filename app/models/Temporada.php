@@ -26,16 +26,14 @@ class Temporada {
             $getStats = function($id) {
                 if(!$id) return ['gen' => 0, 'red' => 0];
                 
-                // Asumimos: Total Venta = Puntos Generados | Descuento Puntos = Puntos Redimidos
-                // Solo contamos órdenes FINALIZADAS
+                // Gen: Suma de la cantidad de servicios que acumulan puntos en órdenes finalizadas de la temporada
+                // Red: Cantidad de órdenes finalizadas en la temporada que tuvieron un canje (descuento_puntos > 0)
                 $sql = "SELECT 
-                            COALESCE(SUM(total_final), 0) as gen, 
-                            COALESCE(SUM(descuento_puntos), 0) as red
-                        FROM ordenes 
-                        WHERE id_temporada = :id AND estado = 'FINALIZADO'";
+                            (SELECT COALESCE(SUM(d.cantidad), 0) FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio INNER JOIN ordenes o ON d.id_orden = o.id_orden WHERE o.id_temporada = :id_gen AND o.estado = 'FINALIZADO' AND s.acumula_puntos = 1 AND o.id_cliente != 1) as gen, 
+                            (SELECT COALESCE(COUNT(id_orden), 0) FROM ordenes WHERE id_temporada = :id_red AND estado = 'FINALIZADO' AND descuento_puntos > 0 AND id_cliente != 1) as red";
                         
                 $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([':id' => $id]);
+                $stmt->execute([':id_gen' => $id, ':id_red' => $id]);
                 return $stmt->fetch(PDO::FETCH_ASSOC);
             };
 
@@ -54,8 +52,8 @@ class Temporada {
     public function getAll() {
         try {
             $sql = "SELECT t.*, 
-                    (SELECT COALESCE(SUM(total_final),0) FROM ordenes o WHERE o.id_temporada = t.id_temporada AND o.estado='FINALIZADO') as puntos_gen,
-                    (SELECT COALESCE(SUM(descuento_puntos),0) FROM ordenes o WHERE o.id_temporada = t.id_temporada AND o.estado='FINALIZADO') as puntos_red
+                    (SELECT COALESCE(SUM(d.cantidad),0) FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio INNER JOIN ordenes o ON d.id_orden = o.id_orden WHERE o.id_temporada = t.id_temporada AND o.estado = 'FINALIZADO' AND s.acumula_puntos = 1 AND o.id_cliente != 1) as puntos_gen,
+                    (SELECT COALESCE(COUNT(o.id_orden),0) FROM ordenes o WHERE o.id_temporada = t.id_temporada AND o.estado = 'FINALIZADO' AND o.descuento_puntos > 0 AND o.id_cliente != 1) as puntos_red
                     FROM temporadas t 
                     ORDER BY t.fecha_inicio DESC";
             return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);

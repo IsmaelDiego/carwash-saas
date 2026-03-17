@@ -224,6 +224,11 @@ class EmpleadoController {
                 return;
             }
 
+            if (empty($input['password_admin'])) {
+                echo json_encode(['success' => false, 'message' => 'Debes ingresar tu contraseña de administrador para confirmar.']);
+                return;
+            }
+
             // Proteger al Super Admin (id=1)
             if ($input['id_usuario'] == 1) {
                 echo json_encode(['success' => false, 'message' => 'No se puede eliminar al Super Admin.']);
@@ -237,6 +242,13 @@ class EmpleadoController {
             }
 
             $model = new Empleado($pdo);
+
+            // Verificar la contraseña del administrador actual
+            $admin = $model->getById($_SESSION['user']['id']);
+            if (!$admin || !password_verify($input['password_admin'], $admin['password_hash'])) {
+                echo json_encode(['success' => false, 'message' => 'Contraseña de administrador incorrecta.']);
+                return;
+            }
 
             try {
                 if ($model->eliminar($input['id_usuario'])) {

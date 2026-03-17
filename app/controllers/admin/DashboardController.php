@@ -139,4 +139,21 @@ class DashboardController
         }
         return $result;
     }
+
+    public function apinotifications()
+    {
+        requireAuth();
+        header('Content-Type: application/json');
+        
+        // Force refresh cache
+        if (isset($_SESSION['_notif_cache'])) {
+            unset($_SESSION['_notif_cache']);
+        }
+
+        require_once APP_PATH . '/helpers/system_helper.php';
+        $notifs = getAdminNotifications();
+
+        echo json_encode(['success' => true, 'data' => $notifs]);
+        exit;
+    }
 }

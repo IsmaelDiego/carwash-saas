@@ -7,14 +7,25 @@ class PermisoEmpleado {
         $this->pdo = $pdo;
     }
 
-    public function getAll() {
+    public function getAll($mes_anio = null) {
         try {
             $sql = "SELECT p.*, u.nombres as empleado, a.nombres as admin_registrador
                     FROM permisos_empleados p
                     JOIN usuarios u ON p.id_usuario = u.id_usuario
-                    LEFT JOIN usuarios a ON p.id_admin_registrador = a.id_usuario
-                    ORDER BY p.fecha_creacion DESC";
-            return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+                    LEFT JOIN usuarios a ON p.id_admin_registrador = a.id_usuario";
+            
+            $params = [];
+            if ($mes_anio) {
+                // $mes_anio expects 'YYYY-MM'
+                $sql .= " WHERE DATE_FORMAT(p.fecha_inicio, '%Y-%m') = :mes_anio ";
+                $params[':mes_anio'] = $mes_anio;
+            }
+            
+            $sql .= " ORDER BY p.fecha_creacion DESC";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) { return []; }
     }
 
@@ -50,5 +61,16 @@ class PermisoEmpleado {
             $stmt = $this->pdo->prepare($sql);
             return $stmt->execute([':estado' => $estado, ':id_admin' => $id_admin_registrador, ':id' => $id_permiso]);
         } catch (Exception $e) { return false; }
+    }
+
+    public function getEstadisticas() {
+        try {
+            $stats = [];
+            $stats['total'] = $this->pdo->query("SELECT COUNT(*) as total FROM permisos_empleados")->fetch()['total'];
+            $stats['aprobados'] = $this->pdo->query("SELECT COUNT(*) as total FROM permisos_empleados WHERE estado = 'APROBADO'")->fetch()['total'];
+            $stats['pendientes'] = $this->pdo->query("SELECT COUNT(*) as total FROM permisos_empleados WHERE estado = 'PENDIENTE'")->fetch()['total'];
+            $stats['rechazados'] = $this->pdo->query("SELECT COUNT(*) as total FROM permisos_empleados WHERE estado = 'RECHAZADO'")->fetch()['total'];
+            return $stats;
+        } catch (Exception $e) { return []; }
     }
 }

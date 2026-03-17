@@ -37,107 +37,154 @@
 
     /* ─── WELCOME BANNER ─── */
     .welcome-banner {
-        background: linear-gradient(135deg, #1a237e 0%, #0d47a1 40%, #0288d1 100%);
-        border-radius: 16px;
-        padding: 28px 30px;
+        background: linear-gradient(135deg, #696cff 0%, #3b3dec 100%);
+        border-radius: 20px;
+        padding: 35px 40px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 6px 24px rgba(13, 71, 161, 0.25);
+        box-shadow: 0 10px 30px rgba(105, 108, 255, 0.25);
+    }
+
+    .welcome-banner::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle fill="rgba(255,255,255,0.05)" cx="80" cy="20" r="40"/><circle fill="rgba(255,255,255,0.08)" cx="90" cy="90" r="30"/></svg>') no-repeat right center;
+        background-size: cover;
+        opacity: 0.6;
+        pointer-events: none;
     }
 
     .welcome-banner::before {
         content: '\e9d0';
         font-family: 'boxicons'!important;
         position: absolute;
-        right: 20px;
+        right: 30px;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 8rem;
-        opacity: 0.08;
+        font-size: 10rem;
+        opacity: 0.1;
         color: #fff;
     }
 
     .welcome-banner h4 {
-        font-weight: 700;
-        margin-bottom: 4px;
+        font-weight: 800;
+        margin-bottom: 8px;
         color: #fff;
+        font-size: 1.8rem;
     }
 
     .welcome-banner p {
-        opacity: 0.85;
-        font-size: 0.9rem;
+        opacity: 0.9;
+        font-size: 1rem;
+        font-weight: 500;
     }
-
-
 
     /* ─── KPI CARDS ─── */
     .kpi-card {
-        border: none;
-        border-radius: 14px;
-        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.04);
+        border-radius: 20px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        background: #fff;
+        position: relative;
         overflow: hidden;
     }
 
     .kpi-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+        border-color: rgba(105, 108, 255, 0.2);
     }
 
     .kpi-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
+        font-size: 1.6rem;
     }
 
     .kpi-value {
-        font-size: 1.6rem;
-        font-weight: 700;
-        line-height: 1;
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        letter-spacing: -0.5px;
     }
 
     /* ─── ORDENES LIVE ─── */
     .order-live {
         display: flex;
-        gap: 10px;
+        gap: 12px;
         flex-wrap: wrap;
+        z-index: 1;
+        position: relative;
     }
 
     .order-pill {
-        border-radius: 10px;
-        padding: 8px 14px;
+        border-radius: 16px;
+        padding: 12px 18px;
         text-align: center;
         flex: 1;
-        min-width: 80px;
+        min-width: 90px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+    }
+
+    .order-pill:hover {
+        transform: translateY(-3px);
+        background: rgba(255,255,255,0.25);
     }
 
     .order-pill .opv {
-        font-size: 1.3rem;
-        font-weight: 700;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 2px;
     }
 
     .order-pill .opl {
-        font-size: 0.68rem;
+        font-size: 0.75rem;
         font-weight: 600;
+        color: rgba(255,255,255,0.9);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     /* ─── TABLES ─── */
+    .dash-table {
+        margin-bottom: 0;
+    }
     .dash-table th {
-        font-size: 0.72rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
-        color: #8592a3;
-        font-weight: 600;
-        border: 0;
+        color: #a1acb8;
+        font-weight: 700;
+        border-bottom: 2px solid #f4f4f4;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
 
     .dash-table td {
         vertical-align: middle;
-        border-color: #f4f4f4;
-        font-size: 0.85rem;
+        border-color: #f8f9fa;
+        font-size: 0.9rem;
+        padding: 1rem 0.85rem;
+    }
+    
+    .dash-table tbody tr {
+        transition: background 0.2s;
+    }
+    .dash-table tbody tr:hover {
+        background: rgba(105, 108, 255, 0.03);
     }
 </style>
 
@@ -162,22 +209,22 @@
                     <p class="mb-0"><i class="bx bx-calendar me-1"></i><?= ucfirst($fecha) ?></p>
                 </div>
                 <div class="col-md-5">
-                    <div class="order-live mt-3 mt-md-0">
-                        <div class="order-pill bg-label-primary">
+                    <div class="order-live mt-4 mt-md-0">
+                        <div class="order-pill position-relative overflow-hidden">
                             <div class="opv"><?= $oh['en_cola'] ?? 0 ?></div>
-                            <div class="opl">En Cola</div>
+                            <div class="opl">En Cola Hoy <i class='bx bx-time text-white-50 ms-1'></i></div>
                         </div>
-                        <div class="order-pill bg-label-warning">
+                        <div class="order-pill position-relative overflow-hidden">
                             <div class="opv"><?= $oh['en_proceso'] ?? 0 ?></div>
-                            <div class="opl">Proceso</div>
+                            <div class="opl">Proceso Hoy <i class='bx bx-loader-circle text-white-50 ms-1 bx-spin'></i></div>
                         </div>
-                        <div class="order-pill bg-label-success">
+                        <div class="order-pill position-relative overflow-hidden">
                             <div class="opv"><?= $oh['por_cobrar'] ?? 0 ?></div>
-                            <div class="opl">Cobrar</div>
+                            <div class="opl">A Cobrar Hoy <i class='bx bx-dollar-circle text-white-50 ms-1'></i></div>
                         </div>
-                        <div class="order-pill bg-label-info">
+                        <div class="order-pill position-relative overflow-hidden">
                             <div class="opv"><?= $oh['finalizadas'] ?? 0 ?></div>
-                            <div class="opl">Listos</div>
+                            <div class="opl">Listos Hoy <i class='bx bx-check-double text-white-50 ms-1'></i></div>
                         </div>
                     </div>
                 </div>
@@ -204,12 +251,15 @@
             foreach ($kpis as $i => $kpi): ?>
                 <div class="col-sm-6 col-md-4 col-xl-5th mb-3 dash-animate" style="flex: 1 0 20%;">
                     <?php if(!empty($kpi['url']) && $kpi['url'] !== '#'): ?><a href="<?= $kpi['url'] ?>" style="text-decoration:none; color:inherit; display:block; height:100%;"><?php endif; ?>
-                    <div class="card kpi-card shadow-sm h-100" style="border:1px solid #f0f0f0; <?= (!empty($kpi['url']) && $kpi['url'] !== '#') ? 'cursor:pointer;' : '' ?>">
-                        <div class="card-body d-flex align-items-center justify-content-between p-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="kpi-icon bg-label-<?= $kpi['color'] ?> shadow-sm"><i class="bx <?= $kpi['icon'] ?> text-<?= $kpi['color'] ?>"></i></div>
-                                <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem"><?= $kpi['lbl'] ?></small>
-                                    <div class="kpi-value text-<?= $kpi['color'] ?>" style="font-size:1.4rem"><?= $kpi['val'] ?></div>
+                    <div class="card kpi-card h-100" <?= (!empty($kpi['url']) && $kpi['url'] !== '#') ? 'style="cursor:pointer;"' : '' ?>>
+                        <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3 w-100">
+                                <div class="kpi-icon bg-label-<?= $kpi['color'] ?> shadow-sm flex-shrink-0">
+                                    <i class="bx <?= $kpi['icon'] ?> text-<?= $kpi['color'] ?>"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <small class="text-muted fw-bold text-uppercase d-block mb-1 text-truncate" style="font-size:0.7rem; letter-spacing: 0.5px;"><?= $kpi['lbl'] ?></small>
+                                    <div class="kpi-value text-<?= $kpi['color'] ?> text-truncate" title="<?= strip_tags($kpi['val']) ?>"><?= $kpi['val'] ?></div>
                                 </div>
                             </div>
                         </div>
@@ -222,23 +272,23 @@
         <div class="row">
             <!-- ═══ CHART: INGRESOS POR MES ═══ -->
             <div class="col-lg-8 mb-4 dash-animate">
-                <div class="card shadow-sm" style="border:none;border-radius:14px">
-                    <div class="card-header border-0">
-                        <h6 class="mb-0 fw-bold"><i class="bx bx-dollar-circle text-success me-1"></i>Ingresos por Mes (6 meses)</h6>
+                <div class="card h-100" style="border: 1px solid rgba(0,0,0,0.04); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="card-header border-0 pb-0 pt-4 px-4">
+                        <h6 class="mb-0 fw-bold fs-5"><i class="bx bx-dollar-circle text-success me-2 fs-4 align-middle"></i>Ingresos por Mes <span class="text-muted fw-normal fs-6 ms-1">(6 meses)</span></h6>
                     </div>
-                    <div class="card-body pt-0">
+                    <div class="card-body px-3 pb-3 pt-0 mt-2">
                         <div id="chartIngresosMes"></div>
                     </div>
                 </div>
             </div>
             <!-- ═══ CHART: VEHÍCULOS ═══ -->
             <div class="col-lg-4 mb-4 dash-animate">
-                <div class="card shadow-sm h-100" style="border:none;border-radius:14px">
-                    <div class="card-header border-0">
-                        <h6 class="mb-0 fw-bold"><i class="bx bx-car text-info me-1"></i>Vehículos por Categoría</h6>
+                <div class="card h-100" style="border: 1px solid rgba(0,0,0,0.04); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="card-header border-0 pb-0 pt-4 px-4">
+                        <h6 class="mb-0 fw-bold fs-5"><i class="bx bx-car text-info me-2 fs-4 align-middle"></i>Flota por Categoría</h6>
                     </div>
-                    <div class="card-body pt-0">
-                        <div id="chartVehiculos"></div>
+                    <div class="card-body px-3 pb-3 pt-0 mt-3 d-flex align-items-center justify-content-center">
+                        <div id="chartVehiculos" class="w-100"></div>
                     </div>
                 </div>
             </div>
@@ -247,20 +297,21 @@
         <div class="row">
             <!-- ═══ ÚLTIMAS ÓRDENES ═══ -->
             <div class="col-lg-7 mb-4 dash-animate">
-                <div class="card shadow-sm" style="border:none;border-radius:14px">
-                    <div class="card-header border-0 d-flex justify-content-between">
-                        <h6 class="mb-0 fw-bold"><i class="bx bx-receipt text-primary me-1"></i>Últimas Órdenes</h6>
+                <div class="card h-100" style="border: 1px solid rgba(0,0,0,0.04); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="card-header border-0 d-flex justify-content-between align-items-center pt-4 px-4 pb-3">
+                        <h6 class="mb-0 fw-bold fs-5"><i class="bx bx-receipt text-primary me-2 fs-4 align-middle"></i>Últimas Órdenes</h6>
+                        <a href="<?= BASE_URL ?>/admin/orden" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm fw-bold">Ver Todas</a>
                     </div>
-                    <div class="card-body pt-0">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table dash-table">
+                            <table class="table dash-table mb-0">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
+                                        <th class="ps-4"># Ticket</th>
                                         <th>Cliente</th>
-                                        <th>Placa</th>
-                                        <th>Estado</th>
-                                        <th class="text-end">Total</th>
+                                        <th>Vehículo</th>
+                                        <th>Estado Actual</th>
+                                        <th class="text-end pe-4">Importe</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -270,16 +321,23 @@
                                             $badge = $est_colors[$ord['estado']] ?? 'secondary';
                                         ?>
                                             <tr>
-                                                <td class="fw-bold">#<?= $ord['id_orden'] ?></td>
-                                                <td><i class="bx bxs-user-circle text-muted me-1"></i><?= htmlspecialchars($ord['cliente'] ?? '—') ?></td>
-                                                <td><span class="badge bg-label-info"><?= $ord['placa'] ?? '—' ?></span></td>
-                                                <td><span class="badge bg-label-<?= $badge ?>"><?= str_replace('_', ' ', $ord['estado']) ?></span></td>
-                                                <td class="text-end fw-bold">S/ <?= number_format($ord['total_final'] ?? 0, 2) ?></td>
+                                                <td class="fw-bold ps-4 text-primary">#<?= str_pad($ord['id_orden'], 5, '0', STR_PAD_LEFT) ?></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar avatar-sm me-2">
+                                                            <span class="avatar-initial rounded-circle bg-label-info"><i class="bx bxs-user"></i></span>
+                                                        </div>
+                                                        <span class="fw-semibold text-truncate" style="max-width: 150px;"><?= htmlspecialchars($ord['cliente'] ?? '—') ?></span>
+                                                    </div>
+                                                </td>
+                                                <td><span class="badge bg-label-dark fw-bold border" style="letter-spacing: 1px;"><?= $ord['placa'] ?? '—' ?></span></td>
+                                                <td><span class="badge bg-<?= $badge ?> bg-glow rounded-pill px-3 shadow-sm"><?= str_replace('_', ' ', $ord['estado']) ?></span></td>
+                                                <td class="text-end fw-bold text-dark pe-4 fs-6">S/ <?= number_format($ord['total_final'] ?? 0, 2) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted py-4"><i class="bx bx-receipt" style="font-size:2rem"></i><br>Sin órdenes aún</td>
+                                            <td colspan="5" class="text-center text-muted py-5"><i class="bx bx-receipt opacity-25" style="font-size:3rem"></i><br>Aún no hay tickets hoy</td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -291,51 +349,46 @@
 
             <!-- ═══ RESUMEN RÁPIDO ─── -->
             <div class="col-lg-5 mb-4 dash-animate">
-                <div class="card shadow-sm h-100" style="border:none;border-radius:14px">
-                    <div class="card-header border-0">
-                        <h6 class="mb-0 fw-bold"><i class="bx bx-info-circle text-primary me-1"></i>Indicadores Clave</h6>
+                <div class="card h-100" style="border: 1px solid rgba(0,0,0,0.04); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="card-header border-0 pt-4 px-4 pb-2">
+                        <h6 class="mb-0 fw-bold fs-5"><i class="bx bx-info-circle text-primary me-2 fs-4 align-middle"></i>Métricas Rápidas</h6>
                     </div>
-                    <div class="card-body pt-0">
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted"><i class="bx bx-phone text-success me-1"></i>WhatsApp Activos</span>
-                            <span class="fw-bold"><?= $dashData['clientes_whatsapp'] ?></span>
+                    <div class="card-body px-4 pt-2">
+                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom dashed">
+                            <span class="text-muted d-flex align-items-center"><i class="bx bx-phone text-success fs-5 me-2"></i>Contactos de WhatsApp</span>
+                            <span class="fw-bold fs-5"><?= $dashData['clientes_whatsapp'] ?></span>
                         </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted"><i class="bx bx-calendar-star text-warning me-1"></i>Total Temporadas</span>
-                            <span class="fw-bold"><?= $dashData['total_temporadas'] ?></span>
+                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom dashed">
+                            <span class="text-muted d-flex align-items-center"><i class="bx bx-sun text-warning fs-5 me-2"></i>Temporada Activa</span>
+                            <span class="badge bg-label-primary px-3 rounded-pill fw-bold"><?= $dashData['temporada_activa']['nombre'] ?? 'Ninguna' ?></span>
                         </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted"><i class="bx bx-sun text-danger me-1"></i>Temporada Activa</span>
-                            <span class="fw-bold text-primary"><?= $dashData['temporada_activa']['nombre'] ?? 'Ninguna' ?></span>
+                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom dashed">
+                            <span class="text-muted d-flex align-items-center"><i class="bx bx-receipt text-info fs-5 me-2"></i>Tickets de Hoy</span>
+                            <span class="fw-bold fs-5"><?= $oh['total_hoy'] ?? 0 ?></span>
                         </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted"><i class="bx bx-key text-warning me-1"></i>Tokens Activos</span>
-                            <span class="fw-bold text-warning"><?= $dashData['tokens_activos'] ?></span>
+                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom dashed">
+                            <span class="text-muted d-flex align-items-center"><i class="bx bxs-tag-x text-danger fs-5 me-2"></i>Desc. por Promociones</span>
+                            <span class="fw-bold text-danger fs-6">- S/ <?= number_format($oh['descuentospromo_hoy'] ?? 0, 2) ?></span>
                         </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted"><i class="bx bx-receipt text-info me-1"></i>Órdenes Hoy</span>
-                            <span class="fw-bold"><?= $oh['total_hoy'] ?? 0 ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted"><i class="bx bxs-tag-x text-danger me-1"></i>Desc. x Promociones</span>
-                            <span class="fw-bold text-danger">- S/ <?= number_format($oh['descuentospromo_hoy'] ?? 0, 2) ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between py-2">
-                            <span class="text-muted"><i class="bx bxs-gift text-warning me-1"></i>Canjes Reclamados</span>
-                            <span class="fw-bold text-warning">- S/ <?= number_format($oh['descuentospuntos_hoy'] ?? 0, 2) ?></span>
+                        <div class="d-flex justify-content-between align-items-center py-3">
+                            <span class="text-muted d-flex align-items-center"><i class="bx bxs-gift text-warning fs-5 me-2"></i>Puntos Canjeados</span>
+                            <span class="fw-bold text-warning fs-6">- S/ <?= number_format($oh['descuentospuntos_hoy'] ?? 0, 2) ?></span>
                         </div>
 
-                        <hr>
-                        <h6 class="fw-bold mb-3 small text-uppercase"><i class="bx bx-badge-check text-success me-1"></i>Servicios</h6>
-                        <?php foreach ($dashData['servicios_populares'] as $serv): ?>
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <div>
-                                    <span class="badge bg-<?= $serv['estado'] ? 'success' : 'secondary' ?> me-1" style="width:8px;height:8px;border-radius:50%;padding:0;display:inline-block"></span>
-                                    <span class="small fw-semibold"><?= htmlspecialchars($serv['nombre']) ?></span>
+                        <div class="mt-4 pt-4 border-top">
+                            <h6 class="fw-bold mb-3 small text-uppercase text-muted"><i class="bx bx-badge-check text-success me-2"></i>Top Servicios Activos</h6>
+                            <?php foreach ($dashData['servicios_populares'] as $serv): ?>
+                                <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded hover-bg-light transition-all">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-3">
+                                            <span class="avatar-initial rounded-circle bg-label-<?= $serv['estado'] ? 'success' : 'secondary' ?>"><i class="bx bx-car"></i></span>
+                                        </div>
+                                        <span class="fw-semibold text-dark"><?= htmlspecialchars($serv['nombre']) ?></span>
+                                    </div>
+                                    <span class="fw-bold text-primary">S/ <?= number_format($serv['precio_base'], 2) ?></span>
                                 </div>
-                                <span class="small fw-bold text-primary">S/ <?= number_format($serv['precio_base'], 2) ?></span>
-                            </div>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -344,28 +397,46 @@
         <!-- ═══ RECENT CLIENTS ═══ -->
         <div class="row dash-animate">
             <div class="col-12 mb-4">
-                <div class="card shadow-sm" style="border:none;border-radius:14px">
-                    <div class="card-header border-0">
-                        <h6 class="mb-0 fw-bold"><i class="bx bx-user-plus text-success me-1"></i>Últimos Clientes Registrados</h6>
+                <div class="card" style="border: 1px solid rgba(0,0,0,0.04); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="card-header border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold fs-5"><i class="bx bx-user-plus text-success me-2 fs-4 align-middle"></i>Nuevos Clientes en la Red</h6>
+                        <a href="<?= BASE_URL ?>/admin/cliente" class="btn btn-sm btn-label-success rounded-pill px-3 fw-bold">Ver Directorio</a>
                     </div>
-                    <div class="card-body pt-0">
+                    <div class="card-body p-0 mt-3">
                         <div class="table-responsive">
-                            <table class="table dash-table">
+                            <table class="table dash-table mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Nombre</th>
-                                        <th>Teléfono</th>
-                                        <th>Puntos</th>
-                                        <th>Registrado</th>
+                                        <th class="ps-4">Perfil</th>
+                                        <th>Contacto Directo</th>
+                                        <th>Nivel de Lealtad</th>
+                                        <th class="text-end pe-4">Fecha de Alta</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($dashData['ultimos_clientes'] as $cli): ?>
                                         <tr>
-                                            <td class="fw-semibold"><i class="bx bxs-user text-primary me-1"></i><?= htmlspecialchars($cli['nombres'] . ' ' . $cli['apellidos']) ?></td>
-                                            <td><?= $cli['telefono'] ?: '—' ?></td>
-                                            <td><span class="badge bg-label-primary"><?= $cli['puntos_acumulados'] ?> pts</span></td>
-                                            <td class="text-muted small"><?= date('d/m/Y', strtotime($cli['fecha_registro'])) ?></td>
+                                            <td class="ps-4">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar avatar-sm me-3">
+                                                        <span class="avatar-initial rounded-circle bg-primary text-white shadow-sm"><?= strtoupper(substr($cli['nombres'], 0, 1) . substr($cli['apellidos'], 0, 1)) ?></span>
+                                                    </div>
+                                                    <span class="fw-bold text-dark text-uppercase"><?= htmlspecialchars($cli['nombres'] . ' ' . $cli['apellidos']) ?></span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <?php if($cli['telefono']): ?>
+                                                    <span class="badge bg-label-secondary fw-medium px-3"><i class="bx bx-phone me-1"></i><?= $cli['telefono'] ?></span>
+                                                <?php else: ?>
+                                                    <span class="text-muted small fst-italic">—</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning bg-glow text-dark px-3 rounded-pill fw-bold shadow-sm"><i class="bx bxs-star me-1"></i><?= $cli['puntos_acumulados'] ?> pt(s)</span>
+                                            </td>
+                                            <td class="text-muted small fw-medium text-end pe-4">
+                                                <i class="bx bx-calendar-event me-1"></i><?= date('d/m/Y', strtotime($cli['fecha_registro'])) ?>
+                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>

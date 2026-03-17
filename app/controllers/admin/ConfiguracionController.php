@@ -41,8 +41,16 @@ class ConfiguracionController {
                     mkdir($uploadDir, 0777, true);
                 }
                 
-                $fileName = time() . '_' . basename($_FILES['logo']['name']);
+                $extension = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
+                $fileName = 'logo.' . $extension;
                 $targetPath = $uploadDir . $fileName;
+                
+                $existingLogos = glob($uploadDir . 'logo.*');
+                if ($existingLogos) {
+                    foreach ($existingLogos as $el) {
+                        @unlink($el);
+                    }
+                }
                 
                 if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetPath)) {
                     $input['logo_path'] = 'public/uploads/' . $fileName;
@@ -79,8 +87,18 @@ class ConfiguracionController {
             if ($minutos < 5) $minutos = 5;
             if ($minutos > 1440) $minutos = 1440; // Máx 24h
 
+            $limite = (int)($input['limite_usos'] ?? 1);
+            if ($limite < 0) $limite = 1; // 0 podría ser ilimitado si queremos, pero por ahora 1 min
+
             $model = new TokenSeguridad($pdo);
-            $token = $model->generar($_SESSION['user']['id'], $input['motivo'], $minutos);
+            
+            // 🛑 LIMITE: Solo 1 token activo a la vez para evitar creación masiva
+            if ($model->contarActivos() >= 1) {
+                echo json_encode(['success' => false, 'message' => 'Ya existe un token activo. Úsalo o espera a que expire para generar uno nuevo.']);
+                return;
+            }
+
+            $token = $model->generar($_SESSION['user']['id'], $input['motivo'], $minutos, $limite);
 
             if ($token) {
                 echo json_encode([

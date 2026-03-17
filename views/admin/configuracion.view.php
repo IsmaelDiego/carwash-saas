@@ -1,75 +1,223 @@
 <?php require VIEW_PATH . '/layouts/header.view.php'; ?>
 <style>
-    .config-card { border:none; border-radius:14px; overflow:hidden; }
-    .config-card .card-header { background: linear-gradient(135deg,#696cff,#7b7eff); color:#fff; }
-    .token-card { border:none; border-radius:12px; padding:14px; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.04);
-        border-left:4px solid #696cff; transition:all 0.2s; }
-    .token-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.08); }
-    .token-card.usado { opacity:0.5; border-left-color:#8592a3; }
-    .token-card.expirado { opacity:0.4; border-left-color:#ff3e1d; }
-    .token-codigo { font-family:monospace; font-size:1.3rem; font-weight:700; letter-spacing:3px; color:#696cff;
-        background:#f0f0ff; padding:6px 14px; border-radius:8px; display:inline-block; }
-    .token-card.usado .token-codigo { color:#8592a3; background:#f5f5f5; }
+    .config-card {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s;
+    }
+
+    .config-card:hover {
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .config-card .card-header {
+        background: linear-gradient(135deg, #1e2035, #3b3f5c);
+        color: #fff;
+        padding: 1.5rem;
+        border-bottom: none;
+    }
+
+    .config-input {
+        border-radius: 10px;
+        border: 1px solid #e0e6ed;
+        padding: 0.6rem 1rem;
+        background: #f8fafc;
+        transition: all 0.2s;
+    }
+
+    .config-input:focus {
+        background: #fff;
+        border-color: #696cff;
+        box-shadow: 0 0 0 4px rgba(105, 108, 255, 0.1);
+    }
+
+    .logo-preview-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        border-radius: 16px;
+        border: 2px dashed #d9dee3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #f8fafc;
+        transition: all 0.3s ease;
+    }
+
+    .logo-preview-container:hover {
+        border-color: #696cff;
+        background: #f0f0ff;
+    }
+
+    .btn-save-cfg {
+        background: linear-gradient(135deg, #696cff, #4e51d8);
+        border: none;
+        border-radius: 10px;
+        padding: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 15px rgba(105, 108, 255, 0.3);
+        transition: all 0.3s;
+    }
+
+    .btn-save-cfg:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(105, 108, 255, 0.4);
+    }
+
+    .token-wrapper {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .token-card {
+        border: none;
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        border-left: 5px solid #1fff3dff;
+        background: #fff;
+        transition: all 0.25s;
+        border-right: 1px solid #f0f0f0;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
+        
+    }
+
+    .token-card:hover {
+        transform: translateX(4px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.07);
+    }
+
+    .token-card.usado {
+        opacity: 0.6;
+        border-left-color: #8592a3;
+        filter: grayscale(100%);
+    }
+
+    .token-card.expirado {
+        opacity: 0.5;
+        border-left-color: #ff3e1d;
+    }
+
+    .token-codigo {
+        font-family: 'Courier New', monospace;
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: 4px;
+        color: #696cff;
+        background: #f3f4fb;
+        padding: 8px 16px;
+        border-radius: 10px;
+        display: inline-block;
+    }
+
+    .token-card.usado .token-codigo {
+        color: #8592a3;
+        background: #f5f5f5;
+    }
+
+    .token-card.expirado .token-codigo {
+        color: #ff3e1d;
+        background: #ffeceb;
+    }
+
+    /* Pulsación cuando hay cambios */
+    @keyframes pulse-save {
+        0% { transform: scale(1); box-shadow: 0 4px 15px rgba(105, 108, 255, 0.3); }
+        50% { transform: scale(1.02); box-shadow: 0 6px 20px rgba(105, 108, 255, 0.5); }
+        100% { transform: scale(1); box-shadow: 0 4px 15px rgba(105, 108, 255, 0.3); }
+    }
+    .pulse-save {
+        animation: pulse-save 2s infinite;
+        background: linear-gradient(135deg, #28a745, #218838) !important;
+    }
 </style>
 
 <div class="content-wrapper">
     <div class="container-fluid flex-grow-1 container-p-y">
 
-        <h5 class="card-header border-bottom mb-4">
-            <i class="bx bx-cog text-primary me-1"></i> CONFIGURACIÓN DEL SISTEMA
-        </h5>
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb"><li class="breadcrumb-item"><a href="<?= BASE_URL ?>/home">Inicio</a></li><li class="breadcrumb-item active text-primary">Configuración</li></ol>
-        </nav>
+        <h4 class="fw-bold mb-4" style="color: #3b3f5c;">
+            <i class="bx bx-cog text-primary me-2" style="font-size: 1.5rem;"></i> Ajustes de Sistema
+        </h4>
 
         <div class="row">
             <!-- ═══ CONFIGURACIÓN GENERAL ═══ -->
             <div class="col-lg-5 mb-4">
-                <div class="card config-card shadow-sm">
-                    <div class="card-header py-3">
-                        <h6 class="mb-0 fw-bold text-white"><i class="bx bx-buildings me-1"></i> Datos del Negocio</h6>
+                <div class="card config-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0 fw-bold text-white"><i class="bx bx-buildings me-2"></i> Identidad del Negocio</h5>
+                            <small class="text-white-50">Personaliza la apariencia y moneda</small>
+                        </div>
+                        <span id="badgeUnsaved" class="badge bg-warning animate__animated animate__fadeIn" style="display:none;">Cambios pendientes</span>
                     </div>
-                    <div class="card-body p-4">
-                        <form id="formConfig" enctype="multipart/form-data">
-                            <div class="mb-3 text-center">
-                                <img src="<?= BASE_URL ?>/public/img/logo.png" id="logoPreview" style="max-height:80px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.1)">
+                    <div class="card-body p-4 pt-4">
+                        <!-- Vista Previa Live -->
+                        <div class="mb-4 p-3 rounded-3 bg-light border border-dashed border-primary" style="background: rgba(105, 108, 255, 0.03) !important;">
+                            <div class="small fw-bold text-primary mb-3 text-uppercase" style="letter-spacing: 1px;"><i class="bx bx-show me-1"></i> Previsualización en Tiempo Real</div>
+                            <div class="d-flex align-items-center p-2 rounded bg-white shadow-sm" style="max-width: 300px; margin: 0 auto; border: 1px solid #f0f0f0;">
+                                <div id="previewSidebarLogo" class="me-2" style="width: 35px; height: 35px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                    <i class="bx bxs-car text-muted"></i>
+                                </div>
+                                <span id="previewSidebarAbrev" class="fw-bold text-dark" style="font-size: 0.9rem;">C-SAAS</span>
+                                <div class="ms-auto"><span id="previewMoneda" class="badge bg-label-success">S/</span></div>
                             </div>
+                        </div>
+                        <form id="formConfig" enctype="multipart/form-data">
+                            <div class="mb-4 text-center">
+                                <div class="logo-preview-container cursor-pointer" onclick="document.getElementById('cfg_logo').click()" title="Click para cambiar logo">
+                                    <img src="" id="logoPreview" style="max-height:100px; max-width:100px; object-fit:contain;">
+                                </div>
+                                <div class="mt-2 text-muted small"><i class="bx bx-image-add"></i> Cambiar Logo</div>
+                            </div>
+                            <input type="file" class="d-none" name="logo" id="cfg_logo" accept="image/*" onchange="previewLogo(this)">
+
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Nombre del Negocio</label>
-                                <input type="text" class="form-control" name="nombre_negocio" id="cfg_nombre" required>
+                                <label class="form-label fw-bold text-dark">Nombre del Negocio</label>
+                                <input type="text" class="form-control config-input" name="nombre_negocio" id="cfg_nombre" required placeholder="Ej: Carwash Express">
                             </div>
                             <div class="row g-3 mb-3">
-                                <div class="col-4">
-                                    <label class="form-label fw-bold">Abreviatura</label>
-                                    <input type="text" class="form-control" name="abreviatura" id="cfg_abrev" maxlength="10">
+                                <div class="col-6">
+                                    <label class="form-label fw-bold text-dark">Abreviatura Nav</label>
+                                    <input type="text" class="form-control config-input" name="abreviatura" id="cfg_abrev" maxlength="10" placeholder="Ej: CW-FAST">
                                 </div>
-                                <div class="col-4">
-                                    <label class="form-label fw-bold">Moneda</label>
-                                    <select class="form-select" name="moneda" id="cfg_moneda">
+                                <div class="col-6">
+                                    <label class="form-label fw-bold text-dark">Moneda Principal</label>
+                                    <select class="form-select config-input" name="moneda" id="cfg_moneda">
                                         <option value="S/">S/ (Soles)</option>
                                         <option value="$">$ (Dólares)</option>
+                                        <option value="€">€ (Euros)</option>
                                     </select>
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label fw-bold">Logo</label>
-                                    <input type="file" class="form-control" name="logo" id="cfg_logo" accept="image/*" onchange="previewLogo(this)">
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Meta de Puntos para Canje</label>
-                                <input type="number" class="form-control" name="meta_puntos_canje" id="cfg_meta" min="1">
+                                <label class="form-label fw-bold text-dark">Puntos para Canje <small>(Metas Mágicas)</small></label>
+                                <input type="number" class="form-control config-input" name="meta_puntos_canje" id="cfg_meta" min="1" placeholder="Ej: 10">
                             </div>
-                            <div class="mb-4">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="cfg_modo_sin_cajero" name="modo_sin_cajero" value="1">
-                                    <label class="form-check-label fw-bold" for="cfg_modo_sin_cajero">
-                                        Modo Sin Cajero <small class="text-muted">(Operario puede cobrar sin token)</small>
+                            <div class="mb-4 mt-4 p-3 rounded" style="background:#f8fafc; border-left:4px solid #00d4ff;">
+                                <div class="form-check form-switch mt-1">
+                                    <input class="form-check-input" type="checkbox" id="cfg_modo_sin_cajero" name="modo_sin_cajero" value="1" style="width:2.5em; height:1.25em;">
+                                    <label class="form-check-label fw-bold ms-2" for="cfg_modo_sin_cajero">
+                                        Modo Operación Libre <br><small class="text-muted fw-normal">Permitir a operarios cobrar sin necesitar un Token de Admin</small>
                                     </label>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">
-                                <i class="bx bx-save me-1"></i> Guardar Cambios
-                            </button>
+                            <div class="d-flex gap-2 mt-4">
+                                <button type="button" class="btn btn-label-secondary w-100 fw-bold" id="btnDiscardConfig" style="display:none;">
+                                    <i class="bx bx-undo me-1"></i> Descartar
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-save-cfg w-100 text-white">
+                                    <i class="bx bx-save me-2"></i> Guardar Cambios
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -77,13 +225,13 @@
 
             <!-- ═══ TOKENS DE SEGURIDAD ═══ -->
             <div class="col-lg-7 mb-4">
-                <div class="card shadow-sm" style="border:none;border-radius:14px">
-                    <div class="card-header d-flex justify-content-between align-items-center border-0">
+                <div class="card token-wrapper bg-white">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-bottom-0 pt-4 pb-2 px-4">
                         <div>
                             <h6 class="mb-0 fw-bold"><i class="bx bx-key text-warning me-1"></i> Tokens de Seguridad</h6>
                             <small class="text-muted">Genera códigos temporales para operarios y cajeros</small>
                         </div>
-                        <button class="btn btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#modalToken">
+                        <button class="btn btn-primary rounded-pill" id="btnShowModalToken">
                             <i class="bx bx-plus me-1"></i>Generar Token
                         </button>
                     </div>
@@ -106,9 +254,13 @@
                     <i class="bx bx-key text-primary" style="font-size:3rem"></i>
                     <h5 class="fw-bold mt-2">Generar Token</h5>
                 </div>
+                <div class="alert alert-warning mb-3 d-flex align-items-center gap-2" style="border-radius:12px; font-size: 0.8rem;">
+                    <i class="bx bx-error-circle fs-4"></i>
+                    <span>Solo puedes tener <strong>un token activo</strong> a la vez. Úsalo o espera a que expire para crear otro.</span>
+                </div>
                 <form id="formToken">
                     <div class="mb-3">
-                        <label class="form-label fw-bold small">Motivo</label>
+                        <label class="form-label fw-bold small">¿Para qué es este token?</label>
                         <select class="form-select" name="motivo" required>
                             <option value="">-- Seleccionar --</option>
                             <option value="Cajero ausente - Operario cobra">Cajero ausente — Operario cobra</option>
@@ -122,7 +274,16 @@
                         <input type="number" class="form-control" name="minutos_validez" value="60" min="5" max="1440">
                         <small class="text-muted">Mín: 5 min — Máx: 24 horas (1440 min)</small>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold">GENERAR</button>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small">Límite de Usos</label>
+                        <select class="form-select" name="limite_usos" id="selLimiteUsos">
+                            <option value="1">Un solo uso (Más seguro)</option>
+                            <option value="5">Hasta 5 usos</option>
+                            <option value="10">Hasta 10 usos</option>
+                            <option value="0">Uso ilimitado (Mientras no expire)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">GENERAR TOKEN</button>
                 </form>
             </div>
         </div>
@@ -135,11 +296,17 @@
         <div class="modal-content border-top border-5 border-success">
             <div class="modal-body p-4 text-center">
                 <i class="bx bx-check-circle text-success" style="font-size:3rem"></i>
-                <h5 class="fw-bold mt-2">¡Token Generado!</h5>
-                <p class="text-muted small">Comunica este código al empleado:</p>
-                <div class="token-codigo mb-3" id="tokenResultCodigo" style="font-size:2rem;letter-spacing:5px"></div>
-                <p class="small text-muted">Expira: <strong id="tokenResultExpira"></strong></p>
-                <button class="btn btn-success w-100" data-bs-dismiss="modal">Entendido</button>
+                <p class="text-muted small">Haz clic para copiar el código:</p>
+                <div class="position-relative mb-4">
+                    <div class="token-codigo w-100 text-center py-3 cursor-pointer" id="tokenResultCodigo" style="font-size:2.5rem;letter-spacing:8px; border: 2px dashed #696cff;"></div>
+                    <div id="copyFeedback" class="badge bg-success position-absolute top-100 start-50 translate-middle-x mt-2 animate__animated animate__fadeInUp" style="display:none;">¡Token Copiado!</div>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary fw-bold" id="btnCopyToken">
+                        <i class="bx bx-copy me-1"></i> COPIAR TOKEN
+                    </button>
+                    <button class="btn btn-secondary w-100" data-bs-dismiss="modal">CERRAR</button>
+                </div>
             </div>
         </div>
     </div>
@@ -149,116 +316,6 @@
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 
 <script>
-const BASE_URL = "<?= BASE_URL ?>";
-
-document.addEventListener('DOMContentLoaded', () => {
-    cargarConfig();
-    cargarTokens();
-    initForms();
-});
-
-async function cargarConfig() {
-    const res = await fetch(`${BASE_URL}/admin/configuracion/getconfig`);
-    const json = await res.json();
-    if (json.success) {
-        const d = json.data;
-        document.getElementById('cfg_nombre').value = d.nombre_negocio || '';
-        document.getElementById('cfg_abrev').value = d.abreviatura || '';
-        document.getElementById('cfg_moneda').value = d.moneda || 'S/';
-        document.getElementById('cfg_meta').value = d.meta_puntos_canje || 10;
-        document.getElementById('cfg_modo_sin_cajero').checked = d.modo_sin_cajero == 1;
-        if (d.logo) {
-            document.getElementById('logoPreview').src = `${BASE_URL}/${d.logo}`;
-        }
-    }
-}
-
-function previewLogo(input) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) { document.getElementById('logoPreview').src = e.target.result; }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-async function cargarTokens() {
-    const res = await fetch(`${BASE_URL}/admin/configuracion/gettokens`);
-    const json = await res.json();
-    const tokens = json.data || [];
-    const container = document.getElementById('listaTokens');
-
-    if (!tokens.length) {
-        container.innerHTML = `<div class="text-center py-4 text-muted"><i class="bx bx-key" style="font-size:2.5rem"></i><p class="mt-2 mb-0">No hay tokens generados</p></div>`;
-        return;
-    }
-
-    container.innerHTML = tokens.map(t => {
-        const ahora = new Date();
-        const expira = new Date(t.fecha_expiracion);
-        const usado = t.usado == 1;
-        const expirado = expira < ahora && !usado;
-        const activo = !usado && !expirado;
-        const cls = usado ? 'usado' : (expirado ? 'expirado' : '');
-        const badge = activo ? '<span class="badge bg-success">ACTIVO</span>' : (usado ? '<span class="badge bg-secondary">USADO</span>' : '<span class="badge bg-danger">EXPIRADO</span>');
-
-        return `<div class="token-card ${cls}">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="token-codigo">${t.codigo}</span>
-                ${badge}
-            </div>
-            <div class="small text-muted"><i class="bx bx-user me-1"></i>${t.generado_por}</div>
-            <div class="small text-muted"><i class="bx bx-message-detail me-1"></i>${t.motivo_generacion || '—'}</div>
-            <div class="small text-muted"><i class="bx bx-time me-1"></i>Expira: ${expira.toLocaleString('es-PE')}</div>
-        </div>`;
-    }).join('');
-}
-
-function initForms() {
-    // Config
-    document.getElementById('formConfig').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const fd = new FormData(this);
-        // Explicitly set checkbox value since unchecked boxes aren't serialized
-        const modo = document.getElementById('cfg_modo_sin_cajero').checked ? 1 : 0;
-        fd.set('modo_sin_cajero', modo);
-
-        const res = await fetch(`${BASE_URL}/admin/configuracion/guardar`, {
-            method: 'POST', body: fd
-        });
-        const data = await res.json();
-        mostrarToast(data.message, data.success ? 'success' : 'danger');
-    });
-
-    // Token
-    document.getElementById('formToken').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const fd = new FormData(this);
-        const obj = {};
-        fd.forEach((v,k) => obj[k] = v);
-
-        const res = await fetch(`${BASE_URL}/admin/configuracion/generartoken`, {
-            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(obj)
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('modalToken')).hide();
-            document.getElementById('tokenResultCodigo').textContent = data.token.codigo;
-            document.getElementById('tokenResultExpira').textContent = new Date(data.token.expira).toLocaleString('es-PE');
-            new bootstrap.Modal(document.getElementById('modalTokenResult')).show();
-            this.reset();
-            cargarTokens();
-        } else {
-            mostrarToast(data.message, 'danger');
-        }
-    });
-}
-
-function mostrarToast(msg, tipo) {
-    let el = document.getElementById('toastSistema');
-    el.className = `bs-toast toast fade bg-${tipo} position-fixed top-0 end-0 m-3`;
-    el.style.zIndex = "11000";
-    document.getElementById('toastMensaje').textContent = msg;
-    new bootstrap.Toast(el).show();
-}
+    const BASE_URL = "<?= BASE_URL ?>";
 </script>
+<script src="<?= BASE_URL ?>/public/js/admin/configuracion.js"></script>

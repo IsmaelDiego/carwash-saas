@@ -120,7 +120,7 @@
                             <option value="Operario">Operario</option>
                         </select>
 
-                        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
+                        <button type="button" class="btn btn-primary shadow-sm" id="btnNuevoEmpleado">
                             <i class="bx bx-user-plus me-1"></i> Nuevo Empleado
                         </button>
 
@@ -136,28 +136,7 @@
         <!-- LEYENDA                                         -->
         <!-- ════════════════════════════════════════════════ -->
         <div class="card shadow-sm">
-            <div class="card-body border-bottom p-3 badge bg-label-dark">
-                <div class="d-flex flex-wrap align-items-center gap-4">
-                    <span class="fw-bold text-muted small text-uppercase">
-                        <i class="bx bx-info-circle me-1"></i> Roles:
-                    </span>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-label-primary me-2 p-1"><i class="bx bx-shield fs-6"></i></span>
-                        <span class="small text-dark">Administrador</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-label-info me-2 p-1"><i class="bx bx-calculator fs-6"></i></span>
-                        <span class="small text-dark">Cajero</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-label-warning me-2 p-1"><i class="bx bx-wrench fs-6"></i></span>
-                        <span class="small text-dark">Operario</span>
-                    </div>
-                    <div class="d-flex align-items-center ms-auto">
-                        <small class="text-muted fst-italic" style="font-size: 0.75rem;">* Los usuarios inactivos no pueden iniciar sesión.</small>
-                    </div>
-                </div>
-            </div>
+            
 
             <!-- ════════════════════════════════════════════════ -->
             <!-- TABLA                                           -->

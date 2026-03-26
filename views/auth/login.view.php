@@ -80,6 +80,9 @@ $nombre_negocio = !empty($config_sys['nombre_negocio']) ? $config_sys['nombre_ne
                                     />
                                     <span class="input-group-text cursor-pointer"><i class="icon-base bx bx-hide"></i></span>
                                 </div>
+                                <div class="mt-2 text-end">
+                                    <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#modalRecuperar" class="small fw-bold">¿Olvidaste tu contraseña?</a>
+                                </div>
                             </div>
                             
                             <div class="mb-6">
@@ -87,15 +90,94 @@ $nombre_negocio = !empty($config_sys['nombre_negocio']) ? $config_sys['nombre_ne
                             </div>
                         </form>
 
-                        <p class="text-center">
+                        <!-- <p class="text-center">
                             <span>¿Nuevo empleado?</span>
                             <a href="<?= BASE_URL ?>/register">
                                 <span>Crear cuenta</span>
                             </a>
-                        </p>
+                        </p> -->
+                    </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CUENTA INACTIVA -->
+    <div class="modal fade" id="modalInactivo" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-top border-5 border-danger shadow-lg">
+                <div class="modal-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="bx bx-error-circle text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    <h4 class="fw-bold text-danger">CUENTA INACTIVA</h4>
+                    <p class="text-muted small">Tu acceso ha sido restringido temporalmente. Por favor, comunícate con la administración para reactivar tu perfil.</p>
+                    <button type="button" class="btn btn-danger w-100 fw-bold" data-bs-dismiss="modal">ENTENDIDO</button>
+                    <div class="mt-4 pt-2 border-top">
+                        <small class="text-muted">Desarrollado por <b>Ismael Diego</b></small>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RECUPERAR CONTRASEÑA (MULTI-STEP) -->
+    <div class="modal fade" id="modalRecuperar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-top border-5 border-primary">
+                <div class="modal-body p-4">
+                    <div id="recuperarMessage" class="alert text-center small mb-3" style="display:none;"></div>
+                    
+                    <!-- STEP 1: SOLICITAR -->
+                    <div id="stepRecuperar1">
+                        <div class="text-center mb-4">
+                            <i class="bx bx-key text-primary" style="font-size:3.5rem"></i>
+                            <h5 class="fw-bold mt-2">Recuperar Acceso</h5>
+                            <p class="text-muted small">Ingresa tu DNI o Correo para validar tu cuenta.</p>
+                        </div>
+                        <form id="formRecuperar">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small">Identificador</label>
+                                <input type="text" class="form-control" name="identifier" required placeholder="Ej: 45893XXX o admin@...">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">CONTINUAR</button>
+                            <button type="button" class="btn btn-label-secondary w-100 mt-2" data-bs-dismiss="modal">CANCELAR</button>
+                        </form>
+                    </div>
+
+                    <!-- STEP 2: VERIFICAR PIN -->
+                    <div id="stepRecuperar2" style="display:none;">
+                        <div class="text-center mb-4">
+                            <i class="bx bx-mail-send text-info" style="font-size:3.5rem"></i>
+                            <h5 class="fw-bold mt-2">Verificar Correo</h5>
+                            <p class="text-muted small" id="pinMessage">Ingresa el código que te enviamos.</p>
+                        </div>
+                        <form id="formVerificarPin">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small">Código de 6 dígitos</label>
+                                <input type="text" class="form-control text-center fw-bold fs-4" name="pin" maxlength="6" required placeholder="000000">
+                            </div>
+                            <button type="submit" class="btn btn-info w-100 fw-bold">VERIFICAR CÓDIGO</button>
+                            <button type="button" class="btn btn-label-secondary w-100 mt-2" onclick="showStep(1)">VOLVER</button>
+                        </form>
+                    </div>
+
+                    <!-- STEP 3: NUEVA PASSWORD -->
+                    <div id="stepRecuperar3" style="display:none;">
+                        <div class="text-center mb-4">
+                            <i class="bx bx-lock-open-alt text-success" style="font-size:3.5rem"></i>
+                            <h5 class="fw-bold mt-2">Nueva Contraseña</h5>
+                            <p class="text-muted small">Establece tu nuevo acceso seguro.</p>
+                        </div>
+                        <form id="formResetPassword">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Nueva Contraseña</label>
+                                <input type="password" class="form-control" name="password" minlength="6" required placeholder="Mínimo 6 caracteres">
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 fw-bold">CAMBIAR Y ACCEDER</button>
+                        </form>
+                    </div>
+
                 </div>
+            </div>
         </div>
     </div>
     <script src="<?= BASE_URL ?>/template/assets/vendor/libs/jquery/jquery.js"></script>

@@ -16,6 +16,7 @@ require_once BASE_PATH . '/app/core/autoload.php';
 // 5. HELPERS
 require_once BASE_PATH . '/app/helpers/auth_helper.php';
 require_once BASE_PATH . '/app/helpers/system_helper.php';
+require_once BASE_PATH . '/app/helpers/mail_helper.php';
 
 // 6. SESIONES SEGURAS
 if (session_status() === PHP_SESSION_NONE) {

@@ -25,7 +25,12 @@ class DashboardController {
         $ordenesEnProceso = $ordenModel->getAll('EN_PROCESO');
 
         // Productos para venta
-        $productos = $pdo->query("SELECT * FROM productos WHERE stock_actual > 0 ORDER BY nombre")->fetchAll(\PDO::FETCH_ASSOC);
+        $productos = $pdo->query("
+            SELECT *, DATEDIFF(fecha_caducidad, CURDATE()) as dias_vencimiento 
+            FROM productos 
+            WHERE stock_actual > 0 
+            ORDER BY nombre
+        ")->fetchAll(\PDO::FETCH_ASSOC);
 
         // Historial de hoy
         $stmtHoy = $pdo->query(

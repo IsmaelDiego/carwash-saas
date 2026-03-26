@@ -27,11 +27,11 @@ class User
                 u.password_hash,
                 u.avatar_url,
                 u.id_rol,
+                u.estado,
                 r.nombre AS rol_nombre
             FROM usuarios u
             INNER JOIN roles r ON u.id_rol = r.id_rol
             WHERE u.email = :email 
-            AND u.estado = 1
             LIMIT 1
         ";
 
@@ -54,13 +54,14 @@ class User
                 u.id_usuario,
                 u.nombres,
                 u.dni,
+                u.email,
                 u.password_hash,
                 u.id_rol,
+                u.estado,
                 r.nombre AS rol_nombre
             FROM usuarios u
             INNER JOIN roles r ON u.id_rol = r.id_rol
             WHERE u.dni = :dni 
-            AND u.estado = 1
             LIMIT 1
         ";
 

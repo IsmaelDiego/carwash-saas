@@ -116,15 +116,15 @@
             </div>
         </div>
   <!-- ═══ SECCIÓN DE TABLAS (OCULTA POR DEFECTO PARA ENFOQUE) ═══ -->
-        <div class="accordion mb-4 border-0 shadow-none" id="accordionTables">
-            <div class="accordion-item border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTables">
+        <div class="accordion mb-4" id="accordionTables">
+            <div class="card accordion-item border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+                <h2 class="accordion-header" id="headingTables">
+                    <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTables" aria-expanded="false" aria-controls="collapseTables">
                         <i class="bx bx-table me-2 text-primary"></i> Ver Detalle de Movimientos e Inventario
                     </button>
                 </h2>
-                <div id="collapseTables" class="accordion-collapse collapse" data-bs-parent="#accordionTables">
-                    <div class="accordion-body p-4" style="background-color: #faf9ffff; border-bottom: 1px solid #1b1fffff;">
+                <div id="collapseTables" class="accordion-collapse collapse" aria-labelledby="headingTables" data-bs-parent="#accordionTables">
+                    <div class="accordion-body p-4" style="background-color: #fcfcffff; border-top: 1px solid #eee;">
                         <div class="row">
                             <!-- ═══ HISTORIAL DE GASTOS ═══ -->
                             <div class="col-xl-7 mb-4">
@@ -177,10 +177,10 @@
                                                     <td class="text-end">
                                                         <div class="d-flex gap-1 justify-content-end">
                                                             <?php 
-                                                                $js_name = htmlspecialchars(addslashes($ins['nombre']), ENT_QUOTES, 'UTF-8');
-                                                                $js_um = htmlspecialchars(addslashes($ins['unidad_medida']), ENT_QUOTES, 'UTF-8');
+                                                                $js_name = json_encode($ins['nombre'] ?? '');
+                                                                $js_um = json_encode($ins['unidad_medida'] ?? '');
                                                             ?>
-                                                            <button class="btn btn-sm btn-icon btn-label-warning" onclick='editarInsumo(<?= $ins["id_insumo"] ?>, "<?= $js_name ?>", "<?= $js_um ?>", <?= $ins["costo_unitario"] ?>, <?= $ins["stock_actual"] ?>)' title="Editar"><i class="bx bx-edit"></i></button>
+                                                            <button class="btn btn-sm btn-icon btn-label-warning" onclick='editarInsumo(<?= $ins["id_insumo"] ?>, <?= $js_name ?>, <?= $js_um ?>, <?= $ins["costo_unitario"] ?>, <?= $ins["stock_actual"] ?>)' title="Editar"><i class="bx bx-edit"></i></button>
                                                             <button class="btn btn-sm btn-icon btn-label-danger" onclick="eliminarInsumo(<?= $ins['id_insumo'] ?>)" title="Eliminar"><i class="bx bx-trash"></i></button>
                                                         </div>
                                                     </td>

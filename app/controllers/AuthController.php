@@ -53,6 +53,17 @@ class AuthController
             
             if ($user) {
                 if (password_verify($password, $user['password_hash'])) {
+                    // VERIFICACIÓN DE ESTADO (Requerido por el USER)
+                    if ($user['estado'] == 0) {
+                        http_response_code(403); // Prohibido
+                        echo json_encode([
+                            'success' => false, 
+                            'is_inactive' => true,
+                            'message' => 'Tu cuenta está INACTIVA. Contacta con el administrador.'
+                        ]);
+                        return;
+                    }
+
                     session_regenerate_id(true);
 
                     // Guardamos datos usando las columnas de V3.2
@@ -67,6 +78,7 @@ class AuthController
 
                     echo json_encode([
                         'success'  => true,
+                        'message'  => '¡Acceso Concedido! Bienvenido/a.',
                         'redirect' => BASE_URL . '/home'
                     ]);
                 } else {
@@ -75,7 +87,7 @@ class AuthController
                 }
             } else {
                 http_response_code(401);
-                echo json_encode(['success' => false, 'message' => 'El correo/DNI y contraseña son inválidos.']);
+                echo json_encode(['success' => false, 'message' => 'El correo/DNI ingresado no existe.']);
             }
             return;
         }
@@ -174,6 +186,215 @@ class AuthController
         // Cargar vista de despedida
         require VIEW_PATH . '/auth/sign-out.view.php';
         exit;
+    }
+
+    /**
+     * Solicitar recuperación de contraseña (Notificación al Admin)
+     */
+    public function solicitarRecuperacion(): void
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        global $pdo;
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        $identifier = $data['identifier'] ?? '';
+
+        if (empty($identifier)) {
+            echo json_encode(['success' => false, 'message' => 'Ingresa tu DNI o Correo']);
+            return;
+        }
+
+        $userModel = new User($pdo);
+        $user = null;
+
+        if (strpos($identifier, '@') !== false) {
+            $user = $userModel->findByEmail($identifier);
+        } else {
+            $user = $userModel->findByDni($identifier);
+        }
+
+        if (!$user) {
+            echo json_encode(['success' => false, 'message' => 'El usuario no existe en el sistema']);
+            return;
+        }
+
+        // --- LÓGICA DE CORREO (Link/PIN) ---
+        // SOLO PARA ADMINISTRADORES (ID_ROL = 1)
+        if ($user['id_rol'] == 1) {
+            if (!empty($user['email'])) {
+                try {
+                    $pin = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                    $expiry = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+
+                    // Guardar PIN
+                    $stmt = $pdo->prepare("INSERT INTO password_reset_tokens (id_usuario, token, expires_at) VALUES (:u, :t, :e)");
+                    $stmt->execute([':u' => $user['id_usuario'], ':t' => $pin, ':e' => $expiry]);
+
+                    // Enviar Correo (Usamos @ para evitar que warnings de PHP rompan el JSON en local)
+                    if (sendRecoveryEmail($user['email'], $user['nombres'], $pin)) {
+                        ob_clean();
+                        echo json_encode([
+                            'success' => true, 
+                            'has_email' => true,
+                            'message' => 'Código de 6 dígitos enviado a ' . substr($user['email'], 0, 3) . '***@***'
+                        ]);
+                    } else {
+                        // MODO SIMULACIÓN PARA DESARROLLO (XAMPP)
+                        if (APP_ENV === 'development') {
+                            ob_clean();
+                            echo json_encode([
+                                'success' => true, 
+                                'has_email' => true,
+                                'message' => '[MODO TEST] Servidor de correo no configurado. Tu PIN es: ' . $pin
+                            ]);
+                        } else {
+                            throw new Exception("El servidor de correo no está disponible momentáneamente.");
+                        }
+                    }
+                } catch (Exception $e) {
+                    ob_clean();
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => 'Error: ' . $e->getMessage() . ' Contacta con soporte técnico.'
+                    ]);
+                }
+            } else {
+                ob_clean();
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Tu cuenta de Administrador no tiene un correo vinculado para recibir el PIN.'
+                ]);
+            }
+            return;
+        }
+
+        // --- MÉTODO PARA OTROS ROLES (Cajeros, Operarios) ---
+        try {
+            // Verificar si ya tiene una solicitud pendiente
+            $stmt = $pdo->prepare("SELECT id_notificacion FROM notificaciones_recuperacion WHERE id_usuario = :id AND estado = 'PENDIENTE'");
+            $stmt->execute([':id' => $user['id_usuario']]);
+            if ($stmt->fetch()) {
+                ob_clean();
+                echo json_encode(['success' => true, 'has_email' => false, 'message' => 'Ya existe una solicitud pendiente. El administrador pronto reiniciará tu acceso.']);
+                return;
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO notificaciones_recuperacion (id_usuario) VALUES (:id)");
+            $stmt->execute([':id' => $user['id_usuario']]);
+
+            ob_clean();
+            echo json_encode([
+                'success' => true, 
+                'has_email' => false,
+                'message' => 'Solicitud enviada. Por seguridad, el administrador debe autorizar el cambio de tu contraseña.'
+            ]);
+        } catch (Exception $e) {
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => 'Error al procesar notificación: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Verificar PIN de recuperación
+     */
+    public function verificarPin(): void {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        global $pdo;
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        $identifier = $data['identifier'] ?? '';
+        $pin = $data['pin'] ?? '';
+
+        if (empty($pin) || empty($identifier)) {
+            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            return;
+        }
+
+        // Buscar al usuario
+        $userModel = new User($pdo);
+        if (strpos($identifier, '@') !== false) $user = $userModel->findByEmail($identifier);
+        else $user = $userModel->findByDni($identifier);
+
+        if (!$user) {
+            echo json_encode(['success' => false, 'message' => 'Usuario inválido']);
+            return;
+        }
+
+        $stmt = $pdo->prepare("SELECT id FROM password_reset_tokens WHERE id_usuario = :u AND token = :t AND used = 0 AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1");
+        $stmt->execute([':u' => $user['id_usuario'], ':t' => $pin]);
+        
+        if ($stmt->fetch()) {
+            echo json_encode(['success' => true, 'message' => 'PIN verificado correctamente']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'PIN incorrecto o expirado']);
+        }
+    }
+
+    /**
+     * Restablecer contraseña con PIN
+     */
+    public function restablecerConPin(): void {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        global $pdo;
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        $identifier = $data['identifier'] ?? '';
+        $pin = $data['pin'] ?? '';
+        $new_password = $data['password'] ?? '';
+
+        if (empty($pin) || empty($identifier) || empty($new_password)) {
+            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            return;
+        }
+
+        if (strlen($new_password) < 6) {
+            echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres']);
+            return;
+        }
+
+        // Buscar al usuario
+        $userModel = new User($pdo);
+        if (strpos($identifier, '@') !== false) $user = $userModel->findByEmail($identifier);
+        else $user = $userModel->findByDni($identifier);
+
+        if (!$user) {
+            echo json_encode(['success' => false, 'message' => 'Usuario inválido']);
+            return;
+        }
+
+        // Verificar PIN nuevamente antes de cambiar
+        $stmt = $pdo->prepare("SELECT id FROM password_reset_tokens WHERE id_usuario = :u AND token = :t AND used = 0 AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1");
+        $stmt->execute([':u' => $user['id_usuario'], ':t' => $pin]);
+        $token = $stmt->fetch();
+
+        if ($token) {
+            $hash = password_hash($new_password, PASSWORD_DEFAULT);
+            
+            $pdo->beginTransaction();
+            try {
+                // 1. Actualizar Password
+                $stmt = $pdo->prepare("UPDATE usuarios SET password_hash = :h WHERE id_usuario = :u");
+                $stmt->execute([':h' => $hash, ':u' => $user['id_usuario']]);
+
+                // 2. Marcar PIN como usado
+                $stmt = $pdo->prepare("UPDATE password_reset_tokens SET used = 1 WHERE id = :id");
+                $stmt->execute([':id' => $token['id']]);
+
+                $pdo->commit();
+                echo json_encode(['success' => true, 'message' => '¡Contraseña actualizada con éxito! Ahora puedes iniciar sesión.']);
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar contraseña']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Sesión de recuperación expirada']);
+        }
     }
 
     /**

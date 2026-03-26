@@ -8,6 +8,7 @@ const EmpleadoModule = {
         this.initVisualFixes();
         this.cargarRoles();
         this.cargarStats();
+        this.checkRecoveryParam();
     },
 
     // ════════════════════════════════════════════════════
@@ -393,8 +394,8 @@ const EmpleadoModule = {
         $('#tablaEmpleados tbody').on('click', '.btn-password', async function() {
             const d = getData(this);
 
-            const password = await window.confirmByPassword();
-            if(!password) return;
+            const confirmed = await window.confirmByPassword();
+            if(!confirmed) return;
 
             $('#pass_id_usuario').val(d.id_usuario);
             $('#pass_nombre_empleado').text(d.nombres);
@@ -540,6 +541,34 @@ const EmpleadoModule = {
             $("#reg_nombres").val("");
         } finally {
             $("#btnBuscarDniEmpleado").html('<i class="bx bx-search fs-5"></i>').prop("disabled", false);
+        }
+    },
+
+    checkRecoveryParam: async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const recoverId = urlParams.get('recover_id');
+        if (recoverId) {
+            // Removemos el parámetro pronto para evitar loops o re-activaciones al refrescar
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path:cleanUrl},'',cleanUrl);
+
+            // 1. Pedir primero la clave de admin
+            const confirmed = await window.confirmByPassword();
+            if(!confirmed) return;
+
+            try {
+                // 2. Si confirmó, buscar datos y abrir modal
+                const res = await fetch(`${BASE_URL}/admin/empleado/getone?id=${recoverId}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    const user = data.user;
+                    $('#pass_id_usuario').val(user.id_usuario);
+                    $('#pass_nombre_empleado').text(user.nombres);
+                    $('#nueva_password').val('');
+                    $('#modalPassword').modal('show');
+                }
+            } catch(e) { console.error('Error auto-recovery:', e); }
         }
     }
 };

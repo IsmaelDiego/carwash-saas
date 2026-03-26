@@ -24,9 +24,14 @@ async function cargarConfig() {
             actualizarPreviewLive();
 
             if (d.logo) {
-                const logoUrl = `${BASE_URL}/${d.logo}`;
-                document.getElementById('logoPreview').src = logoUrl + '?v=' + new Date().getTime();
+                const timestamp = new Date().getTime();
+                const logoUrl = `${BASE_URL}/${d.logo}?v=${timestamp}`;
+                document.getElementById('logoPreview').src = logoUrl;
                 document.getElementById('previewSidebarLogo').innerHTML = `<img src="${logoUrl}" style="width:100%; height:100%; object-fit:contain;">`;
+                
+                // También actualizar el logo real del sidebar si existe en el layout
+                const realSidebarLogo = document.getElementById('sidebar-logo');
+                if (realSidebarLogo) realSidebarLogo.src = logoUrl;
             }
         }
     } catch(e) { console.error("Error al cargar configuración", e); }
@@ -182,10 +187,22 @@ function initForms() {
 
         const btn = this.querySelector('button[type="submit"]');
         const originalText = btn.innerHTML;
+        const logoInput = document.getElementById('cfg_logo');
+        
         btn.disabled = true;
-        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i> Procesando...';
+        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i> Optimizando Recursos...';
 
         const fd = new FormData(this);
+
+        // Si hay un logo nuevo, redimensionarlo antes de subir
+        if (logoInput.files && logoInput.files[0]) {
+            try {
+                const optimizedLogo = await resizeLogo(logoInput.files[0], 500, 500);
+                fd.set('logo', optimizedLogo, 'logo_optimized.webp');
+            } catch (e) {
+                console.warn("No se pudo optimizar el logo, se enviará original", e);
+            }
+        }
         const modo = document.getElementById('cfg_modo_sin_cajero').checked ? 1 : 0;
         fd.set('modo_sin_cajero', modo);
         // Inyectar password verificado para el backend si es necesario (el controlador lo verificará de nuevo si queremos)
@@ -199,6 +216,8 @@ function initForms() {
             
             if (data.success) {
                 mostrarToast(data.message, 'success');
+                // Limpiar el input de archivo para que detectarCambios() se resetee
+                logoInput.value = "";
                 // Actualizar estado inicial para "limpiar" cambios pendientes
                 await cargarConfig(); 
                 
@@ -282,6 +301,51 @@ function initForms() {
 
     document.getElementById('btnCopyToken').addEventListener('click', copiarToken);
     document.getElementById('tokenResultCodigo').addEventListener('click', copiarToken);
+}
+
+async function resizeLogo(file, maxWidth, maxHeight) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Calcular nuevas dimensiones manteniendo el aspect ratio
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Exportar como WebP con calidad 85% para reducir peso drásticamente
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error("Error al procesar imagen"));
+                    }
+                }, 'image/webp', 0.85);
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
 }
 
 function mostrarToast(msg, tipo) {

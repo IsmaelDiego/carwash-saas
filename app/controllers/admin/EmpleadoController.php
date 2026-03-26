@@ -35,6 +35,24 @@ class EmpleadoController {
         echo json_encode(['data' => $model->getAll()]);
     }
 
+    public function getone() {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID faltante']);
+            return;
+        }
+        $model = new Empleado($pdo);
+        $user = $model->getById($id);
+        if ($user) {
+            echo json_encode(['success' => true, 'user' => $user]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No encontrado']);
+        }
+    }
+
     // ==========================================
     // API: OBTENER ROLES (JSON para Select)
     // URL: /admin/empleado/getroles
@@ -171,6 +189,10 @@ class EmpleadoController {
 
             try {
                 if ($model->cambiarPassword($input['id_usuario'], $input['nueva_password'])) {
+                    // Marcar notificaciones de recuperación como atendidas
+                    $stmt = $pdo->prepare("UPDATE notificaciones_recuperacion SET estado = 'ATENDIDO' WHERE id_usuario = :id AND estado = 'PENDIENTE'");
+                    $stmt->execute([':id' => $input['id_usuario']]);
+                    
                     echo json_encode(['success' => true, 'message' => '¡Contraseña actualizada!']);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Error al actualizar la contraseña.']);

@@ -45,11 +45,15 @@ function getAdminNotifications() {
             $stmtVencer = $pdo->query("SELECT COUNT(*) as total FROM productos WHERE fecha_caducidad IS NOT NULL AND fecha_caducidad <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
             $countVencer = (int)($stmtVencer->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
+            $stmtRecuperar = $pdo->query("SELECT COUNT(*) as total FROM notificaciones_recuperacion WHERE estado = 'PENDIENTE'");
+            $countRecuperar = (int)($stmtRecuperar->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+
             $_SESSION[$cacheKey] = [
                 'pagos' => $countPagos, 
                 'permisos' => $countPermisos, 
                 'stock_bajo' => $countStockBajo,
                 'vencer' => $countVencer,
+                'recuperar' => $countRecuperar,
                 'ts' => $now
             ];
         }
@@ -58,6 +62,26 @@ function getAdminNotifications() {
         $countPermisos = $_SESSION[$cacheKey]['permisos'];
         $countStockBajo = $_SESSION[$cacheKey]['stock_bajo'] ?? 0;
         $countVencer = $_SESSION[$cacheKey]['vencer'] ?? 0;
+        $countRecuperar = $_SESSION[$cacheKey]['recuperar'] ?? 0;
+
+        if ($countRecuperar > 0) {
+            $stmtList = $pdo->query("
+                SELECT u.nombres, n.id_usuario 
+                FROM notificaciones_recuperacion n 
+                JOIN usuarios u ON n.id_usuario = u.id_usuario 
+                WHERE n.estado = 'PENDIENTE'
+            ");
+            while($row = $stmtList->fetch()) {
+                $notificaciones_admin[] = [
+                    'icono' => 'bx-key',
+                    'color' => 'secondary',
+                    'titulo' => 'Recuperar Contraseña',
+                    'descripcion' => "{$row['nombres']} olvidó su contraseña.",
+                    'url' => BASE_URL . "/admin/empleado?recover_id={$row['id_usuario']}"
+                ];
+            }
+            $total_notificaciones += $countRecuperar;
+        }
 
         if ($countPagos > 0) {
             $notificaciones_admin[] = [

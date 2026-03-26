@@ -117,13 +117,9 @@
             <div style="padding-right:16px">
                 <!-- Tabs -->
                 <div class="order-tabs">
-                    <div class="order-tab active" data-filter="POR_COBRAR" onclick="filtrarOrdenes('POR_COBRAR', this)">
-                        <i class="bx bx-dollar-circle me-1"></i>Por Cobrar
-                        <span class="badge bg-success rounded-pill" id="badgeCobrar"><?= count($ordenesPorCobrar) ?></span>
-                    </div>
-                    <div class="order-tab" data-filter="EN_PROCESO" onclick="filtrarOrdenes('EN_PROCESO', this)">
-                        <i class="bx bx-loader-circle me-1"></i>En Proceso
-                        <span class="badge bg-warning rounded-pill" id="badgeProceso"><?= count($ordenesEnProceso) ?></span>
+                    <div class="order-tab active" data-filter="ACTIVAS" onclick="filtrarOrdenes('ACTIVAS', this)">
+                        <i class="bx bx-loader-circle me-1"></i>Órdenes Activas
+                        <span class="badge bg-primary rounded-pill" id="badgeActivas"><?= count($ordenesPorCobrar) + count($ordenesEnProceso) ?></span>
                     </div>
                     <div class="order-tab" data-filter="HISTORIAL" onclick="filtrarOrdenes('HISTORIAL', this)">
                         <i class="bx bx-history me-1"></i>Historial Hoy
@@ -138,31 +134,81 @@
 
             <!-- ─── PANEL DERECHO: TIENDA ─── -->
             <div class="pos-sidebar">
-                <div class="ps-header">
+                <div class="ps-header pb-2">
                     <h6 class="fw-bold mb-2"><i class="bx bx-store-alt text-primary me-1"></i>Tienda — Venta Directa</h6>
+                    <ul class="nav nav-pills nav-fill mb-2" role="tablist" style="font-size: 0.8rem; background: #f4f5f7; border-radius: 8px; padding: 4px;">
+                        <li class="nav-item">
+                            <button class="nav-link active py-1 px-2 fw-bold" data-bs-toggle="pill" data-bs-target="#tabDisponibles">Disponibles</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-1 px-2 fw-bold text-danger" data-bs-toggle="pill" data-bs-target="#tabVencidos">Vencidos</button>
+                        </li>
+                    </ul>
                     <div class="search-box">
                         <i class="bx bx-search"></i>
                         <input type="text" class="form-control form-control-sm" id="buscadorTienda" placeholder="Buscar producto..." onkeyup="filtrarTienda()">
                     </div>
                 </div>
-                <div class="ps-body" id="productosLista">
-                    <?php if (!empty($productos)): ?>
-                        <?php foreach ($productos as $prod): ?>
-                        <div class="prod-item" onclick="agregarAlCarrito(<?= $prod['id_producto'] ?>, '<?= htmlspecialchars(addslashes($prod['nombre'])) ?>', <?= $prod['precio_venta'] ?>, <?= $prod['stock_actual'] ?>)">
-                            <div class="pi-icon"><i class="bx bx-package"></i></div>
-                            <div class="flex-grow-1">
-                                <div class="fw-bold small"><?= htmlspecialchars($prod['nombre']) ?></div>
-                                <div style="font-size:0.7rem;color:#8592a3">Stock: <?= $prod['stock_actual'] ?></div>
+                <div class="ps-body tab-content p-0" id="productosLista" style="flex:1; overflow-y:auto; padding: 16px!important">
+                    <div class="tab-pane fade show active" id="tabDisponibles">
+                        <?php 
+                        $hayDisponibles = false;
+                        if (!empty($productos)): 
+                            foreach ($productos as $prod): 
+                                $dias = $prod['dias_vencimiento'];
+                                $is_vencido = ($dias !== null && $dias < 0);
+                                if ($is_vencido) continue;
+                                $hayDisponibles = true;
+                                $is_warning = ($dias !== null && $dias >= 0 && $dias <= 30);
+                                $bg_style = $is_warning ? 'background-color:#fff3cd;border-color:#ffecb5;' : '';
+                                $icon_color = $is_warning ? 'color:#ffab00;background:#fff8e1;' : '';
+                        ?>
+                            <div class="prod-item" style="<?= $bg_style ?>" onclick="agregarAlCarrito(<?= $prod['id_producto'] ?>, '<?= htmlspecialchars(addslashes($prod['nombre'])) ?>', <?= $prod['precio_venta'] ?>, <?= $prod['stock_actual'] ?>)">
+                                <div class="pi-icon" style="<?= $icon_color ?>"><i class="bx bx-package"></i></div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold small"><?= htmlspecialchars($prod['nombre']) ?></div>
+                                    <div style="font-size:0.7rem;color:#8592a3">
+                                        Stock: <?= $prod['stock_actual'] ?>
+                                        <?= $is_warning ? "<span class='text-warning ms-1 fw-bold'><i class='bx bx-alarm-exclamation'></i> Por vencer</span>" : "" ?>
+                                    </div>
+                                </div>
+                                <span class="fw-bold text-primary">S/ <?= number_format($prod['precio_venta'], 2) ?></span>
                             </div>
-                            <span class="fw-bold text-primary">S/ <?= number_format($prod['precio_venta'], 2) ?></span>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="text-center py-4 text-muted">
-                            <i class="bx bx-package" style="font-size:2.5rem"></i>
-                            <p class="mt-2 mb-0 small">Sin productos disponibles</p>
-                        </div>
-                    <?php endif; ?>
+                        <?php endforeach; endif; ?>
+                        <?php if(!$hayDisponibles): ?>
+                            <div class="text-center py-4 text-muted">
+                                <i class="bx bx-package" style="font-size:2.5rem"></i>
+                                <p class="mt-2 mb-0 small">Sin productos disponibles</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="tabVencidos">
+                        <?php 
+                        $hayVencidos = false;
+                        if (!empty($productos)): 
+                            foreach ($productos as $prod): 
+                                $dias = $prod['dias_vencimiento'];
+                                $is_vencido = ($dias !== null && $dias < 0);
+                                if (!$is_vencido) continue;
+                                $hayVencidos = true;
+                        ?>
+                            <div class="prod-item" style="background-color:#ffebe9;border-color:#f5c2c7;opacity:0.8;cursor:not-allowed">
+                                <div class="pi-icon" style="color:#ff3e1d;background:#ffe0db;"><i class="bx bx-dizzy"></i></div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold small"><?= htmlspecialchars($prod['nombre']) ?></div>
+                                    <div style="font-size:0.7rem;color:#ff3e1d" class="fw-bold">VENCIDO</div>
+                                </div>
+                                <span class="fw-bold text-muted text-decoration-line-through">S/ <?= number_format($prod['precio_venta'], 2) ?></span>
+                            </div>
+                        <?php endforeach; endif; ?>
+                        <?php if(!$hayVencidos): ?>
+                            <div class="text-center py-4 text-muted">
+                                <i class="bx bx-check-circle" style="font-size:2.5rem;color:#71dd37"></i>
+                                <p class="mt-2 mb-0 small">No hay productos vencidos</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <!-- Carrito -->
@@ -188,12 +234,12 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden">
             <div class="modal-header" style="background:linear-gradient(135deg,#71dd37,#56c41a);color:#fff;border:0">
-                <h5 class="modal-title fw-bold"><i class="bx bx-dollar-circle me-1"></i>Cobrar Orden #<span id="cobrar_id"></span></h5>
+                <h5 class="modal-title fw-bold"><i class="bx bx-check-double me-1"></i>Finalizar Orden #<span id="cobrar_id"></span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <div class="text-center mb-4">
-                    <div class="fw-bold text-muted small">TOTAL A COBRAR</div>
+                    <div class="fw-bold text-muted small">TOTAL A PAGAR</div>
                     <div style="font-size:2.5rem;font-weight:800;color:#696cff" id="cobrar_total">S/ 0.00</div>
                 </div>
                 <!-- Detalle orden -->
@@ -208,8 +254,8 @@
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                <button class="btn btn-success btn-lg w-100 fw-bold rounded-pill" onclick="confirmarCobro()" id="btnConfirmarCobro">
-                    <i class="bx bx-check-double me-1"></i>CONFIRMAR COBRO
+                <button class="btn btn-primary bg-gradient btn-lg w-100 fw-bold rounded-pill border-0 shadow-sm" onclick="confirmarCobro()" id="btnConfirmarCobro">
+                    <i class="bx bx-check-double me-1"></i>FINALIZAR ORDEN
                 </button>
             </div>
         </div>
@@ -324,7 +370,7 @@
 const BASE_URL = '<?= BASE_URL ?>';
 let todasOrdenes = [];
 let historialHoy = <?= json_encode($historialHoy) ?>;
-let filtroActual = 'POR_COBRAR';
+let filtroActual = 'ACTIVAS';
 let carrito = [];
 let ordenCobrar = null;
 let metodoCobro = 'EFECTIVO';
@@ -408,6 +454,8 @@ function renderOrdenes() {
 
     if (filtroActual === 'HISTORIAL') {
         data = historialHoy;
+    } else if (filtroActual === 'ACTIVAS') {
+        data = todasOrdenes.filter(o => o.estado === 'POR_COBRAR' || o.estado === 'EN_PROCESO');
     } else {
         data = todasOrdenes.filter(o => o.estado === filtroActual);
     }
@@ -426,8 +474,8 @@ function renderOrdenes() {
         let actions = '';
         if (est === 'POR_COBRAR') {
             actions = `<div class="d-flex gap-2 mt-2">
-                <button class="btn btn-success btn-sm flex-grow-1 fw-bold" onclick="abrirCobro(${o.id_orden}, ${o.total_final})">
-                    <i class="bx bx-dollar-circle me-1"></i>Cobrar
+                <button class="btn btn-primary bg-gradient btn-sm flex-grow-1 fw-bold border-0 shadow-sm" onclick="abrirCobro(${o.id_orden}, ${o.total_final})">
+                    <i class="bx bx-check-double me-1"></i>Finalizar
                 </button>
                 <button class="btn btn-outline-danger btn-sm" onclick="iniciarAnulacion(${o.id_orden})" title="Anular">
                     <i class="bx bx-x-circle"></i>
@@ -473,8 +521,9 @@ function renderOrdenes() {
 function actualizarBadges() {
     const cobrar = todasOrdenes.filter(o => o.estado === 'POR_COBRAR').length;
     const proceso = todasOrdenes.filter(o => o.estado === 'EN_PROCESO').length;
-    document.getElementById('badgeCobrar').textContent = cobrar;
-    document.getElementById('badgeProceso').textContent = proceso;
+    if (document.getElementById('badgeActivas')) {
+        document.getElementById('badgeActivas').textContent = cobrar + proceso;
+    }
     document.getElementById('sPorCobrar').textContent = cobrar;
     document.getElementById('sEnProceso').textContent = proceso;
 }
@@ -564,13 +613,17 @@ function renderCarrito() {
     const count = carrito.reduce((s, c) => s + c.cantidad, 0);
 
     lista.innerHTML = carrito.map(c => `
-        <div class="cart-item">
-            <div class="flex-grow-1">
-                <div class="fw-bold">${c.nombre}</div>
-                <small class="text-muted">S/ ${c.precio.toFixed(2)} × ${c.cantidad}</small>
+        <div class="cart-item py-2">
+            <div class="flex-grow-1" style="max-width: 45%;">
+                <div class="fw-bold text-truncate" title="${c.nombre}">${c.nombre}</div>
+                <small class="text-muted">S/ ${c.precio.toFixed(2)}</small>
             </div>
-            <span class="fw-bold text-primary me-2">S/ ${(c.precio * c.cantidad).toFixed(2)}</span>
-            <button class="btn btn-sm btn-outline-danger" onclick="quitarDelCarrito(${c.id})" style="padding:2px 6px"><i class="bx bx-minus"></i></button>
+            <div class="d-flex align-items-center bg-light rounded-pill px-1" style="border: 1px solid #e1e4e8;">
+                <button class="btn btn-sm btn-icon text-danger" onclick="quitarDelCarrito(${c.id})" style="width: 24px; height: 24px; padding: 0;"><i class="bx bx-minus"></i></button>
+                <span class="fw-bold px-2 text-center" style="min-width: 25px; font-size: 0.85rem">${c.cantidad}</span>
+                <button class="btn btn-sm btn-icon text-success" onclick="agregarAlCarrito(${c.id}, '${c.nombre.replace(/'/g, "\\'")}', ${c.precio}, ${c.stock})" style="width: 24px; height: 24px; padding: 0;"><i class="bx bx-plus"></i></button>
+            </div>
+            <div class="fw-bold text-primary ms-auto" style="min-width: 60px; text-align: right;">S/ ${(c.precio * c.cantidad).toFixed(2)}</div>
         </div>
     `).join('');
 

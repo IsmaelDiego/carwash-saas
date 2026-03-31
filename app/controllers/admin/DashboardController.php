@@ -41,7 +41,8 @@ class DashboardController
                 (SELECT COUNT(*) FROM permisos_empleados WHERE estado = 'PENDIENTE') as permisos_pendientes,
                 (SELECT COUNT(*) FROM tokens_seguridad WHERE usado = 0 AND fecha_expiracion > NOW()) as tokens_activos,
                 (SELECT COUNT(*) FROM clientes WHERE estado_whatsapp = 1 AND telefono IS NOT NULL AND telefono != '') as clientes_whatsapp,
-                (SELECT COUNT(*) FROM temporadas) as total_temporadas
+                (SELECT COUNT(*) FROM temporadas) as total_temporadas,
+                (SELECT COUNT(*) FROM caja_sesiones WHERE estado = 'ABIERTA') as cajas_abiertas
         ");
         $counters = $stmt->fetch(\PDO::FETCH_ASSOC);
         $data = array_merge($data, $counters);

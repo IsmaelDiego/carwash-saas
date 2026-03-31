@@ -66,7 +66,21 @@ class DashboardController {
         $categoriasVH = $pdo->query("SELECT * FROM categorias_vehiculos ORDER BY nombre")->fetchAll(\PDO::FETCH_ASSOC);
 
         // Productos (solo si tiene token desbloqueado)
-        $productos = $pdo->query("SELECT * FROM productos WHERE stock_actual > 0 ORDER BY nombre")->fetchAll(\PDO::FETCH_ASSOC);
+        // Se usa la misma lógica de "precio sugerido" (el máximo de sus lotes activos)
+        $productos = $pdo->query("
+            SELECT p.*, 
+                   (SELECT IFNULL(MAX(pl.precio_venta), p.precio_venta) 
+                    FROM producto_lotes pl 
+                    WHERE pl.id_producto = p.id_producto AND pl.estado = 'ACTIVO' AND pl.cantidad_actual > 0
+                   ) as precio_venta_pos,
+                   (SELECT MIN(DATEDIFF(pl.fecha_vencimiento, CURDATE())) 
+                    FROM producto_lotes pl 
+                    WHERE pl.id_producto = p.id_producto AND pl.estado = 'ACTIVO' AND pl.cantidad_actual > 0
+                   ) as dias_vencimiento
+            FROM productos p 
+            WHERE p.stock_actual > 0 
+            ORDER BY p.nombre ASC
+        ")->fetchAll(\PDO::FETCH_ASSOC);
 
         // Promociones activas
         $promociones = $pdo->query(
@@ -385,7 +399,7 @@ class DashboardController {
         }
     }
 
-    // API: Agregar producto (consumo) a la orden
+    // API: Agregar producto (consumo) a la orden — AHORA CON FIFO Y PRECIO SUGERIDO
     public function agregarproducto() {
         requireAuth();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
@@ -398,27 +412,65 @@ class DashboardController {
         }
 
         try {
-            $stmt = $pdo->prepare("SELECT * FROM productos WHERE id_producto = :id AND stock_actual > 0");
-            $stmt->execute([':id' => $input['id_producto']]);
-            $prod = $stmt->fetch(\PDO::FETCH_ASSOC);
-            if (!$prod) { echo json_encode(['success' => false, 'message' => 'Producto sin stock.']); return; }
-
+            $pdo->beginTransaction();
+            $idProducto = $input['id_producto'];
+            $idOrden = $input['id_orden'];
             $cantidad = (int)($input['cantidad'] ?? 1);
-            $subtotal = $prod['precio_venta'] * $cantidad;
 
+            $productoModel = new \Producto($pdo);
+            $p = $productoModel->getById($idProducto);
+
+            if (!$p) throw new \Exception("Producto no encontrado.");
+
+            // 1. Validar Stock
+            if ($p['stock_actual'] < $cantidad) {
+                throw new \Exception("Stock insuficiente para '{$p['nombre']}'.");
+            }
+
+            // 2. Bloqueo por vencimiento (FIFO)
+            $vencido = $productoModel->getLoteProximoAVencer($idProducto);
+            if ($vencido && $vencido['vencido']) {
+                throw new \Exception("Producto Vencido: '{$p['nombre']}' requiere retiro de almacén.");
+            }
+
+            // 3. Precio Sugerido: Se cobra el precio MÁXIMO de entre los lotes activos
+            $precioSugerido = $productoModel->getPrecioVentaSugerido($idProducto);
+
+            // 4. Descontar por FIFO
+            $lotesUsados = $productoModel->descontarStockFIFO(
+                $idProducto, 
+                $cantidad, 
+                $idOrden,
+                $_SESSION['user']['id'] ?? 1
+            );
+
+            // 5. Registrar detalle_orden por cada lote
+            $totalAgregado = 0;
+            foreach ($lotesUsados as $loteUsado) {
+                $subLote = $precioSugerido * $loteUsado['cantidad'];
+                $totalAgregado += $subLote;
+
+                $pdo->prepare("INSERT INTO detalle_orden (id_orden, id_producto, cantidad, precio_unitario, subtotal, id_lote) VALUES (:o, :p, :c, :pu, :s, :l)")
+                    ->execute([
+                        ':o'  => $idOrden, 
+                        ':p'  => $idProducto, 
+                        ':c'  => $loteUsado['cantidad'], 
+                        ':pu' => $precioSugerido, 
+                        ':s'  => $subLote,
+                        ':l'  => $loteUsado['id_lote']
+                    ]);
+            }
+
+            // 6. Actualizar totales de la orden
             $pdo->prepare(
-                "INSERT INTO detalle_orden (id_orden, id_producto, cantidad, precio_unitario, subtotal) VALUES (:o, :p, :c, :pu, :s)"
-            )->execute([':o' => $input['id_orden'], ':p' => $input['id_producto'], ':c' => $cantidad, ':pu' => $prod['precio_venta'], ':s' => $subtotal]);
+                "UPDATE ordenes SET total_productos = total_productos + :ta, total_final = total_servicios + total_productos + :ta2 - descuento_promo - descuento_puntos WHERE id_orden = :id"
+            )->execute([':ta' => $totalAgregado, ':ta2' => $totalAgregado, ':id' => $idOrden]);
 
-            $pdo->prepare(
-                "UPDATE ordenes SET total_productos = total_productos + :sub, total_final = total_servicios + total_productos + :sub2 - descuento_promo - descuento_puntos WHERE id_orden = :id"
-            )->execute([':sub' => $subtotal, ':sub2' => $subtotal, ':id' => $input['id_orden']]);
+            $pdo->commit();
+            echo json_encode(['success' => true, 'message' => "{$p['nombre']} agregado exitosamente."]);
 
-            $pdo->prepare("UPDATE productos SET stock_actual = stock_actual - :c WHERE id_producto = :id")
-                ->execute([':c' => $cantidad, ':id' => $input['id_producto']]);
-
-            echo json_encode(['success' => true, 'message' => "{$prod['nombre']} agregado."]);
         } catch (\Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
     }

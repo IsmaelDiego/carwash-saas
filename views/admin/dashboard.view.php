@@ -246,6 +246,7 @@
                 ['val' => $dashData['total_promociones'], 'lbl' => 'Promos Activas', 'icon' => 'bx-gift', 'color' => 'danger', 'url' => '#'],
                 ['val' => $dashData['pagos_pendientes'], 'lbl' => 'Pagos Pendientes', 'icon' => 'bx-money', 'color' => 'success', 'url' => BASE_URL . '/admin/pago'],
                 ['val' => $dashData['permisos_pendientes'], 'lbl' => 'Permisos Pendientes', 'icon' => 'bx-calendar', 'color' => 'warning', 'url' => BASE_URL . '/admin/permiso'],
+                ['val' => $dashData['cajas_abiertas'], 'lbl' => 'Cajas Abiertas', 'icon' => 'bx-wallet', 'color' => 'primary', 'url' => BASE_URL . '/admin/caja'],
                 ['val' => $dashData['tokens_activos'], 'lbl' => 'Tokens de Seguridad', 'icon' => 'bx-key', 'color' => 'secondary', 'url' => '#'],
             ];
             foreach ($kpis as $i => $kpi): ?>

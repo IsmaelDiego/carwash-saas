@@ -115,24 +115,27 @@ const PromocionModule = {
       const bgIcon = esPorcentaje
         ? "bg-label-primary text-primary"
         : "bg-label-success text-success";
-      const estadoClass = promo.estado == 1 ? "success" : "secondary";
-      const estadoText = promo.estado == 1 ? "ACTIVA" : "INACTIVA";
+      const estadoClass = promo.es_caducada == 1 ? "secondary" : (promo.estado == 1 ? "success" : "warning");
+      const estadoText = promo.es_caducada == 1 ? "CADUCADA" : (promo.estado == 1 ? "ACTIVA" : "INACTIVA");
       const f = new Date(promo.fecha_fin.replace(/-/g, "/"));
       const finStr = !isNaN(f) ? f.toLocaleDateString() : promo.fecha_fin;
 
-      html += `
-            <div class="col animate__animated animate__fadeIn">
-                <div class="card promo-card h-100 overflow-hidden">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <span class="badge bg-label-${estadoClass} fw-bold rounded-pill px-3 py-1 border-0">${estadoText}</span>
+      let dropdownHtml = promo.es_caducada == 1 ? '' : `
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                     <li><a class="dropdown-item btn-editar-card" href="javascript:void(0);" data-id="${promo.id_promocion}"><i class="bx bx-edit-alt me-2 text-warning"></i> Editar</a></li>
                                     <li><a class="dropdown-item btn-eliminar-card text-danger" href="javascript:void(0);" data-id="${promo.id_promocion}" data-nom="${promo.nombre}"><i class="bx bx-trash me-2"></i> Eliminar</a></li>
                                 </ul>
-                            </div>
+                            </div>`;
+
+      html += `
+            <div class="col animate__animated animate__fadeIn">
+                <div class="card promo-card h-100 overflow-hidden ${promo.es_caducada == 1 ? 'opacity-75 bg-light' : ''}">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <span class="badge bg-label-${estadoClass} fw-bold rounded-pill px-3 py-1 border-0">${estadoText}</span>
+                            ${dropdownHtml}
                         </div>
                         <div class="d-flex align-items-center mb-4">
                             <div class="discount-circle ${bgIcon} me-4 shadow-sm">
@@ -214,14 +217,17 @@ const PromocionModule = {
         {
           data: "estado",
           className: "text-center",
-          render: (d, t, r) =>
-            `<div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input switch-estado" type="checkbox" data-id="${r.id_promocion}" ${d == 1 ? "checked" : ""}></div>`,
+          render: (d, t, r) => r.es_caducada == 1 
+                      ? `<span class="badge bg-label-secondary"><i class="bx bx-time"></i> CADUCADA</span>`
+                      : `<div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input switch-estado" type="checkbox" data-id="${r.id_promocion}" ${d == 1 ? "checked" : ""}></div>`,
         },
         {
           data: null,
           className: "text-center",
-          render: () =>
-            `<div class="dropdown"><button class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded fs-4"></i></button><div class="dropdown-menu dropdown-menu-end shadow-sm border-0"><a class="dropdown-item btn-ver" href="javascript:void(0);"><i class="bx bx-show text-info me-2"></i> Ver Detalle</a><a class="dropdown-item btn-editar" href="javascript:void(0);"><i class="bx bx-edit text-warning me-2"></i> Editar</a><div class="dropdown-divider"></div><a class="dropdown-item btn-eliminar text-danger" href="javascript:void(0);"><i class="bx bx-trash me-2"></i> Eliminar</a></div></div>`,
+          render: (d, t, r) => {
+              let editarHtml = r.es_caducada == 1 ? '' : `<a class="dropdown-item btn-editar" href="javascript:void(0);"><i class="bx bx-edit text-warning me-2"></i> Editar</a>`;
+              return `<div class="dropdown"><button class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded fs-4"></i></button><div class="dropdown-menu dropdown-menu-end shadow-sm border-0"><a class="dropdown-item btn-ver" href="javascript:void(0);"><i class="bx bx-show text-info me-2"></i> Ver Detalle</a>${editarHtml}<div class="dropdown-divider"></div><a class="dropdown-item btn-eliminar text-danger" href="javascript:void(0);"><i class="bx bx-trash me-2"></i> Eliminar</a></div></div>`;
+          }
         },
       ],
       buttons: [

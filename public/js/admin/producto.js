@@ -1,6 +1,6 @@
 /**
- * Módulo Productos — Admin
- * Estructura: Module Pattern + init() (igual que ClienteModule, EmpleadoModule, etc.)
+ * Módulo Productos — Admin (Fase 2: Lotes FIFO)
+ * Estructura: Module Pattern + init()
  */
 const ProductoModule = {
     tabla: null,
@@ -11,6 +11,7 @@ const ProductoModule = {
         this.initEventosUI();
         this.initFormularios();
         this.initVisualFixes();
+        this.cargarAlertasVencimiento();
     },
 
     // ════════════════════════════════════════════════════
@@ -25,7 +26,7 @@ const ProductoModule = {
             autoWidth: false,
             ordering: true,
             ajax: `${BASE_URL}/admin/producto/getall`,
-            dom: '<"row mx-2"<"col-md-12 my-2"l>>t<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
+            dom: '<"row mx-2"<"col-md-12 my-2"l>><t><"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
             pageLength: 10,
             language: {
                 lengthMenu: " _MENU_ ",
@@ -42,20 +43,24 @@ const ProductoModule = {
                 { data: null, className: 'text-center', render: function(d, t, row) {
                     const pc = parseFloat(row.precio_compra);
                     const pv = parseFloat(row.precio_venta);
+                    const ps = parseFloat(row.precio_sugerido || pv);
+                    
                     let margenStr = '—';
                     if (pc > 0) {
-                        const margen = (((pv - pc) / pc) * 100).toFixed(0);
-                        const color = pv > pc ? 'text-success' : 'text-danger';
+                        const margen = (((ps - pc) / pc) * 100).toFixed(0);
+                        const color = ps > pc ? 'text-success' : 'text-danger';
                         margenStr = `<span class="${color} small fw-bold">(${margen}%)</span>`;
                     }
                     return `<div class="d-flex flex-column" style="line-height:1.2;">
-                                <span class="fw-bold text-primary">S/ ${pv.toFixed(2)}</span>
-                                <small class="text-muted">Costo: S/ ${pc.toFixed(2)} ${margenStr}</small>
+                                <span class="fw-bold text-primary" title="Precio máximo sugerido por lotes">S/ ${ps.toFixed(2)}</span>
+                                <small class="text-muted" style="font-size:0.75rem">Base: S/ ${pv.toFixed(2)}</small>
+                                <small class="text-muted" style="font-size:0.65rem">Costo: S/ ${pc.toFixed(2)} ${margenStr}</small>
                             </div>`;
                 }},
                 { data: null, render: function(d, t, row) {
                     const actual = parseInt(row.stock_actual);
                     const min = parseInt(row.stock_minimo);
+                    const lotes = parseInt(row.lotes_activos || 0);
                     const pct = min > 0 ? Math.min((actual / (min * 3)) * 100, 100) : 100;
                     const barColor = actual === 0 ? 'bg-danger' : (actual <= min ? 'bg-warning' : 'bg-success');
                     return `<div class="d-flex flex-column align-items-center">
@@ -63,33 +68,40 @@ const ProductoModule = {
                                 <div class="progress" style="width:70px;height:4px">
                                     <div class="progress-bar ${barColor}" style="width:${pct}%"></div>
                                 </div>
+                                <small class="text-muted mt-1" style="font-size:0.65rem"><i class="bx bx-layer"></i> ${lotes} lote${lotes !== 1 ? 's' : ''}</small>
                             </div>`;
                 }},
                 { data: null, className: 'text-center', render: function(d, t, row) {
-                    // Estado Stock
                     const actual = parseInt(row.stock_actual);
                     const min = parseInt(row.stock_minimo);
                     let stockBadge = '<span class="badge bg-label-success mb-1">Con stock</span>';
                     if (actual === 0) stockBadge = '<span class="badge bg-label-danger mb-1">Sin stock</span>';
                     else if (actual <= min) stockBadge = '<span class="badge bg-label-warning mb-1">Bajo stock</span>';
 
-                    // Estado Caducidad
+                    // Vencimiento por lote más próximo
                     let cadBadge = '';
-                    if (row.fecha_caducidad) {
+                    if (row.prox_vencimiento) {
                         let hoy = new Date();
                         hoy.setHours(0,0,0,0);
                         let limitDate = new Date();
                         limitDate.setDate(limitDate.getDate() + 30);
                         limitDate.setHours(0,0,0,0);
-                        
-                        let fcad = new Date(row.fecha_caducidad + 'T00:00:00');
+                        let fcad = new Date(row.prox_vencimiento + 'T00:00:00');
                         
                         if (fcad < hoy) {
-                            cadBadge = '<br><span class="badge bg-danger shadow-sm mt-1 animate__animated animate__pulse animate__infinite"><i class="bx bx-error-circle me-1"></i>Vencido</span>';
+                            cadBadge = '<br><span class="badge bg-danger shadow-sm mt-1 animate__animated animate__pulse animate__infinite"><i class="bx bx-error-circle me-1"></i>Lote Vencido</span>';
                         } else if (fcad <= limitDate) {
-                             cadBadge = '<br><span class="badge bg-warning shadow-sm mt-1 text-dark"><i class="bx bx-timer me-1"></i>Por Vencer</span>';
+                            cadBadge = '<br><span class="badge bg-warning shadow-sm mt-1 text-dark"><i class="bx bx-timer me-1"></i>Lote Por Vencer</span>';
                         } else {
-                             cadBadge = `<br><small class="text-muted d-block mt-1"><i class="bx bx-calendar-check me-1"></i>Vence: ${fcad.toLocaleDateString('es-ES')}</small>`;
+                            cadBadge = `<br><small class="text-muted d-block mt-1"><i class="bx bx-calendar-check me-1"></i>Vence: ${fcad.toLocaleDateString('es-ES')}</small>`;
+                        }
+                    } else if (row.fecha_caducidad) {
+                        let hoy = new Date(); hoy.setHours(0,0,0,0);
+                        let fcad = new Date(row.fecha_caducidad + 'T00:00:00');
+                        if (fcad < hoy) {
+                            cadBadge = '<br><span class="badge bg-danger shadow-sm mt-1"><i class="bx bx-error-circle me-1"></i>Vencido</span>';
+                        } else {
+                            cadBadge = `<br><small class="text-muted d-block mt-1"><i class="bx bx-calendar-check me-1"></i>Vence: ${fcad.toLocaleDateString('es-ES')}</small>`;
                         }
                     }
 
@@ -104,6 +116,15 @@ const ProductoModule = {
                         <div class="dropdown-menu">
                             <a class="dropdown-item btn-editar" href="javascript:void(0);">
                                 <i class="bx bx-edit-alt me-1"></i> Editar
+                            </a>
+                            <a class="dropdown-item btn-agregar-lote text-success" href="javascript:void(0);">
+                                <i class="bx bx-archive-in me-1"></i> Agregar Lote
+                            </a>
+                            <a class="dropdown-item btn-ver-lotes" href="javascript:void(0);">
+                                <i class="bx bx-layer me-1"></i> Ver Lotes
+                            </a>
+                            <a class="dropdown-item btn-kardex" href="javascript:void(0);">
+                                <i class="bx bx-history me-1"></i> Kardex
                             </a>
                             <a class="dropdown-item btn-stock" href="javascript:void(0);">
                                 <i class="bx bx-transfer me-1"></i> Ajustar Stock
@@ -121,7 +142,7 @@ const ProductoModule = {
                 className: 'd-none',
                 filename: 'Reporte_Productos',
                 title: '',
-                exportOptions: { columns: [1, 2, 3, 4, 5] }, // Exclude action columns
+                exportOptions: { columns: [1, 2, 3, 4, 5] },
                 customize: function(xlsx) {
                     var sheet = xlsx.xl.worksheets['sheet1.xml'];
                     var styles = xlsx.xl['styles.xml'];
@@ -149,8 +170,9 @@ const ProductoModule = {
             document.getElementById('stat_bajo_stock').textContent = s.bajo_stock || 0;
             document.getElementById('stat_sin_stock').textContent = s.sin_stock || 0;
             if(document.getElementById('stat_por_vencer')) document.getElementById('stat_por_vencer').textContent = s.por_vencer || 0;
+            if(document.getElementById('stat_lotes_activos')) document.getElementById('stat_lotes_activos').textContent = s.total_lotes_activos || 0;
             document.getElementById('stat_valor_inv').textContent = 'S/ ' + parseFloat(s.valor_inventario || 0).toFixed(0);
-            document.getElementById('stat_valor_venta').textContent = 'S/ ' + parseFloat(s.valor_venta || 0).toFixed(0);
+            if(document.getElementById('stat_valor_venta')) document.getElementById('stat_valor_venta').textContent = 'S/ ' + parseFloat(s.valor_venta || 0).toFixed(0);
         } catch (e) { console.error('Error cargando stats:', e); }
     },
 
@@ -177,10 +199,9 @@ const ProductoModule = {
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex, originalData) {
             if (settings.nTable.id !== 'tablaProductos') return true;
             
-            // Filtro por Fechas
             let min = $("#filtroFechaInicio").val();
             let max = $("#filtroFechaFin").val();
-            let fechaStr = data[0]; // fecha_raw está oculta en posición 0
+            let fechaStr = data[0];
             
             if (fechaStr) {
                 let fecha = new Date(fechaStr);
@@ -192,7 +213,6 @@ const ProductoModule = {
                 }
             }
 
-            // Filtro por Stock
             let f = $('#filtroStock').val();
             if (!f) return true;
             
@@ -235,7 +255,7 @@ const ProductoModule = {
         // BOTÓN NUEVO
         $(document).on('click', '#btnNuevoProducto', () => self.abrirModalRegistro());
 
-        // EDITAR (delegación de eventos en tablaProductos)
+        // EDITAR
         $('#tablaProductos').on('click', '.btn-editar', function() {
             const p = self.tabla.row($(this).closest('tr')).data();
             if (!p) return;
@@ -243,13 +263,12 @@ const ProductoModule = {
             $('#edit_nombre').val(p.nombre);
             $('#edit_precio_compra').val(p.precio_compra);
             $('#edit_precio_venta').val(p.precio_venta);
-            $('#edit_stock').val(p.stock_actual);
             $('#edit_stock_min').val(p.stock_minimo);
             $('#edit_fecha_caducidad').val(p.fecha_caducidad);
             $('#modalEditar').modal('show');
         });
 
-        // AJUSTAR STOCK
+        // AJUSTAR STOCK (Legacy)
         $('#tablaProductos').on('click', '.btn-stock', function() {
             const p = self.tabla.row($(this).closest('tr')).data();
             if (!p) return;
@@ -261,6 +280,33 @@ const ProductoModule = {
             $('#modalStock').modal('show');
         });
 
+        // ═══ AGREGAR LOTE ═══
+        $('#tablaProductos').on('click', '.btn-agregar-lote', function() {
+            const p = self.tabla.row($(this).closest('tr')).data();
+            if (!p) return;
+            $('#lote_id_producto').val(p.id_producto);
+            $('#lote_producto_nombre').text(p.nombre);
+            $('#lote_precio_compra').val(p.precio_compra);
+            $('#lote_precio_venta').val(p.precio_venta);
+            $('#lote_cantidad').val('');
+            $('#lote_fecha_vencimiento').val(p.fecha_caducidad || '');
+            $('#modalAgregarLote').modal('show');
+        });
+
+        // ═══ VER LOTES ═══
+        $('#tablaProductos').on('click', '.btn-ver-lotes', function() {
+            const p = self.tabla.row($(this).closest('tr')).data();
+            if (!p) return;
+            self.cargarLotesProducto(p.id_producto, p.nombre);
+        });
+
+        // ═══ KARDEX ═══
+        $('#tablaProductos').on('click', '.btn-kardex', function() {
+            const p = self.tabla.row($(this).closest('tr')).data();
+            if (!p) return;
+            self.cargarKardex(p.id_producto, p.nombre);
+        });
+
         // ELIMINAR
         $('#tablaProductos').on('click', '.btn-eliminar', function() {
             const p = self.tabla.row($(this).closest('tr')).data();
@@ -268,6 +314,29 @@ const ProductoModule = {
             $('#eliminar_id').val(p.id_producto);
             $('#eliminar_nombre').text(p.nombre);
             $('#modalEliminar').modal('show');
+        });
+
+        // ═══ BOTÓN ALERTAS VENCIMIENTO ═══
+        $('#btnAlertasVencimiento').on('click', function() {
+            self.cargarAlertasVencimiento();
+            new bootstrap.Offcanvas(document.getElementById('offcanvasAlertas')).show();
+        });
+
+        // ═══ MERMA: Selector de motivo ═══
+        $('#merma_motivo_sel').on('change', function() {
+            const val = $(this).val();
+            if (val && val !== 'otro') {
+                $('#merma_motivo').val(val);
+            } else if (val === 'otro') {
+                $('#merma_motivo').val('').focus();
+            }
+        });
+
+        // ═══ MERMA: Calcular gasto estimado ═══
+        $('#merma_cantidad').on('input', function() {
+            const cant = parseInt($(this).val()) || 0;
+            const costo = parseFloat($('#merma_costo').data('raw')) || 0;
+            $('#merma_gasto_estimado').text((cant * costo).toFixed(2));
         });
     },
 
@@ -299,6 +368,7 @@ const ProductoModule = {
                         self.initVisualFixes();
                         self.tabla.ajax.reload(null, false);
                         self.cargarStats();
+                        self.cargarAlertasVencimiento();
                         if (reset) this.reset();
                         self.mostrarToast(data.message, 'success');
                         if (typeof window.updateGlobalNotifications === 'function') {
@@ -318,25 +388,213 @@ const ProductoModule = {
         handleForm('formRegistro', '/admin/producto/registrar', 'GUARDAR', 'modalRegistro', true);
         handleForm('formEditar', '/admin/producto/editar', 'ACTUALIZAR', 'modalEditar');
         handleForm('formStock', '/admin/producto/ajustarstock', 'AJUSTAR', 'modalStock', true);
-        handleForm('formEliminar', '/admin/producto/eliminar', 'CONTUNUAR', 'modalEliminar');
+        handleForm('formEliminar', '/admin/producto/eliminar', 'CONTINUAR', 'modalEliminar');
+        handleForm('formAgregarLote', '/admin/producto/agregarlote', 'REGISTRAR LOTE', 'modalAgregarLote', true);
+        handleForm('formMerma', '/admin/producto/registrarmerma', 'REGISTRAR MERMA', 'modalMerma', true);
     },
 
     // ════════════════════════════════════════════════════
-    // 5. MODALES Y UTILIDADES
+    // 5. CARGAR LOTES DE UN PRODUCTO
+    // ════════════════════════════════════════════════════
+    cargarLotesProducto: async function(idProducto, nombre) {
+        $('#verLotes_nombre').text(nombre);
+        $('#tbodyLotes').html('<tr><td colspan="7" class="text-center text-muted py-4"><i class="bx bx-loader-alt bx-spin"></i> Cargando...</td></tr>');
+        new bootstrap.Modal(document.getElementById('modalVerLotes')).show();
+
+        try {
+            const res = await fetch(`${BASE_URL}/admin/producto/getlotes?id=${idProducto}`);
+            const data = await res.json();
+            const lotes = data.data || [];
+
+            if (lotes.length === 0) {
+                $('#tbodyLotes').html('<tr><td colspan="7" class="text-center text-muted py-4">No hay lotes activos para este producto.</td></tr>');
+                return;
+            }
+
+            const self = this;
+            let html = '';
+            lotes.forEach(l => {
+                const dias = l.dias_para_vencer;
+                let vencBadge = '<span class="text-muted">—</span>';
+                if (l.fecha_vencimiento) {
+                    const f = new Date(l.fecha_vencimiento + 'T00:00:00');
+                    if (dias !== null && dias <= 0) {
+                        vencBadge = `<span class="badge bg-danger"><i class="bx bx-error-circle me-1"></i>VENCIDO (${Math.abs(dias)}d)</span>`;
+                    } else if (dias !== null && dias <= 30) {
+                        vencBadge = `<span class="badge bg-warning text-dark"><i class="bx bx-timer me-1"></i>${dias}d restantes</span>`;
+                    } else {
+                        vencBadge = `<span class="small">${f.toLocaleDateString('es-ES')}</span>`;
+                    }
+                }
+
+                html += `<tr>
+                    <td><span class="fw-bold text-muted">#${l.id_lote}</span></td>
+                    <td class="text-center">
+                        <span class="fw-bold">${l.cantidad_actual}</span>
+                        <small class="text-muted">/ ${l.cantidad_inicial}</small>
+                    </td>
+                    <td class="text-center">S/ ${parseFloat(l.precio_compra).toFixed(2)}</td>
+                    <td class="text-center fw-bold text-primary">S/ ${parseFloat(l.precio_venta).toFixed(2)}</td>
+                    <td class="text-center">${vencBadge}</td>
+                    <td class="text-center"><span class="badge bg-label-success">Activo</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger btn-merma-lote" 
+                            data-id="${l.id_lote}" data-nombre="${self.escHtml(nombre)}" 
+                            data-cantidad="${l.cantidad_actual}" data-costo="${l.precio_compra}">
+                            <i class="bx bx-trash bx-xs"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+
+            $('#tbodyLotes').html(html);
+
+            // Handler para botones de merma dentro de Ver Lotes
+            $('#tbodyLotes').off('click', '.btn-merma-lote').on('click', '.btn-merma-lote', function() {
+                const btn = $(this);
+                // Cerrar modal de lotes primero
+                bootstrap.Modal.getInstance(document.getElementById('modalVerLotes'))?.hide();
+                setTimeout(() => {
+                    self.abrirMerma(btn.data('id'), btn.data('nombre'), btn.data('cantidad'), btn.data('costo'));
+                }, 400);
+            });
+        } catch (e) {
+            $('#tbodyLotes').html('<tr><td colspan="7" class="text-center text-danger py-4">Error cargando lotes.</td></tr>');
+        }
+    },
+
+    // ════════════════════════════════════════════════════
+    // 6. ALERTAS DE VENCIMIENTO
+    // ════════════════════════════════════════════════════
+    cargarAlertasVencimiento: async function() {
+        try {
+            const res = await fetch(`${BASE_URL}/admin/producto/alertasvencimiento`);
+            const data = await res.json();
+            const alertas = data.alertas || [];
+
+            // Badge en botón
+            const badge = document.getElementById('badgeAlertasVenc');
+            if (badge) {
+                if (alertas.length > 0) {
+                    badge.textContent = alertas.length;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            // Contenido del offcanvas
+            const container = document.getElementById('listaAlertasVencimiento');
+            if (!container) return;
+
+            if (alertas.length === 0) {
+                container.innerHTML = `<div class="text-center py-5 text-muted">
+                    <i class="bx bx-check-shield fs-1 text-success"></i>
+                    <p class="mt-2 fw-bold">¡Sin alertas!</p>
+                    <small>No hay lotes vencidos ni próximos a vencer.</small>
+                </div>`;
+                return;
+            }
+
+            let html = '';
+            alertas.forEach(a => {
+                const esVencido = a.tipo === 'VENCIDO';
+                const icon = esVencido ? 'bx-error-circle' : 'bx-timer';
+                const bgColor = esVencido ? '#fff5f5' : '#fffbeb';
+                const borderColor = esVencido ? '#fed7d7' : '#fef3c7';
+                const textColor = esVencido ? 'text-danger' : 'text-warning';
+                const label = esVencido ? 'VENCIDO' : `Vence en ${a.dias} día${a.dias !== 1 ? 's' : ''}`;
+
+                html += `<div class="d-flex align-items-start gap-3 p-3 border-bottom" style="background:${bgColor}; border-left: 4px solid ${borderColor};">
+                    <i class="bx ${icon} ${textColor} fs-4 mt-1"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${a.producto}</div>
+                        <small class="text-muted">Lote #${a.lote} · ${a.cantidad} unidades</small>
+                        <div class="mt-1"><span class="badge ${esVencido ? 'bg-danger' : 'bg-warning text-dark'}">${label}</span></div>
+                        <small class="text-muted">${a.fecha}</small>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        } catch (e) {
+            console.error('Error alertas:', e);
+        }
+    },
+
+    // ════════════════════════════════════════════════
+    // 7. KARDEX DE MOVIMIENTOS
+    // ════════════════════════════════════════════════
+    cargarKardex: async function(idProducto, nombre) {
+        $('#kardex_nombre').text(nombre);
+        $('#tbodyKardex').html('<tr><td colspan="6" class="text-center text-muted py-4"><i class="bx bx-loader-alt bx-spin"></i> Cargando...</td></tr>');
+        new bootstrap.Modal(document.getElementById('modalKardex')).show();
+
+        try {
+            const res = await fetch(`${BASE_URL}/admin/producto/getkardex?id=${idProducto}`);
+            const data = await res.json();
+            const movs = data.data || [];
+
+            if (movs.length === 0) {
+                $('#tbodyKardex').html('<tr><td colspan="6" class="text-center text-muted py-4">Sin movimientos registrados.</td></tr>');
+                return;
+            }
+
+            let html = '';
+            movs.forEach(m => {
+                const tipoMap = {
+                    'ENTRADA': { icon: 'bx-archive-in', color: 'success', label: 'Entrada' },
+                    'VENTA': { icon: 'bx-cart', color: 'primary', label: 'Venta' },
+                    'MERMA': { icon: 'bx-trash', color: 'danger', label: 'Merma' },
+                    'AJUSTE_SALIDA': { icon: 'bx-transfer', color: 'warning', label: 'Ajuste' }
+                };
+                const info = tipoMap[m.tipo] || { icon: 'bx-dots-horizontal', color: 'secondary', label: m.tipo };
+
+                html += `<tr>
+                    <td><small class="text-muted">${m.fecha_fmt || ''}</small></td>
+                    <td><span class="badge bg-label-${info.color}"><i class="bx ${info.icon} me-1"></i>${info.label}</span></td>
+                    <td class="text-center">${m.id_lote ? '#' + m.id_lote : '—'}</td>
+                    <td class="text-center fw-bold">${m.tipo === 'ENTRADA' ? '+' : '-'}${m.cantidad}</td>
+                    <td><small>${m.referencia || '—'}</small></td>
+                    <td><small class="text-muted">${m.usuario_nombre || 'Sistema'}</small></td>
+                </tr>`;
+            });
+
+            $('#tbodyKardex').html(html);
+        } catch (e) {
+            $('#tbodyKardex').html('<tr><td colspan="6" class="text-center text-danger py-4">Error cargando kardex.</td></tr>');
+        }
+    },
+
+    // ════════════════════════════════════════════════
+    // 8. ABRIR MODAL DE MERMA
+    // ════════════════════════════════════════════════
+    abrirMerma: function(idLote, nombreProducto, cantidadDisponible, costoUnitario) {
+        $('#merma_id_lote').val(idLote);
+        $('#merma_producto_nombre').text(nombreProducto);
+        $('#merma_lote_id').text('#' + idLote);
+        $('#merma_disponible').text(cantidadDisponible + ' u.');
+        $('#merma_costo').text('S/ ' + parseFloat(costoUnitario).toFixed(2)).data('raw', costoUnitario);
+        $('#merma_cantidad').val('').attr('max', cantidadDisponible);
+        $('#merma_motivo_sel').val('');
+        $('#merma_motivo').val('');
+        $('#merma_gasto_estimado').text('0.00');
+        new bootstrap.Modal(document.getElementById('modalMerma')).show();
+    },
+
+    // ════════════════════════════════════════════════════
+    // MODALES Y UTILIDADES
+    // ════════════════════════════════════════════════════
     abrirModalRegistro: function() {
         const form = document.getElementById('formRegistro');
         if (form) form.reset();
         new bootstrap.Modal(document.getElementById('modalRegistro')).show();
     },
 
-    // ════════════════════════════════════════════════════
-    // 7. UTILIDADES
-    // ════════════════════════════════════════════════════
     initVisualFixes: function() {
         $('.modal-backdrop, .offcanvas-backdrop').remove();
         $('body').removeClass('modal-open offcanvas-open').css('overflow', '').css('padding-right', '');
 
-        // Resetear formulario al cerrar
         $("#modalRegistro").on("hidden.bs.modal", function () {
             const form = document.querySelector('#modalRegistro form');
             if (form) form.reset();

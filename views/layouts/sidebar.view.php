@@ -44,6 +44,14 @@ $abreviatura = !empty($config_sys['abreviatura']) ? $config_sys['abreviatura'] :
             </a>
         </li>
 
+        <!-- Arqueo de Caja -->
+        <li class="menu-item <?= strpos($current_url, '/admin/caja') !== false ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/caja" class="menu-link hide-url">
+                <i class="menu-icon tf-icons bx bx-wallet"></i>
+                <div class="text-truncate">Arqueo de Caja</div>
+            </a>
+        </li>
+
         <!-- Apps & Pages -->
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Operaciones</span>

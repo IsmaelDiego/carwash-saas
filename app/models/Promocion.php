@@ -11,7 +11,9 @@ class Promocion {
     // LISTAR TODAS (Para la tabla inferior)
     public function getAll() {
         try {
-            $stmt = $this->pdo->query("SELECT * FROM promociones ORDER BY id_promocion DESC");
+            // Auto desactivar caducadas
+            $this->pdo->query("UPDATE promociones SET estado = 0 WHERE fecha_fin < CURDATE() AND estado = 1");
+            $stmt = $this->pdo->query("SELECT p.*, (fecha_fin < CURDATE()) AS es_caducada FROM promociones p ORDER BY p.id_promocion DESC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) { return []; }
     }
@@ -19,8 +21,10 @@ class Promocion {
     // OBTENER RECIENTES (Para las Cards Superiores - Máx 4)
     public function getRecientes() {
         try {
+            // Auto desactivar caducadas
+            $this->pdo->query("UPDATE promociones SET estado = 0 WHERE fecha_fin < CURDATE() AND estado = 1");
             // Priorizamos las Activas (estado 1) y luego por fecha inicio reciente
-            $sql = "SELECT * FROM promociones ORDER BY estado DESC, fecha_inicio DESC LIMIT 4";
+            $sql = "SELECT p.*, (fecha_fin < CURDATE()) AS es_caducada FROM promociones p ORDER BY p.estado DESC, p.fecha_inicio DESC LIMIT 4";
             return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) { return []; }
     }
@@ -92,9 +96,14 @@ class Promocion {
 
     public function cambiarEstado($id, $estado) {
         try {
-            $sql = "UPDATE promociones SET estado = :estado WHERE id_promocion = :id";
+            if ($estado == 1) {
+                $sql = "UPDATE promociones SET estado = :estado WHERE id_promocion = :id AND fecha_fin >= CURDATE()";
+            } else {
+                $sql = "UPDATE promociones SET estado = :estado WHERE id_promocion = :id";
+            }
             $stmt = $this->pdo->prepare($sql);
-            return $stmt->execute([':estado' => $estado, ':id' => $id]);
+            $stmt->execute([':estado' => $estado, ':id' => $id]);
+            return $stmt->rowCount() > 0;
         } catch (Exception $e) { return false; }
     }
 }

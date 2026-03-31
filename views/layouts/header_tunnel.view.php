@@ -35,11 +35,51 @@
     <!-- Core CSS -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/css/core.css" />
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/css/demo.css" />
+    <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/css/dark-mode.css" />
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
     <!-- Helpers -->
     <script src="<?= BASE_URL ?>/template/assets/vendor/js/helpers.js"></script>
     <script src="<?= BASE_URL ?>/template/assets/js/config.js"></script>
+    <script>
+        // Init Theme Settings
+        (function() {
+            const storedTheme = localStorage.getItem('theme') || 'light';
+            if (storedTheme === 'dark') {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                document.documentElement.classList.add('dark-style');
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+                document.documentElement.classList.remove('dark-style');
+            }
+        })();
+
+        function toggleTheme() {
+            const htmlElement = document.documentElement;
+            let currentTheme = htmlElement.getAttribute('data-bs-theme') || 'light';
+            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            if(newTheme === 'dark') {
+                htmlElement.classList.add('dark-style');
+            } else {
+                htmlElement.classList.remove('dark-style');
+            }
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-toggle-icon');
+            if(icon) {
+                icon.className = theme === 'dark' ? 'icon-base bx bx-moon icon-md' : 'icon-base bx bx-sun icon-md';
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            updateThemeIcon(theme);
+        });
+    </script>
 </head>
 
 <body>
@@ -61,6 +101,12 @@
                         </div>
 
                         <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+                            <!-- Theme Toggle -->
+                            <li class="nav-item me-3">
+                                <a class="nav-link hide-arrow" href="javascript:void(0);" onclick="toggleTheme()" title="Cambiar Tema">
+                                    <i class="icon-base bx bx-sun icon-md" id="theme-toggle-icon"></i>
+                                </a>
+                            </li>
                             <!-- User -->
                             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                 <a class="nav-link dropdown-toggle hide-arrow p-0"

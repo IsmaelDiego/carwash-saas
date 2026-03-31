@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-03-2026 a las 18:40:43
+-- Tiempo de generación: 27-03-2026 a las 19:44:28
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -20,6 +20,33 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `carwash-sys`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `caja_sesiones`
+--
+
+CREATE TABLE `caja_sesiones` (
+  `id_sesion` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `monto_apertura` decimal(10,2) NOT NULL,
+  `monto_cierre_real` decimal(10,2) DEFAULT NULL,
+  `monto_esperado` decimal(10,2) DEFAULT NULL,
+  `diferencia` decimal(10,2) DEFAULT NULL,
+  `estado` enum('ABIERTA','CERRADA') NOT NULL DEFAULT 'ABIERTA',
+  `fecha_apertura` datetime DEFAULT current_timestamp(),
+  `fecha_cierre` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `caja_sesiones`
+--
+
+INSERT INTO `caja_sesiones` (`id_sesion`, `id_usuario`, `monto_apertura`, `monto_cierre_real`, `monto_esperado`, `diferencia`, `estado`, `fecha_apertura`, `fecha_cierre`) VALUES
+(1, 4, 0.00, 0.00, 0.00, 0.00, 'CERRADA', '2026-03-26 16:18:58', '2026-03-27 09:35:58'),
+(2, 4, 50.00, 100.00, 110.00, -10.00, 'CERRADA', '2026-03-27 11:26:03', '2026-03-27 12:19:14'),
+(3, 4, 0.00, NULL, 0.00, NULL, 'ABIERTA', '2026-03-27 12:59:11', NULL);
 
 -- --------------------------------------------------------
 
@@ -98,7 +125,8 @@ INSERT INTO `clientes` (`id_cliente`, `dni`, `nombres`, `apellidos`, `sexo`, `te
 (14, '74589634', 'LESLY HELEN', 'VILCHEZ SUERE', 'F', '973563350', NULL, 0, 0, 0, '2026-03-09 13:26:33', ''),
 (15, '72256894', 'CAROLINA', 'LIZARRAGA HUAYANA', 'M', '973563350', NULL, 0, 0, 0, '2026-03-09 15:58:23', ''),
 (16, '75326985', 'GAORI ISABEL', 'QUISPE CAHUANA', 'M', '973563350', NULL, 0, 0, 0, '2026-03-11 11:15:19', ''),
-(17, '75896548', 'EDHYNSON EDUARDO', 'ESQUEN BARBOZA', 'M', '973563350', NULL, 0, 0, 0, '2026-03-11 11:16:27', '');
+(17, '75896548', 'EDHYNSON EDUARDO', 'ESQUEN BARBOZA', 'M', '973563350', NULL, 0, 0, 0, '2026-03-11 11:16:27', ''),
+(18, '47318373', 'SILVIO AMADOR', 'MENDOZA RUPAY', 'M', '973563350', NULL, 1, 1, 0, '2026-03-27 13:31:29', '');
 
 -- --------------------------------------------------------
 
@@ -136,30 +164,37 @@ CREATE TABLE `detalle_orden` (
   `id_producto` int(11) DEFAULT NULL,
   `cantidad` int(11) DEFAULT 1,
   `precio_unitario` decimal(10,2) NOT NULL,
-  `subtotal` decimal(10,2) NOT NULL
+  `subtotal` decimal(10,2) NOT NULL,
+  `id_lote` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `detalle_orden`
 --
 
-INSERT INTO `detalle_orden` (`id_detalle`, `id_orden`, `id_servicio`, `id_producto`, `cantidad`, `precio_unitario`, `subtotal`) VALUES
-(1, 1, 1, NULL, 1, 300.00, 300.00),
-(2, 2, 1, NULL, 1, 300.00, 300.00),
-(3, 3, 2, NULL, 1, 15.00, 15.00),
-(4, 4, 2, NULL, 1, 15.00, 15.00),
-(5, 5, 2, NULL, 1, 15.00, 15.00),
-(6, 6, NULL, 1, 1, 1.50, 1.50),
-(7, 7, NULL, 1, 1, 1.50, 1.50),
-(8, 8, 2, NULL, 1, 15.00, 15.00),
-(9, 9, 2, NULL, 1, 15.00, 15.00),
-(10, 10, 2, NULL, 1, 15.00, 15.00),
-(11, 11, NULL, 1, 1, 1.50, 1.50),
-(12, 12, 1, NULL, 1, 300.00, 300.00),
-(13, 13, 2, NULL, 1, 15.00, 15.00),
-(14, 13, NULL, 3, 1, 2.50, 2.50),
-(15, 13, NULL, 1, 1, 3.00, 3.00),
-(16, 14, 1, NULL, 1, 300.00, 300.00);
+INSERT INTO `detalle_orden` (`id_detalle`, `id_orden`, `id_servicio`, `id_producto`, `cantidad`, `precio_unitario`, `subtotal`, `id_lote`) VALUES
+(1, 1, 1, NULL, 1, 300.00, 300.00, NULL),
+(2, 2, 1, NULL, 1, 300.00, 300.00, NULL),
+(3, 3, 2, NULL, 1, 15.00, 15.00, NULL),
+(4, 4, 2, NULL, 1, 15.00, 15.00, NULL),
+(5, 5, 2, NULL, 1, 15.00, 15.00, NULL),
+(6, 6, NULL, 1, 1, 1.50, 1.50, NULL),
+(7, 7, NULL, 1, 1, 1.50, 1.50, NULL),
+(8, 8, 2, NULL, 1, 15.00, 15.00, NULL),
+(9, 9, 2, NULL, 1, 15.00, 15.00, NULL),
+(10, 10, 2, NULL, 1, 15.00, 15.00, NULL),
+(11, 11, NULL, 1, 1, 1.50, 1.50, NULL),
+(12, 12, 1, NULL, 1, 300.00, 300.00, NULL),
+(13, 13, 2, NULL, 1, 15.00, 15.00, NULL),
+(14, 13, NULL, 3, 1, 2.50, 2.50, NULL),
+(15, 13, NULL, 1, 1, 3.00, 3.00, NULL),
+(16, 14, 1, NULL, 1, 300.00, 300.00, NULL),
+(17, 15, NULL, 3, 1, 2.50, 2.50, NULL),
+(18, 16, NULL, 8, 5, 8.00, 40.00, 8),
+(19, 16, NULL, 8, 2, 10.00, 20.00, 9),
+(20, 17, NULL, 9, 1, 2.00, 2.00, 10),
+(21, 18, NULL, 8, 2, 10.00, 20.00, 9),
+(22, 19, 2, NULL, 1, 8.00, 8.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -231,6 +266,44 @@ INSERT INTO `insumos` (`id_insumo`, `nombre`, `unidad_medida`, `costo_unitario`,
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `kardex_movimientos`
+--
+
+CREATE TABLE `kardex_movimientos` (
+  `id_movimiento` int(11) NOT NULL,
+  `id_producto` int(11) NOT NULL,
+  `id_lote` int(11) DEFAULT NULL,
+  `tipo` enum('ENTRADA','VENTA','MERMA','AJUSTE_SALIDA') NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `referencia` varchar(255) DEFAULT NULL,
+  `id_orden` int(11) DEFAULT NULL,
+  `id_usuario` int(11) DEFAULT NULL,
+  `fecha` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `kardex_movimientos`
+--
+
+INSERT INTO `kardex_movimientos` (`id_movimiento`, `id_producto`, `id_lote`, `tipo`, `cantidad`, `referencia`, `id_orden`, `id_usuario`, `fecha`) VALUES
+(1, 1, 1, 'ENTRADA', 26, 'Entrada Lote #1 (migración)', NULL, NULL, '2026-03-27 10:02:41'),
+(2, 2, 2, 'ENTRADA', 20, 'Entrada Lote #2 (migración)', NULL, NULL, '2026-03-27 10:02:41'),
+(3, 3, 3, 'ENTRADA', 98, 'Entrada Lote #3 (migración)', NULL, NULL, '2026-03-27 10:02:41'),
+(5, 5, 5, 'ENTRADA', 180, 'Entrada Lote #5 (migración)', NULL, NULL, '2026-03-27 10:07:33'),
+(6, 6, 6, 'ENTRADA', 25, 'Entrada Lote #6 (migración)', NULL, NULL, '2026-03-27 10:10:30'),
+(7, 7, 7, 'ENTRADA', 5, 'Entrada Lote #7 (migración)', NULL, NULL, '2026-03-27 10:27:05'),
+(8, 8, 8, 'ENTRADA', 5, 'Entrada Lote #8', NULL, NULL, '2026-03-27 11:18:10'),
+(9, 8, 9, 'ENTRADA', 10, 'Entrada Lote #9', NULL, NULL, '2026-03-27 11:24:11'),
+(10, 8, 8, 'VENTA', 5, 'Venta Orden #16', 16, NULL, '2026-03-27 11:26:23'),
+(11, 8, 9, 'VENTA', 2, 'Venta Orden #16', 16, NULL, '2026-03-27 11:26:23'),
+(12, 9, 10, 'ENTRADA', 5, 'Entrada Lote #10', NULL, NULL, '2026-03-27 11:43:13'),
+(13, 9, 11, 'ENTRADA', 10, 'Entrada Lote #11', NULL, NULL, '2026-03-27 11:43:47'),
+(14, 9, 10, 'VENTA', 1, 'Venta Orden #17', 17, 4, '2026-03-27 12:59:18'),
+(15, 8, 9, 'VENTA', 2, 'Venta Orden #18', 18, 4, '2026-03-27 13:30:11');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `notificaciones_recuperacion`
 --
 
@@ -275,28 +348,34 @@ CREATE TABLE `ordenes` (
   `motivo_anulacion` varchar(255) DEFAULT NULL,
   `id_token_autorizacion` int(11) DEFAULT NULL,
   `fecha_creacion` datetime DEFAULT current_timestamp(),
-  `fecha_cierre` datetime DEFAULT NULL
+  `fecha_cierre` datetime DEFAULT NULL,
+  `id_caja_sesion` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `ordenes`
 --
 
-INSERT INTO `ordenes` (`id_orden`, `id_temporada`, `id_cliente`, `id_vehiculo`, `id_usuario_creador`, `id_usuario_cajero`, `estado`, `ubicacion_en_local`, `total_servicios`, `total_productos`, `descuento_promo`, `descuento_puntos`, `total_final`, `motivo_anulacion`, `id_token_autorizacion`, `fecha_creacion`, `fecha_cierre`) VALUES
-(1, 6, 9, 2, 3, 4, 'FINALIZADO', '', 300.00, 0.00, 0.00, 0.00, 300.00, NULL, NULL, '2026-03-09 12:06:33', '2026-03-09 12:08:24'),
-(2, 6, 5, 2, 3, 3, 'FINALIZADO', '', 300.00, 0.00, 0.00, 0.00, 300.00, NULL, 1, '2026-03-09 12:11:01', '2026-03-09 12:11:47'),
-(3, 6, 3, 2, 3, 3, 'FINALIZADO', '', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 12:32:33', '2026-03-09 12:33:18'),
-(4, 6, 10, 2, 3, 4, 'FINALIZADO', '', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 12:38:29', '2026-03-09 12:40:12'),
-(5, 6, 8, 2, 3, 4, 'FINALIZADO', '', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 12:43:43', '2026-03-09 12:52:37'),
-(6, 6, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 1.50, 0.00, 0.00, 1.50, NULL, NULL, '2026-03-09 12:52:31', '2026-03-09 12:52:31'),
-(7, 6, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 1.50, 0.00, 0.00, 1.50, NULL, NULL, '2026-03-09 12:52:55', '2026-03-09 12:52:55'),
-(8, 6, 3, 2, 3, 4, 'FINALIZADO', '', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 12:56:41', '2026-03-09 13:02:31'),
-(9, 6, 3, 3, 3, 4, 'FINALIZADO', 'ssss', 15.00, 0.00, 1.50, 0.00, 13.50, NULL, NULL, '2026-03-09 13:17:23', '2026-03-09 13:18:01'),
-(10, 6, 3, 3, 3, 4, 'FINALIZADO', 'ssss', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 13:20:45', '2026-03-09 13:20:59'),
-(11, 6, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 1.50, 0.00, 0.00, 1.50, NULL, NULL, '2026-03-09 13:39:24', '2026-03-09 13:39:24'),
-(12, 7, 5, 2, 3, 3, 'FINALIZADO', '', 300.00, 0.00, 150.00, 0.00, 150.00, NULL, 3, '2026-03-12 02:10:47', '2026-03-12 02:11:25'),
-(13, 7, 5, 2, 3, 3, 'FINALIZADO', '', 15.00, 5.50, 0.00, 0.00, 23.50, NULL, 4, '2026-03-16 15:00:55', '2026-03-16 15:02:13'),
-(14, 7, 3, 3, 3, 3, 'FINALIZADO', '', 300.00, 0.00, 30.00, 0.00, 270.00, NULL, NULL, '2026-03-17 01:14:19', '2026-03-17 01:14:53');
+INSERT INTO `ordenes` (`id_orden`, `id_temporada`, `id_cliente`, `id_vehiculo`, `id_usuario_creador`, `id_usuario_cajero`, `estado`, `ubicacion_en_local`, `total_servicios`, `total_productos`, `descuento_promo`, `descuento_puntos`, `total_final`, `motivo_anulacion`, `id_token_autorizacion`, `fecha_creacion`, `fecha_cierre`, `id_caja_sesion`) VALUES
+(1, 6, 9, 2, 3, 4, 'FINALIZADO', '', 300.00, 0.00, 0.00, 0.00, 300.00, NULL, NULL, '2026-03-09 12:06:33', '2026-03-09 12:08:24', NULL),
+(2, 6, 5, 2, 3, 3, 'FINALIZADO', '', 300.00, 0.00, 0.00, 0.00, 300.00, NULL, 1, '2026-03-09 12:11:01', '2026-03-09 12:11:47', NULL),
+(3, 6, 3, 2, 3, 3, 'FINALIZADO', '', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 12:32:33', '2026-03-09 12:33:18', NULL),
+(4, 6, 10, 2, 3, 4, 'FINALIZADO', '', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 12:38:29', '2026-03-09 12:40:12', NULL),
+(5, 6, 8, 2, 3, 4, 'FINALIZADO', '', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 12:43:43', '2026-03-09 12:52:37', NULL),
+(6, 6, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 1.50, 0.00, 0.00, 1.50, NULL, NULL, '2026-03-09 12:52:31', '2026-03-09 12:52:31', NULL),
+(7, 6, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 1.50, 0.00, 0.00, 1.50, NULL, NULL, '2026-03-09 12:52:55', '2026-03-09 12:52:55', NULL),
+(8, 6, 3, 2, 3, 4, 'FINALIZADO', '', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 12:56:41', '2026-03-09 13:02:31', NULL),
+(9, 6, 3, 3, 3, 4, 'FINALIZADO', 'ssss', 15.00, 0.00, 1.50, 0.00, 13.50, NULL, NULL, '2026-03-09 13:17:23', '2026-03-09 13:18:01', NULL),
+(10, 6, 3, 3, 3, 4, 'FINALIZADO', 'ssss', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, '2026-03-09 13:20:45', '2026-03-09 13:20:59', NULL),
+(11, 6, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 1.50, 0.00, 0.00, 1.50, NULL, NULL, '2026-03-09 13:39:24', '2026-03-09 13:39:24', NULL),
+(12, 7, 5, 2, 3, 3, 'FINALIZADO', '', 300.00, 0.00, 150.00, 0.00, 150.00, NULL, 3, '2026-03-12 02:10:47', '2026-03-12 02:11:25', NULL),
+(13, 7, 5, 2, 3, 3, 'FINALIZADO', '', 15.00, 5.50, 0.00, 0.00, 23.50, NULL, 4, '2026-03-16 15:00:55', '2026-03-16 15:02:13', NULL),
+(14, 7, 3, 3, 3, 3, 'FINALIZADO', '', 300.00, 0.00, 30.00, 0.00, 270.00, NULL, NULL, '2026-03-17 01:14:19', '2026-03-17 01:14:53', NULL),
+(15, 8, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 2.50, 0.00, 0.00, 2.50, NULL, NULL, '2026-03-26 15:38:19', '2026-03-26 15:38:19', NULL),
+(16, 8, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 60.00, 0.00, 0.00, 60.00, NULL, NULL, '2026-03-27 11:26:23', '2026-03-27 11:26:23', 2),
+(17, 8, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 2.00, 0.00, 0.00, 2.00, NULL, NULL, '2026-03-27 12:59:18', '2026-03-27 12:59:18', 3),
+(18, 8, 1, NULL, 4, 4, 'FINALIZADO', 'Venta Directa', 0.00, 20.00, 0.00, 0.00, 20.00, NULL, NULL, '2026-03-27 13:30:11', '2026-03-27 13:30:11', 3),
+(19, 8, 18, 7, 3, 3, 'FINALIZADO', '', 8.00, 0.00, 0.00, 0.00, 8.00, NULL, NULL, '2026-03-27 13:33:56', '2026-03-27 13:34:26', NULL);
 
 -- --------------------------------------------------------
 
@@ -368,7 +447,12 @@ INSERT INTO `pagos_orden` (`id_pago`, `id_orden`, `metodo_pago`, `monto`) VALUES
 (11, 11, 'YAPE', 1.50),
 (12, 12, 'YAPE', 150.00),
 (13, 13, 'YAPE', 23.50),
-(14, 14, 'YAPE', 270.00);
+(14, 14, 'YAPE', 270.00),
+(15, 15, 'EFECTIVO', 2.50),
+(16, 16, 'EFECTIVO', 60.00),
+(17, 17, 'EFECTIVO', 2.00),
+(18, 18, 'EFECTIVO', 20.00),
+(19, 19, 'EFECTIVO', 8.00);
 
 -- --------------------------------------------------------
 
@@ -457,8 +541,46 @@ CREATE TABLE `productos` (
 INSERT INTO `productos` (`id_producto`, `nombre`, `precio_compra`, `precio_venta`, `stock_actual`, `stock_minimo`, `fecha_caducidad`, `fecha_registro`) VALUES
 (1, 'Galletas Rellenita', 1.00, 3.00, 26, 5, NULL, '2026-03-17 02:06:44'),
 (2, 'Gaseosa', 15.00, 20.00, 20, 5, NULL, '2026-03-17 02:06:44'),
-(3, 'Cigarro Laky 1', 2.00, 2.50, 99, 5, NULL, '2026-03-17 02:06:44'),
-(4, 'papitas', 1.00, 1.50, 5, 5, '2026-03-15', '2026-03-17 03:50:48');
+(3, 'Cigarro Laky 1', 2.00, 2.50, 98, 5, NULL, '2026-03-17 02:06:44'),
+(5, 'Caramelo Limon', 12.00, 15.00, 180, 10, '2027-06-16', '2026-03-27 15:07:33'),
+(6, 'Cuates', 0.80, 1.00, 25, 5, '2027-07-15', '2026-03-27 15:10:30'),
+(7, 'agua', 1.00, 2.00, 5, 1, '2026-04-11', '2026-03-27 15:27:05'),
+(8, 'Cerveza', 6.00, 8.00, 6, 1, '2026-04-30', '2026-03-27 16:18:10'),
+(9, 'Chupetin', 1.00, 1.50, 14, 1, '2026-06-26', '2026-03-27 16:43:13');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `producto_lotes`
+--
+
+CREATE TABLE `producto_lotes` (
+  `id_lote` int(11) NOT NULL,
+  `id_producto` int(11) NOT NULL,
+  `cantidad_inicial` int(11) NOT NULL,
+  `cantidad_actual` int(11) NOT NULL,
+  `precio_compra` decimal(10,2) NOT NULL,
+  `precio_venta` decimal(10,2) NOT NULL,
+  `fecha_vencimiento` date DEFAULT NULL,
+  `estado` enum('ACTIVO','AGOTADO','MERMA') NOT NULL DEFAULT 'ACTIVO',
+  `fecha_ingreso` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `producto_lotes`
+--
+
+INSERT INTO `producto_lotes` (`id_lote`, `id_producto`, `cantidad_inicial`, `cantidad_actual`, `precio_compra`, `precio_venta`, `fecha_vencimiento`, `estado`, `fecha_ingreso`) VALUES
+(1, 1, 26, 26, 1.00, 3.00, NULL, 'ACTIVO', '2026-03-27 10:02:41'),
+(2, 2, 20, 20, 15.00, 20.00, NULL, 'ACTIVO', '2026-03-27 10:02:41'),
+(3, 3, 98, 98, 2.00, 2.50, NULL, 'ACTIVO', '2026-03-27 10:02:41'),
+(5, 5, 180, 180, 12.00, 15.00, '2027-06-16', 'ACTIVO', '2026-03-27 10:07:33'),
+(6, 6, 25, 25, 0.80, 1.00, '2027-07-15', 'ACTIVO', '2026-03-27 10:10:30'),
+(7, 7, 5, 5, 1.00, 2.00, '2026-04-11', 'ACTIVO', '2026-03-27 10:27:05'),
+(8, 8, 5, 0, 6.00, 8.00, '2026-04-30', 'AGOTADO', '2026-03-27 11:18:10'),
+(9, 8, 10, 6, 8.00, 10.00, '2026-04-30', 'ACTIVO', '2026-03-27 11:24:11'),
+(10, 9, 5, 4, 1.00, 1.50, '2026-06-26', 'ACTIVO', '2026-03-27 11:43:13'),
+(11, 9, 10, 10, 1.00, 2.00, '2026-06-26', 'ACTIVO', '2026-03-27 11:43:47');
 
 -- --------------------------------------------------------
 
@@ -559,7 +681,8 @@ INSERT INTO `temporadas` (`id_temporada`, `nombre`, `fecha_inicio`, `fecha_fin`,
 (4, 'Verano', '2026-02-03', '2026-02-03', 0),
 (5, 'Temporada 5', '2026-02-02', '2026-02-13', 0),
 (6, 'Verano 2026', '2026-03-09', '2026-03-12', 0),
-(7, 'Fin del Mundo ', '2026-03-12', NULL, 1);
+(7, 'Fin del Mundo ', '2026-03-12', '2026-03-26', 0),
+(8, '2026', '2026-03-26', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -649,11 +772,19 @@ INSERT INTO `vehiculos` (`id_vehiculo`, `id_cliente`, `id_categoria`, `placa`, `
 (2, 5, 4, 'A5S-8XY', 'Rojo', '', '2026-02-03 12:47:17'),
 (3, 3, 4, 'GKH985', 'Rojo', '', '2026-03-09 13:17:00'),
 (5, 17, 3, 'ABC123', 'azul', '', '2026-03-11 23:25:22'),
-(6, 11, 2, 'GKH985', 'Rojo', '', '2026-03-16 15:09:58');
+(6, 11, 2, 'GKH985', 'Rojo', '', '2026-03-16 15:09:58'),
+(7, 18, 3, 'LLL356', 'Rojo', '', '2026-03-27 13:32:04');
 
 --
 -- Índices para tablas volcadas
 --
+
+--
+-- Indices de la tabla `caja_sesiones`
+--
+ALTER TABLE `caja_sesiones`
+  ADD PRIMARY KEY (`id_sesion`),
+  ADD KEY `id_usuario` (`id_usuario`);
 
 --
 -- Indices de la tabla `categorias_vehiculos`
@@ -713,6 +844,14 @@ ALTER TABLE `insumos`
   ADD PRIMARY KEY (`id_insumo`);
 
 --
+-- Indices de la tabla `kardex_movimientos`
+--
+ALTER TABLE `kardex_movimientos`
+  ADD PRIMARY KEY (`id_movimiento`),
+  ADD KEY `idx_kardex_producto` (`id_producto`),
+  ADD KEY `idx_kardex_lote` (`id_lote`);
+
+--
 -- Indices de la tabla `notificaciones_recuperacion`
 --
 ALTER TABLE `notificaciones_recuperacion`
@@ -727,7 +866,8 @@ ALTER TABLE `ordenes`
   ADD KEY `id_temporada` (`id_temporada`),
   ADD KEY `id_cliente` (`id_cliente`),
   ADD KEY `id_vehiculo` (`id_vehiculo`),
-  ADD KEY `id_token_autorizacion` (`id_token_autorizacion`);
+  ADD KEY `id_token_autorizacion` (`id_token_autorizacion`),
+  ADD KEY `fk_orden_caja` (`id_caja_sesion`);
 
 --
 -- Indices de la tabla `pagos_empleados`
@@ -764,6 +904,13 @@ ALTER TABLE `permisos_empleados`
 --
 ALTER TABLE `productos`
   ADD PRIMARY KEY (`id_producto`);
+
+--
+-- Indices de la tabla `producto_lotes`
+--
+ALTER TABLE `producto_lotes`
+  ADD PRIMARY KEY (`id_lote`),
+  ADD KEY `idx_producto_lote` (`id_producto`,`estado`,`fecha_vencimiento`);
 
 --
 -- Indices de la tabla `promociones`
@@ -817,6 +964,12 @@ ALTER TABLE `vehiculos`
 --
 
 --
+-- AUTO_INCREMENT de la tabla `caja_sesiones`
+--
+ALTER TABLE `caja_sesiones`
+  MODIFY `id_sesion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT de la tabla `categorias_vehiculos`
 --
 ALTER TABLE `categorias_vehiculos`
@@ -832,7 +985,7 @@ ALTER TABLE `cierres_caja`
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `configuracion_sistema`
@@ -844,7 +997,7 @@ ALTER TABLE `configuracion_sistema`
 -- AUTO_INCREMENT de la tabla `detalle_orden`
 --
 ALTER TABLE `detalle_orden`
-  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de la tabla `gastos`
@@ -865,6 +1018,12 @@ ALTER TABLE `insumos`
   MODIFY `id_insumo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT de la tabla `kardex_movimientos`
+--
+ALTER TABLE `kardex_movimientos`
+  MODIFY `id_movimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
 -- AUTO_INCREMENT de la tabla `notificaciones_recuperacion`
 --
 ALTER TABLE `notificaciones_recuperacion`
@@ -874,7 +1033,7 @@ ALTER TABLE `notificaciones_recuperacion`
 -- AUTO_INCREMENT de la tabla `ordenes`
 --
 ALTER TABLE `ordenes`
-  MODIFY `id_orden` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id_orden` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos_empleados`
@@ -886,7 +1045,7 @@ ALTER TABLE `pagos_empleados`
 -- AUTO_INCREMENT de la tabla `pagos_orden`
 --
 ALTER TABLE `pagos_orden`
-  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT de la tabla `password_reset_tokens`
@@ -904,7 +1063,13 @@ ALTER TABLE `permisos_empleados`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT de la tabla `producto_lotes`
+--
+ALTER TABLE `producto_lotes`
+  MODIFY `id_lote` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `promociones`
@@ -928,7 +1093,7 @@ ALTER TABLE `servicios`
 -- AUTO_INCREMENT de la tabla `temporadas`
 --
 ALTER TABLE `temporadas`
-  MODIFY `id_temporada` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_temporada` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `tokens_seguridad`
@@ -946,11 +1111,17 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `vehiculos`
 --
 ALTER TABLE `vehiculos`
-  MODIFY `id_vehiculo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_vehiculo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restricciones para tablas volcadas
 --
+
+--
+-- Filtros para la tabla `caja_sesiones`
+--
+ALTER TABLE `caja_sesiones`
+  ADD CONSTRAINT `caja_sesiones_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`);
 
 --
 -- Filtros para la tabla `cierres_caja`
@@ -981,6 +1152,12 @@ ALTER TABLE `historial_uso_promociones`
   ADD CONSTRAINT `historial_uso_promociones_ibfk_2` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`);
 
 --
+-- Filtros para la tabla `kardex_movimientos`
+--
+ALTER TABLE `kardex_movimientos`
+  ADD CONSTRAINT `kardex_movimientos_ibfk_1` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`) ON DELETE CASCADE;
+
+--
 -- Filtros para la tabla `notificaciones_recuperacion`
 --
 ALTER TABLE `notificaciones_recuperacion`
@@ -990,6 +1167,7 @@ ALTER TABLE `notificaciones_recuperacion`
 -- Filtros para la tabla `ordenes`
 --
 ALTER TABLE `ordenes`
+  ADD CONSTRAINT `fk_orden_caja` FOREIGN KEY (`id_caja_sesion`) REFERENCES `caja_sesiones` (`id_sesion`) ON DELETE SET NULL,
   ADD CONSTRAINT `ordenes_ibfk_1` FOREIGN KEY (`id_temporada`) REFERENCES `temporadas` (`id_temporada`),
   ADD CONSTRAINT `ordenes_ibfk_2` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`),
   ADD CONSTRAINT `ordenes_ibfk_3` FOREIGN KEY (`id_vehiculo`) REFERENCES `vehiculos` (`id_vehiculo`),
@@ -1020,6 +1198,12 @@ ALTER TABLE `password_reset_tokens`
 ALTER TABLE `permisos_empleados`
   ADD CONSTRAINT `permisos_empleados_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   ADD CONSTRAINT `permisos_empleados_ibfk_2` FOREIGN KEY (`id_admin_registrador`) REFERENCES `usuarios` (`id_usuario`);
+
+--
+-- Filtros para la tabla `producto_lotes`
+--
+ALTER TABLE `producto_lotes`
+  ADD CONSTRAINT `producto_lotes_ibfk_1` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `tokens_seguridad`

@@ -156,6 +156,98 @@ class ProductoController {
     }
 
     // ==========================================
+    // API: AGREGAR LOTE (Abastecimiento)
+    // ==========================================
+    public function agregarlote() {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        global $pdo;
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($input['id_producto']) || empty($input['cantidad']) || !isset($input['precio_compra']) || !isset($input['precio_venta'])) {
+            echo json_encode(['success' => false, 'message' => 'Producto, cantidad y precios son requeridos.']);
+            return;
+        }
+
+        if ((int)$input['cantidad'] <= 0) {
+            echo json_encode(['success' => false, 'message' => 'La cantidad debe ser mayor a 0.']);
+            return;
+        }
+
+        $model = new Producto($pdo);
+        try {
+            if ($model->agregarLote($input)) {
+                echo json_encode(['success' => true, 'message' => "Lote de {$input['cantidad']} unidades registrado exitosamente."]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al registrar el lote.']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
+    // ==========================================
+    // API: LISTAR LOTES DE UN PRODUCTO
+    // ==========================================
+    public function getlotes() {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+        $id = $_GET['id'] ?? 0;
+        $model = new Producto($pdo);
+        echo json_encode(['data' => $model->getLotes($id)]);
+    }
+
+    // ==========================================
+    // API: TODOS LOS LOTES (vista general)
+    // ==========================================
+    public function getalllotes() {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+        $model = new Producto($pdo);
+        echo json_encode(['data' => $model->getAllLotes()]);
+    }
+
+    // ==========================================
+    // API: ALERTAS DE VENCIMIENTO (para panel Admin)
+    // ==========================================
+    public function alertasvencimiento() {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+        $model = new Producto($pdo);
+        $lotes = $model->getAllLotes();
+
+        $alertas = [];
+        foreach ($lotes as $l) {
+            if ($l['fecha_vencimiento'] && $l['dias_para_vencer'] !== null) {
+                if ($l['dias_para_vencer'] <= 0) {
+                    $alertas[] = [
+                        'tipo' => 'VENCIDO',
+                        'producto' => $l['producto_nombre'],
+                        'lote' => $l['id_lote'],
+                        'cantidad' => $l['cantidad_actual'],
+                        'dias' => $l['dias_para_vencer'],
+                        'fecha' => $l['fecha_vencimiento']
+                    ];
+                } elseif ($l['dias_para_vencer'] <= 30) {
+                    $alertas[] = [
+                        'tipo' => 'POR_VENCER',
+                        'producto' => $l['producto_nombre'],
+                        'lote' => $l['id_lote'],
+                        'cantidad' => $l['cantidad_actual'],
+                        'dias' => $l['dias_para_vencer'],
+                        'fecha' => $l['fecha_vencimiento']
+                    ];
+                }
+            }
+        }
+        echo json_encode(['alertas' => $alertas, 'total' => count($alertas)]);
+    }
+
+    // ==========================================
     // API: ELIMINAR PRODUCTO
     // ==========================================
     public function eliminar() {
@@ -182,4 +274,65 @@ class ProductoController {
             echo json_encode(['success' => false, 'message' => 'Error: el producto tiene registros asociados.']);
         }
     }
+
+    // ==========================================
+    // API: REGISTRAR MERMA (Baja de lote)
+    // ==========================================
+    public function registrarmerma() {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        global $pdo;
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($input['id_lote']) || empty($input['cantidad']) || empty($input['motivo'])) {
+            echo json_encode(['success' => false, 'message' => 'Lote, cantidad y motivo son requeridos.']);
+            return;
+        }
+
+        if ((int)$input['cantidad'] <= 0) {
+            echo json_encode(['success' => false, 'message' => 'La cantidad debe ser mayor a 0.']);
+            return;
+        }
+
+        $model = new Producto($pdo);
+        try {
+            $resultado = $model->registrarMerma(
+                $input['id_lote'],
+                (int)$input['cantidad'],
+                $input['motivo'],
+                $_SESSION['id_usuario'] ?? 1
+            );
+            echo json_encode([
+                'success' => true, 
+                'message' => "Merma registrada: {$resultado['cantidad']} unidades dadas de baja. Gasto S/ " . number_format($resultado['monto'], 2) . " registrado automáticamente."
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
+    // ==========================================
+    // API: KARDEX DE UN PRODUCTO
+    // ==========================================
+    public function getkardex() {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+        $id = $_GET['id'] ?? 0;
+        $model = new Producto($pdo);
+        echo json_encode(['data' => $model->getKardex($id)]);
+    }
+
+    // ==========================================
+    // API: KARDEX GLOBAL (últimos movimientos)
+    // ==========================================
+    public function getkardexglobal() {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+        $model = new Producto($pdo);
+        echo json_encode(['data' => $model->getKardexGlobal(200)]);
+    }
 }
+

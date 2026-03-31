@@ -104,6 +104,16 @@
                     </div>
                 </div>
             </div>
+            <div class="col-sm-6 col-md-4 col-xl">
+                <div class="card stat-prod-card shadow-sm h-100" style="border:1px solid #f0f0f0;">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                        <div class="stat-prod-icon bg-label-secondary shadow-sm"><i class="bx bx-layer text-secondary"></i></div>
+                        <div><small class="text-muted fw-bold text-uppercase" style="font-size:0.65rem">Lotes Activos</small>
+                            <div class="fw-bold text-secondary" id="stat_lotes_activos" style="font-size:1.4rem">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- ═══ HEADER + ACCIONES ═══ -->
@@ -135,6 +145,10 @@
                         </select>
                         <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
                             <i class="bx bx-filter-alt me-1"></i> Filtros
+                        </button>
+                        <button class="btn btn-outline-warning position-relative" type="button" id="btnAlertasVencimiento" title="Alertas de Vencimiento">
+                            <i class="bx bx-bell bx-tada"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="badgeAlertasVenc" style="display:none;">0</span>
                         </button>
                         <button class="btn btn-outline-success" type="button" id="btnExportar">
                             <i class="bx bxs-file-export p-2"></i>

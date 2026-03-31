@@ -1,0 +1,97 @@
+/* ─── POS LAYOUT ─── */
+    .pos-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 16px; min-height: calc(100vh - 130px); }
+    @media(max-width:1199px) { .pos-layout { grid-template-columns: 1fr; } .pos-sidebar { display: none; } }
+
+
+    /* ─── STATS BAR ─── */
+    .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-pill { background: #fff; border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; gap: 10px;
+        flex: 1; min-width: 140px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
+    .stat-pill .sp-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center;
+        justify-content: center; font-size: 1.2rem; }
+    .stat-pill .sp-val { font-size: 1.3rem; font-weight: 700; line-height: 1; }
+    .stat-pill .sp-lbl { font-size: 0.68rem; color: #8592a3; font-weight: 600; text-transform: uppercase; }
+
+    /* ─── ORDER TABS ─── */
+    .order-tabs { display: flex; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 16px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    .order-tab { flex: 1; padding: 12px; text-align: center; font-weight: 600; font-size: 0.82rem; color: #8592a3;
+        cursor: pointer; transition: all 0.25s; border-bottom: 3px solid transparent; position: relative; }
+    .order-tab:hover { background: #f8f8ff; }
+    .order-tab.active { color: #696cff; border-bottom-color: #696cff; background: #f8f8ff; }
+    .order-tab .badge { position: absolute; top: 6px; right: 20%; }
+
+    /* ─── ORDER GRID ─── */
+    .orders-grid { display: flex; flex-wrap: wrap; margin: 0 -8px; }
+    .order-col { padding: 8px; width: 33.33%; }
+    @media(max-width:1400px) { .order-col { width: 50%; } }
+    @media(max-width:768px) { .order-col { width: 100%; } }
+
+    /* ─── ORDER CARD ─── */
+    .order-card { background: #fff; border-radius: 18px; padding: 18px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid #f0f0f0; height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .order-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); border-color: #696cff55; }
+    
+    .status-indicator { position: absolute; top: 0; left: 0; width: 100%; height: 4px; }
+    .order-card.st-POR_COBRAR .status-indicator { background: linear-gradient(90deg, #71dd37, #b4ec94); }
+    .order-card.st-EN_PROCESO .status-indicator { background: linear-gradient(90deg, #ffab00, #ffd37a); }
+    .order-card.st-EN_COLA .status-indicator { background: linear-gradient(90deg, #8592a3, #d4d8dd); }
+
+    .oc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .oc-id { font-weight: 800; font-size: 1.1rem; color: #32475c; }
+    .oc-total { font-weight: 800; font-size: 1.2rem; color: #696cff; }
+
+    .oc-client { margin-bottom: 12px; }
+    .oc-name { font-weight: 700; color: #566a7f; font-size: 0.9rem; margin-bottom: 2px; }
+    .oc-vehicle { font-size: 0.78rem; font-weight: 600; color: #8592a3; display: flex; align-items: center; gap: 4px; }
+    
+    .oc-services { background: #f8f9fa; border-radius: 10px; padding: 10px; margin-bottom: 16px; flex-grow: 1; }
+    .oc-serv-list { font-size: 0.75rem; color: #697a8d; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    line-clamp: 2; /* Compatibilidad estándar */ }
+    
+    .oc-footer { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+    
+    .oc-badge { border-radius: 6px; font-size: 0.65rem; padding: 4px 8px; font-weight: 700; text-transform: uppercase; }
+
+    /* ─── SIDEBAR (TIENDA) ─── */
+    .pos-sidebar { background: #fff; border: 1px solid #eee; display: flex; flex-direction: column; height: calc(100vh - 130px); border-radius: 12px; }
+    .ps-header { padding: 16px; border-bottom: 1px solid #eee; }
+    .ps-body { flex: 1; overflow-y: auto; padding: 16px; }
+    .ps-footer { padding: 16px; border-top: 1px solid #eee; background: #fafafa; border-radius: 0 0 12px 12px; }
+    
+    .search-box { position: relative; }
+    .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #8592a3; }
+    .search-box input { padding-left: 36px; border-radius: 10px; border: 1px solid #d9dee3; }
+
+    .prod-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+        border: 1px solid #f0f0f0; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+    .prod-item:hover { border-color: #696cff; background: #fafaff; }
+    .pi-icon { width: 36px; height: 36px; border-radius: 8px; background: #f0f0ff; display: flex;
+        align-items: center; justify-content: center; color: #696cff; font-size: 1rem; flex-shrink: 0; }
+
+    /* ─── CARRITO ─── */
+    .cart-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f4f4f4; font-size: 0.85rem; }
+    .cart-item:last-child { border: 0; }
+    .cart-total-box { background: linear-gradient(135deg, #696cff, #9b9dff); border-radius: 12px; padding: 14px;
+        text-align: center; color: #fff; margin: 12px 0; }
+    .cart-total-box .ctb-val { font-size: 1.8rem; font-weight: 800; }
+
+    /* ─── PAYMENT MODAL ─── */
+    .pay-method-btn { padding: 14px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;
+        border: 2px solid #eee; }
+    .pay-method-btn:hover { border-color: #c5c6ff; }
+    .pay-method-btn.selected { border-color: #696cff; background: #f0f0ff; }
+    .pay-method-btn i { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+
+    /* ─── DETALLE OFFCANVAS ─── */
+    .detalle-line { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f4f4f4; font-size: 0.88rem; }
+
+    /* ─── MODAL NUEVA ORDEN ─── */
+    .service-selectable { border: 2px solid transparent; transition: all 0.25s; }
+    .service-selectable:hover { border-color: #c5c6ff; background: #fafaff; }
+    .service-selectable.selected { border-color: #696cff; background: #f0f0ff; }
+
+    .promo-option { border: 2px solid #eee; border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 8px;}
+    .promo-option:hover { border-color: #ff3e1d; background: #fff5f3; }
+    .promo-option.selected { border-color: #ff3e1d; background: #fff5f3; }

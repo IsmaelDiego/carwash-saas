@@ -37,6 +37,46 @@ class Orden {
     }
 
     // ════════════════════════════════════════
+    // LISTAR ÓRDENES ACTIVAS CAJERO (Con Detalle de Productos/Servicios)
+    // ════════════════════════════════════════
+    public function getActivasCajero($excluirEnCola = false) {
+        $sql = "SELECT o.*, c.nombres AS cli_nombres, c.apellidos AS cli_apellidos, c.puntos_acumulados, v.placa, pr.nombre AS nombre_promocion,
+                    (SELECT SUM(d.cantidad) FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio WHERE d.id_orden = o.id_orden AND s.acumula_puntos = 1) AS puntos_ganados,
+                    (SELECT GROUP_CONCAT(CONCAT(s.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio WHERE d.id_orden = o.id_orden) AS servicios_vendidos,
+                    (SELECT GROUP_CONCAT(CONCAT(p.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN productos p ON d.id_producto = p.id_producto WHERE d.id_orden = o.id_orden) AS productos_vendidos
+             FROM ordenes o
+             LEFT JOIN clientes c ON o.id_cliente = c.id_cliente
+             LEFT JOIN vehiculos v ON o.id_vehiculo = v.id_vehiculo
+             LEFT JOIN promociones pr ON o.id_promocion = pr.id_promocion";
+             
+        if ($excluirEnCola) {
+            $sql .= " WHERE o.estado IN ('EN_PROCESO', 'POR_COBRAR') ORDER BY o.fecha_creacion DESC";
+        } else {
+            $sql .= " WHERE o.estado IN ('EN_COLA', 'EN_PROCESO', 'POR_COBRAR')
+                      ORDER BY CASE o.estado WHEN 'POR_COBRAR' THEN 1 WHEN 'EN_PROCESO' THEN 2 WHEN 'EN_COLA' THEN 3 END ASC, o.id_orden DESC";
+        }
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // ════════════════════════════════════════
+    // LISTAR HISTORIAL HOY CAJERO
+    // ════════════════════════════════════════
+    public function getHistorialHoyCajero() {
+        $sql = "SELECT o.*, c.nombres AS cli_nombres, c.apellidos AS cli_apellidos, c.puntos_acumulados, v.placa, pr.nombre AS nombre_promocion,
+                    (SELECT GROUP_CONCAT(CONCAT(p.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN productos p ON d.id_producto = p.id_producto WHERE d.id_orden = o.id_orden) AS productos_vendidos,
+                    (SELECT GROUP_CONCAT(CONCAT(s.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio WHERE d.id_orden = o.id_orden) AS servicios_vendidos,
+                    (SELECT SUM(d.cantidad) FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio WHERE d.id_orden = o.id_orden AND s.acumula_puntos = 1) AS puntos_ganados,
+                    (SELECT GROUP_CONCAT(metodo_pago SEPARATOR ', ') FROM pagos_orden po WHERE po.id_orden = o.id_orden) AS metodo_pago
+             FROM ordenes o
+             LEFT JOIN clientes c ON o.id_cliente = c.id_cliente
+             LEFT JOIN vehiculos v ON o.id_vehiculo = v.id_vehiculo
+             LEFT JOIN promociones pr ON o.id_promocion = pr.id_promocion
+             WHERE o.estado = 'FINALIZADO' AND DATE(o.fecha_cierre) = CURDATE()
+             ORDER BY o.fecha_cierre DESC LIMIT 50";
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // ════════════════════════════════════════
     // OBTENER ORDEN POR ID
     // ════════════════════════════════════════
     public function getById($id) {

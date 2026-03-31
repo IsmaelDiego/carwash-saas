@@ -384,8 +384,11 @@
                                     <div class="prod-card" onclick="agregarProducto(<?= $prod['id_producto'] ?>, '<?= htmlspecialchars(addslashes($prod['nombre'])) ?>')">
                                         <div class="pc-icon"><i class="bx bx-package"></i></div>
                                         <div class="fw-bold small"><?= htmlspecialchars($prod['nombre']) ?></div>
-                                        <div class="text-primary fw-bold">S/ <?= number_format($prod['precio_venta'], 2) ?></div>
-                                        <small class="text-muted">Stock: <?= $prod['stock_actual'] ?></small>
+                                         <div class="text-primary fw-bold">S/ <?= number_format($prod['precio_venta_pos'], 2) ?></div>
+                                         <small class="text-muted">Stock: <?= $prod['stock_actual'] ?></small>
+                                         <?php if($prod['dias_vencimiento'] !== null && $prod['dias_vencimiento'] <= 30): ?>
+                                            <div class="text-warning fw-bold" style="font-size:0.65rem"><i class="bx bx-alarm-exclamation"></i> Por vencer</div>
+                                         <?php endif; ?>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>

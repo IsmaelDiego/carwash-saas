@@ -76,6 +76,9 @@
                 <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
                   <i class="bx bx-plus me-1"></i> Nuevo Vehículo
                 </button>
+                <a href="<?= BASE_URL ?>/admin/vehiculo/categorias" class="btn btn-label-primary shadow-sm">
+                  <i class="bx bx-category me-1"></i> Categorías
+                </a>
                 <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
                   <i class="bx bx-filter-alt me-1"></i> Filtros
                 </button>

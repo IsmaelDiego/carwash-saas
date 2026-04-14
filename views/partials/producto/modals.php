@@ -164,7 +164,7 @@
                     </div>
                     <div class="mb-3 text-start">
                         <label class="form-label fw-bold small text-muted">Tipo de Movimiento</label>
-                        <select class="form-select shadow-sm" id="stock_tipo" name="tipo">
+                        <select class="form-select shadow-sm select2" id="stock_tipo" name="tipo">
                             <option value="ENTRADA">📥 Entrada (Añadir)</option>
                             <option value="SALIDA">📤 Salida (Retirar)</option>
                         </select>
@@ -294,7 +294,7 @@
             </div>
             <div class="modal-body p-4">
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle">
+                    <table class="table table-sm table-hover align-middle w-100" id="tablaLotesModal">
                         <thead class="table-light">
                             <tr>
                                 <th>#Lote</th>
@@ -330,7 +330,7 @@
 <!-- ═══════════════════════════════════════════════════════════════
      MODAL: REGISTRAR MERMA (Baja de Lote)
 ═══════════════════════════════════════════════════════════════ -->
-<div class="modal fade" id="modalVerLotes" tabindex="-1">
+<div class="modal fade" id="modalMerma" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-danger text-white p-4">
@@ -373,7 +373,7 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold small">Motivo de la merma <span class="text-danger">*</span></label>
-                            <select class="form-select mb-2" id="merma_motivo_sel">
+                            <select class="form-select mb-2 select2" id="merma_motivo_sel" style="width:100%;">
                                 <option value="">Seleccionar motivo...</option>
                                 <option value="Producto vencido">Producto vencido</option>
                                 <option value="Producto dañado">Producto dañado</option>
@@ -417,7 +417,7 @@
             </div>
             <div class="modal-body p-4">
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle">
+                    <table class="table table-sm table-hover align-middle w-100" id="tablaKardexModal">
                         <thead class="table-light">
                             <tr>
                                 <th>Fecha</th>
@@ -437,6 +437,181 @@
         </div>
     </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL: CENTRAL DE REPORTES DE INVENTARIO PRO
+═══════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="modalReportesInventario" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                        <i class="bx bx-bar-chart-alt-2 fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title text-white fw-bold mb-0">BI & REPORTES EXCEL</h5>
+                        <small class="text-white-50">Filtros avanzados para extracción de datos</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formReportesInv" action="<?= BASE_URL ?>/admin/producto/exportar" method="GET" target="_blank">
+                <div class="modal-body p-4 bg-light">
+                    <!-- TIPO PRINCIPAL -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body p-3">
+                            <label class="form-label fw-bold text-primary small mb-2"><i class="bx bx-category me-1"></i> MATRIZ DE EXTRACCIÓN</label>
+                            <select class="form-select form-select-lg fw-bold" name="tipo" id="rep_tipo" required style="border: 2px solid #696cff;">
+                                <option value="productos" selected>📦 1. Catálogo General de Productos</option>
+                                <option value="lotes">🏷️ 2. Inteligencia de Lotes (Vencimientos & Trazabilidad)</option>
+                                <option value="kardex">📊 3. Historial de Kardex y Movimientos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- PANELES DE FILTRO DINÁMICOS -->
+                    <div class="row g-3">
+                        
+                        <!-- FILTROS: PRODUCTOS -->
+                        <div class="col-md-6 panel-filtro filtro-productos">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <label class="form-label fw-bold fw-bold text-dark small"><i class="bx bx-box me-1"></i> Filtro de Stock</label>
+                                    <select class="form-select bg-label-secondary" name="stock">
+                                        <option value="TODOS">Todos los niveles</option>
+                                        <option value="CON_STOCK">Solo con Stock Disponible</option>
+                                        <option value="BAJO_STOCK">Bajo Stock (Crítico)</option>
+                                        <option value="SIN_STOCK">Agotados (Stock 0)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FILTROS: LOTES Y PRODUCTOS -->
+                        <div class="col-md-6 panel-filtro filtro-productos filtro-lotes" style="display:none;">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-3">
+                                    <label class="form-label fw-bold text-dark small"><i class="bx bx-timer me-1"></i> Estado / Condición</label>
+                                    <select class="form-select bg-label-secondary" name="condicion">
+                                        <option value="TODOS">Todas las condiciones</option>
+                                        <option value="VENCIDOS">Solamente Vencidos</option>
+                                        <option value="POR_VENCER">Próximos a Vencer (30 días)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FILTROS: ESPECÍFICO PRODUCTO (KARDEX Y LOTES) -->
+                        <div class="col-12 panel-filtro filtro-kardex filtro-lotes" style="display:none;">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-3">
+                                    <label class="form-label fw-bold text-dark small"><i class="bx bx-search me-1"></i> Singularización de Producto</label>
+                                    <select class="form-select select2" name="id_producto" id="rep_producto">
+                                        <option value="TODOS">Todos los Registros Globales</option>
+                                        <!-- Javascript lo llena con lista de productos -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FILTROS: KARDEX TIEMPO Y TIPO -->
+                        <div class="col-md-12 panel-filtro filtro-kardex" style="display:none;">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-3">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-dark small">Operación Kardex</label>
+                                            <select class="form-select bg-label-secondary" name="movimiento">
+                                                <option value="TODOS">Cualquier Movimiento</option>
+                                                <option value="ENTRADA">📥 Entradas de Lote</option>
+                                                <option value="VENTA">🛒 Ventas (Salida)</option>
+                                                <option value="MERMA">🗑️ Mermas y Bajas</option>
+                                                <option value="AJUSTE_SALIDA">🔄 Ajustes de Sistema</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-dark small">Fecha Inicio</label>
+                                            <input type="date" class="form-control" name="fecha_inicio" id="rep_f_inicio">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-dark small">Fecha Fin</label>
+                                            <input type="date" class="form-control" name="fecha_fin" id="rep_f_fin">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- FOOTER -->
+                <div class="modal-footer p-4 border-top bg-white d-flex justify-content-between align-items-center">
+                    <button class="btn btn-outline-secondary px-4 fw-bold" type="button" id="btnRepLimpiar"><i class="bx bx-eraser me-2"></i> LIMPIAR</button>
+                    <div>
+                        <button class="btn btn-white fw-bold text-muted border me-2" data-bs-dismiss="modal" type="button">Cancelar</button>
+                        <button class="btn btn-dark fw-bold shadow-sm px-4" type="submit"><i class="bx bxs-file-export me-2"></i> GENERAR Y DESCARGAR</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('modalReportesInventario');
+        
+        // Manejo de Paneles UI
+        $('#rep_tipo').on('change', function() {
+            $('.panel-filtro').hide();
+            const val = $(this).val();
+            $(`.filtro-${val}`).fadeIn(200);
+        });
+
+        // Trigger inicial p/ acomodar
+        $('#rep_tipo').trigger('change');
+
+        // Limpiar
+        $('#btnRepLimpiar').on('click', function() {
+            document.getElementById('formReportesInv').reset();
+            $('#rep_producto').val('TODOS').trigger('change');
+            $('#rep_tipo').trigger('change');
+        });
+
+        // Autocompletar Select de Productos al abrir modal
+        modalEl.addEventListener('show.bs.modal', async function() {
+             try {
+                let res = await fetch(`${BASE_URL}/admin/producto/getall`);
+                let json = await res.json();
+                let options = `<option value="TODOS">-- Todos los Registros Globales --</option>`;
+                if (json.data && json.data.length > 0) {
+                    json.data.forEach(p => {
+                        options += `<option value="${p.id_producto}">${p.nombre}</option>`;
+                    });
+                }
+                $('#rep_producto').html(options);
+             } catch(e) {}
+        });
+
+        // Limpiar y Cerrar al generar
+        $('#formReportesInv').on('submit', function() {
+            setTimeout(() => {
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+                $('#btnRepLimpiar').click();
+                
+                // Limpieza absoluta de backdrops huérfanos
+                setTimeout(() => {
+                    $('.modal-backdrop, .offcanvas-backdrop').remove();
+                    $('body').removeClass('modal-open offcanvas-open').css({'overflow':'', 'padding-right':''});
+                }, 400);
+
+            }, 800);
+        });
+
+    });
+</script>
 
 <!-- Toast -->
 <div class="bs-toast toast fade bg-success position-fixed top-0 end-0 m-3" id="toastProducto" role="alert" style="z-index:11000">

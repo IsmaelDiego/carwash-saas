@@ -27,6 +27,23 @@
 <script src="<?= BASE_URL ?>/template/assets/vendor/js/bootstrap.js"></script>
 <script src="<?= BASE_URL ?>/template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
 <script src="<?= BASE_URL ?>/template/assets/vendor/js/menu.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="<?= BASE_URL ?>/template/assets/js/main.js"></script>
+<script>
+$(document).ready(function() {
+    if ($.fn.select2) {
+        $('.select2-clientes, .select2-ordenes-activas, select.form-select.select2').select2({
+            width: '100%'
+        });
+        // Para selects que estén dentro de modales (como en modals.php)
+        $('.modal').on('shown.bs.modal', function () {
+            $(this).find('select.select2, select.select2-clientes, select.select2-ordenes-activas').select2({
+                dropdownParent: $(this),
+                width: '100%'
+            });
+        });
+    }
+});
+</script>
 </body>
 </html>

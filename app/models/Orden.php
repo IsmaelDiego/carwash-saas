@@ -43,7 +43,8 @@ class Orden {
         $sql = "SELECT o.*, c.nombres AS cli_nombres, c.apellidos AS cli_apellidos, c.puntos_acumulados, v.placa, pr.nombre AS nombre_promocion,
                     (SELECT SUM(d.cantidad) FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio WHERE d.id_orden = o.id_orden AND s.acumula_puntos = 1) AS puntos_ganados,
                     (SELECT GROUP_CONCAT(CONCAT(s.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio WHERE d.id_orden = o.id_orden) AS servicios_vendidos,
-                    (SELECT GROUP_CONCAT(CONCAT(p.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN productos p ON d.id_producto = p.id_producto WHERE d.id_orden = o.id_orden) AS productos_vendidos
+                    (SELECT GROUP_CONCAT(CONCAT(p.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN productos p ON d.id_producto = p.id_producto WHERE d.id_orden = o.id_orden) AS productos_vendidos,
+                    (SELECT COALESCE(SUM(monto), 0) FROM pagos_orden WHERE id_orden = o.id_orden) AS pagado_total
              FROM ordenes o
              LEFT JOIN clientes c ON o.id_cliente = c.id_cliente
              LEFT JOIN vehiculos v ON o.id_vehiculo = v.id_vehiculo

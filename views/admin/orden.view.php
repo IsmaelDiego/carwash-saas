@@ -110,6 +110,7 @@
                             <th style="color: #f0f0f0;">Creado por</th>
                             <th class="text-center" style="color: #f0f0f0;">Estado</th>
                             <th class="text-end" style="color: #f0f0f0;">Total</th>
+                            <th class="text-center" style="color: #f0f0f0;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -145,6 +146,102 @@
         </button>
     </div>
   </div>
+</div>
+
+<!-- MODAL DETALLE DE ORDEN PREMIUM -->
+<div class="modal fade" id="modalDetalleOrden" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <!-- Header Premium -->
+            <div class="modal-header text-white px-4 py-3" id="mo_header_bg" style="background-color: #696cff;">
+                <div class="d-flex align-items-center gap-3 w-100">
+                    <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 52px; height: 52px;">
+                        <i class="bx bx-receipt fs-2" id="mo_icon"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4 class="modal-title text-white fw-bold mb-0" id="mo_title">ORDEN #000</h4>
+                        <small class="text-white-50" id="mo_fecha_estado"><i class="bx bx-calendar me-1"></i> Fecha - Estado</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4 bg-light">
+                
+                <!-- ROW: Cards Info -->
+                <div class="row g-3 mb-4">
+                    <!-- Cliente -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm rounded-3">
+                            <div class="card-body p-3">
+                                <span class="d-block text-muted fw-bold mb-1" style="font-size: 0.75rem;"><i class="bx bx-user text-primary"></i> CLIENTE</span>
+                                <h6 class="mb-0 fw-bold text-dark text-truncate" id="mo_cliente_nombre">-</h6>
+                                <small class="text-muted" id="mo_cliente_dni">-</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Vehículo -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                            <div class="card-body p-3 position-relative">
+                                <span class="d-block text-muted fw-bold mb-1" style="font-size: 0.75rem;"><i class="bx bx-car text-info"></i> VEHÍCULO</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="mb-0 fw-bold border border-2 border-dark px-2 py-1 rounded" style="font-family: monospace; letter-spacing: 1px;" id="mo_placa">--</h5>
+                                </div>
+                                <small class="text-muted mt-1 d-block"><span id="mo_color" class="fw-semibold"></span> | <span id="mo_categoria"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Creador/Responsable -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm rounded-3">
+                            <div class="card-body p-3">
+                                <span class="d-block text-muted fw-bold mb-1" style="font-size: 0.75rem;"><i class="bx bx-badge-check text-success"></i> ATENDIDO POR</span>
+                                <h6 class="mb-0 fw-bold text-dark" id="mo_creador">-</h6>
+                                <small class="text-muted"><i class="bx bx-store"></i> Local Creador</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalle de Consumo -->
+                <div class="card border-0 shadow-sm rounded-3 mb-3">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-uppercase d-flex align-items-center"><i class="bx bx-cart text-primary fs-5 me-2"></i> Resumen de Servicios y Productos</h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-striped table-hover mb-0">
+                            <thead class="table-light border-bottom">
+                                <tr>
+                                    <th class="fw-bold text-muted" style="font-size: 0.8rem;">Item</th>
+                                    <th class="fw-bold text-muted text-center" style="font-size: 0.8rem;">Cant.</th>
+                                    <th class="fw-bold text-muted text-end" style="font-size: 0.8rem;">Precio U.</th>
+                                    <th class="fw-bold justify-content-end text-end" style="font-size: 0.8rem;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mo_body_detalles">
+                                <!-- JS -->
+                            </tbody>
+                            <tfoot class="border-top" style="background-color: rgba(105, 108, 255, 0.05);">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold text-dark pe-4">TOTAL A PAGAR:</td>
+                                    <td class="text-end fw-bold text-primary fs-5" id="mo_total_final">S/ 0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-3 d-flex gap-2 text-muted small" id="mo_logs_estado">
+                        <!-- JS Logs -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>

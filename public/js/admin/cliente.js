@@ -10,8 +10,8 @@ const ClienteModule = {
     this.initModalFixes();
     // Stats: computar después de cada carga AJAX de DataTables
     const self = this;
-    $('#tablaClientes').on('xhr.dt', function() {
-        setTimeout(() => self.computeStats(), 100);
+    $("#tablaClientes").on("xhr.dt", function () {
+      setTimeout(() => self.computeStats(), 100);
     });
   },
 
@@ -24,7 +24,7 @@ const ClienteModule = {
       processing: true,
       responsive: true,
       autoWidth: false,
-      ordering: true,
+      ordering: false,
       ajax: { url: `${BASE_URL}/admin/cliente/getall`, type: "GET" },
       // DOM: Paginación izquierda extrema, Info derecha
       dom: '<"row mx-2"<"col-md-12 my-2"l>>t<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
@@ -34,7 +34,7 @@ const ClienteModule = {
         infoEmpty: "0 registros",
         infoFiltered: "(filtrado)",
         paginate: { next: "Siguiente", previous: "Anterior" },
-        zeroRecords: `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay historial de clientes</h5></div>`, 
+        zeroRecords: `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay historial de clientes</h5></div>`,
       },
       columns: [
         { data: "nombres", visible: false, defaultContent: "" },
@@ -99,63 +99,77 @@ const ClienteModule = {
           },
         },
       ],
-      "buttons": [{
-                extend: 'excelHtml5',
-                className: 'd-none', // Oculto (se activa con tu botón personalizado)
-                filename: 'Reporte_Clientes',
-                title: '', // <--- ESTO ELIMINA EL TÍTULO GRANDE (El "Encabezado" del reporte)
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6], // Tus columnas ocultas
-                    orthogonal: 'export'
-                },
-                customize: function(xlsx) {
-                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    var styles = xlsx.xl['styles.xml'];
+      buttons: [
+        {
+          extend: "excelHtml5",
+          className: "d-none", // Oculto (se activa con tu botón personalizado)
+          filename: "Reporte_Clientes",
+          title: "", // <--- ESTO ELIMINA EL TÍTULO GRANDE (El "Encabezado" del reporte)
+          exportOptions: {
+            columns: [0, 1, 2, 3, 4, 5, 6], // Tus columnas ocultas
+            orthogonal: "export",
+          },
+          customize: function (xlsx) {
+            var sheet = xlsx.xl.worksheets["sheet1.xml"];
+            var styles = xlsx.xl["styles.xml"];
 
-                    // 1. Definimos el FONDO CELESTE (DeepSkyBlue: #00BFFF)
-                    // Nota: Excel usa formato ARGB, por eso agregamos 'FF' al inicio -> FF00BFFF
-                    var fillIndex = $('fills fill', styles).length;
-                    $('fills', styles).append(
-                        '<fill><patternFill patternType="solid"><fgColor rgb="FF00BFFF" /><bgColor indexed="64" /></patternFill></fill>'
-                    );
+            // 1. Definimos el FONDO CELESTE (DeepSkyBlue: #00BFFF)
+            // Nota: Excel usa formato ARGB, por eso agregamos 'FF' al inicio -> FF00BFFF
+            var fillIndex = $("fills fill", styles).length;
+            $("fills", styles).append(
+              '<fill><patternFill patternType="solid"><fgColor rgb="FF00BFFF" /><bgColor indexed="64" /></patternFill></fill>',
+            );
 
-                    // 2. Definimos la LETRA BLANCA y Negrita
-                    var fontIndex = $('fonts font', styles).length;
-                    $('fonts', styles).append(
-                        '<font><b /><color rgb="FFFFFFFF" /><sz val="11" /><name val="Calibri" /></font>'
-                    );
+            // 2. Definimos la LETRA BLANCA y Negrita
+            var fontIndex = $("fonts font", styles).length;
+            $("fonts", styles).append(
+              '<font><b /><color rgb="FFFFFFFF" /><sz val="11" /><name val="Calibri" /></font>',
+            );
 
-                    // 3. Creamos el ESTILO PERSONALIZADO (Uniendo Fondo + Letra)
-                    var styleIndex = $('cellXfs xf', styles).length;
-                    $('cellXfs', styles).append(
-                        '<xf numFmtId="0" fontId="' + fontIndex + '" fillId="' + fillIndex + '" applyFont="1" applyFill="1" />'
-                    );
+            // 3. Creamos el ESTILO PERSONALIZADO (Uniendo Fondo + Letra)
+            var styleIndex = $("cellXfs xf", styles).length;
+            $("cellXfs", styles).append(
+              '<xf numFmtId="0" fontId="' +
+                fontIndex +
+                '" fillId="' +
+                fillIndex +
+                '" applyFont="1" applyFill="1" />',
+            );
 
-                    // 4. Aplicamos el estilo a la PRIMERA FILA (Cabecera de columnas)
-                    $('row:first c', sheet).attr('s', styleIndex);
-                }
-            }]
+            // 4. Aplicamos el estilo a la PRIMERA FILA (Cabecera de columnas)
+            $("row:first c", sheet).attr("s", styleIndex);
+          },
+        },
+      ],
     });
   },
 
-  computeStats: function() {
-      if (!this.tabla) return;
-      const data = this.tabla.rows().data().toArray();
-      const total = data.length;
-      const whatsapp = data.filter(r => r.estado_whatsapp == 1).length;
-      const puntos = data.reduce((acc, r) => acc + (parseInt(r.puntos_acumulados) || 0), 0);
-      const now = new Date();
-      const mes = data.filter(r => {
-          if (!r.fecha_registro) return false;
-          const f = new Date(r.fecha_registro);
-          return f.getMonth() === now.getMonth() && f.getFullYear() === now.getFullYear();
-      }).length;
+  computeStats: function () {
+    if (!this.tabla) return;
+    const data = this.tabla.rows().data().toArray();
+    const total = data.length;
+    const whatsapp = data.filter((r) => r.estado_whatsapp == 1).length;
+    const puntos = data.reduce(
+      (acc, r) => acc + (parseInt(r.puntos_acumulados) || 0),
+      0,
+    );
+    const now = new Date();
+    const mes = data.filter((r) => {
+      if (!r.fecha_registro) return false;
+      const f = new Date(r.fecha_registro);
+      return (
+        f.getMonth() === now.getMonth() && f.getFullYear() === now.getFullYear()
+      );
+    }).length;
 
-      const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
-      el('stat_cli_total', total);
-      el('stat_cli_whatsapp', whatsapp);
-      el('stat_cli_puntos', puntos);
-      el('stat_cli_mes', mes);
+    const el = (id, val) => {
+      const e = document.getElementById(id);
+      if (e) e.textContent = val;
+    };
+    el("stat_cli_total", total);
+    el("stat_cli_whatsapp", whatsapp);
+    el("stat_cli_puntos", puntos);
+    el("stat_cli_mes", mes);
   },
 
   // 2. EVENTOS UI
@@ -322,7 +336,7 @@ const ClienteModule = {
                     <div class="col-12">
                         <div class="border rounded p-3 d-flex flex-column h-100 bg-white shadow-sm border-light">
                             <small class="text-muted fw-bold mb-1"><i class="bx bx-notepad text-warning"></i> Observaciones</small>
-                            <span class="text-muted small">${data.observaciones || '<i>No hay observaciones adicionales para este cliente.</i>'}</span>
+                            <span class="text-muted small">${data.observaciones || "<i>No hay observaciones adicionales para este cliente.</i>"}</span>
                         </div>
                     </div>
                 </div>`;
@@ -339,7 +353,7 @@ const ClienteModule = {
       $("#edit_nombres").val(data.nombres);
       $("#edit_apellidos").val(data.apellidos);
       $("#edit_tel1").val(data.telefono);
-      
+
       // Normalizar sexo para el Select
       let sexoNorm = data.sexo;
       if (sexoNorm === "Masculino") sexoNorm = "M";
@@ -436,20 +450,27 @@ const ClienteModule = {
   // 4. FIXES MODALES SOLAMENTE
   initModalFixes: function () {
     const self = this;
-    
+
     // Al cerrar cualquier modal, limpiar backdrops huérfanos
     $(".modal").on("hidden.bs.modal", function () {
       $(".modal-backdrop").remove();
-      $("body").removeClass("modal-open").css("overflow", "auto").css("padding-right", "");
+      $("body")
+        .removeClass("modal-open")
+        .css("overflow", "auto")
+        .css("padding-right", "");
     });
 
     // Resetear formulario de registro al cerrar
     $("#modalRegistrar").on("hidden.bs.modal", function () {
       const form = document.getElementById("registrarcliente");
       if (form) form.reset();
-      $("#dniFeedback").html('Introduce el documento para autocompletar nombre.');
+      $("#dniFeedback").html(
+        "Introduce el documento para autocompletar nombre.",
+      );
       $("#nombres, #apellidos").prop("readonly", false).val("");
-      $("#btnBuscarDni").prop("disabled", false).html('<i class="bx bx-search fs-5"></i>');
+      $("#btnBuscarDni")
+        .prop("disabled", false)
+        .html('<i class="bx bx-search fs-5"></i>');
     });
   },
 
@@ -465,12 +486,20 @@ const ClienteModule = {
     let dni = $("#dni").val().trim();
     let feedback = $("#dniFeedback");
     if (dni.length !== 8 && dni.length !== 11) {
-      feedback.html('<span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> Debe tener 8 (DNI) u 11 (RUC) dígitos.</span>');
+      feedback.html(
+        '<span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> Debe tener 8 (DNI) u 11 (RUC) dígitos.</span>',
+      );
       return;
     }
 
-    $("#btnBuscarDni").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>').prop("disabled", true);
-    feedback.html('<span class="text-primary fw-bold"><i class="bx bx-loader-circle bx-spin"></i> Consultando...</span>');
+    $("#btnBuscarDni")
+      .html(
+        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>',
+      )
+      .prop("disabled", true);
+    feedback.html(
+      '<span class="text-primary fw-bold"><i class="bx bx-loader-circle bx-spin"></i> Consultando...</span>',
+    );
 
     try {
       let res = await fetch(`${BASE_URL}/api/dni`, {
@@ -479,37 +508,46 @@ const ClienteModule = {
         body: JSON.stringify({ dni: dni }),
       });
       let obj = await res.json();
-      
+
       if (obj.success) {
         let n = "";
         let a = "";
-        
+
         // Es DNI
         if (dni.length === 8 && obj.data) {
           n = obj.data.nombres || "";
-          a = `${obj.data.apellido_paterno || ""} ${obj.data.apellido_materno || ""}`.trim();
-        } 
+          a =
+            `${obj.data.apellido_paterno || ""} ${obj.data.apellido_materno || ""}`.trim();
+        }
         // Es RUC
         else if (dni.length === 11 && obj.data) {
           n = obj.data.nombre_o_razon_social || "";
-          a = "RUC"; 
+          a = "RUC";
         }
 
         $("#nombres").val(n);
         $("#apellidos").val(a);
-        
+
         // Bloquear temporalmente - se ve mejor que los datos no se alteren
         $("#nombres, #apellidos").prop("readonly", true);
-        feedback.html('<span class="text-success fw-bold"><i class="bx bx-check-circle"></i> ¡Datos encontrados!</span>');
+        feedback.html(
+          '<span class="text-success fw-bold"><i class="bx bx-check-circle"></i> ¡Datos encontrados!</span>',
+        );
       } else {
-        feedback.html(`<span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> ${obj.message || "No encontrado"}</span>`);
+        feedback.html(
+          `<span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> ${obj.message || "No encontrado"}</span>`,
+        );
         $("#nombres, #apellidos").val("").prop("readonly", false);
       }
     } catch (e) {
-      feedback.html('<span class="text-danger fw-bold"><i class="bx bx-wifi-off"></i> Error de conexión con el servidor.</span>');
+      feedback.html(
+        '<span class="text-danger fw-bold"><i class="bx bx-wifi-off"></i> Error de conexión con el servidor.</span>',
+      );
       $("#nombres, #apellidos").val("").prop("readonly", false);
     } finally {
-      $("#btnBuscarDni").html('<i class="bx bx-search fs-5"></i>').prop("disabled", false);
+      $("#btnBuscarDni")
+        .html('<i class="bx bx-search fs-5"></i>')
+        .prop("disabled", false);
     }
   },
 };

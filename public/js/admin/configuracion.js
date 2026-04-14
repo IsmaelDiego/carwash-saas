@@ -231,6 +231,12 @@ function initForms() {
                 if (document.getElementById('sidebar-logo')) {
                     document.getElementById('sidebar-logo').src = document.getElementById('logoPreview').src;
                 }
+                
+                // Actualizar Favicon (Icono de la Pestaña) dinámicamente
+                let faviconLink = document.querySelector("link[rel~='icon']");
+                if (faviconLink) {
+                    faviconLink.href = document.getElementById('logoPreview').src;
+                }
             } else {
                 mostrarToast(data.message, 'danger');
             }

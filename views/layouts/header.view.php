@@ -51,6 +51,7 @@ $logo_path_app = !empty($config_sys_app['logo']) ? BASE_URL . '/' . $config_sys_
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/css/dark-mode.css" />
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <!-- endbuild -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/libs/apex-charts/apex-charts.css" />
     <!-- Page CSS -->

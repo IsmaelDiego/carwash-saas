@@ -229,6 +229,7 @@ class ProductoController {
                         'producto' => $l['producto_nombre'],
                         'lote' => $l['id_lote'],
                         'cantidad' => $l['cantidad_actual'],
+                        'costo' => $l['precio_compra'],
                         'dias' => $l['dias_para_vencer'],
                         'fecha' => $l['fecha_vencimiento']
                     ];
@@ -238,6 +239,7 @@ class ProductoController {
                         'producto' => $l['producto_nombre'],
                         'lote' => $l['id_lote'],
                         'cantidad' => $l['cantidad_actual'],
+                        'costo' => $l['precio_compra'],
                         'dias' => $l['dias_para_vencer'],
                         'fecha' => $l['fecha_vencimiento']
                     ];
@@ -333,6 +335,116 @@ class ProductoController {
         header('Content-Type: application/json');
         $model = new Producto($pdo);
         echo json_encode(['data' => $model->getKardexGlobal(200)]);
+    }
+
+    // ==========================================
+    // API: CENTRAL DE REPORTES (EXPORT CSV)
+    // ==========================================
+    public function exportar() {
+        requireAuth();
+        global $pdo;
+        $tipo = $_GET['tipo'] ?? 'productos';
+        $model = new Producto($pdo);
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=Reporte_BI_' . strtoupper($tipo) . '_' . date('Ymd_His') . '.csv');
+        $output = fopen('php://output', 'w');
+        fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM UTF-8 (Excel)
+
+        if ($tipo === 'productos') {
+            $stockFiltro = $_GET['stock'] ?? 'TODOS';
+            $condicionFiltro = $_GET['condicion'] ?? 'TODOS';
+
+            fputcsv($output, ['ID Producto', 'Nombre', 'P. Compra', 'P. Venta', 'Stock Actual', 'Stock Minimo', 'Condicion', 'Prox. Vencimiento'], ';');
+            $data = $model->getAll();
+            
+            foreach ($data as $row) {
+                // Filtro Stock
+                if ($stockFiltro === 'CON_STOCK' && $row['stock_actual'] <= 0) continue;
+                if ($stockFiltro === 'SIN_STOCK' && $row['stock_actual'] > 0) continue;
+                if ($stockFiltro === 'BAJO_STOCK' && ($row['stock_actual'] > $row['stock_minimo'] || $row['stock_actual'] <= 0)) continue;
+
+                // Calculo Condición
+                $prox_venc = $row['prox_vencimiento'];
+                $condActual = 'AL DIA';
+                if ($prox_venc) {
+                    $dias = (strtotime($prox_venc) - strtotime(date('Y-m-d'))) / 86400;
+                    if ($dias <= 0) $condActual = 'VENCIDO';
+                    elseif ($dias <= 30) $condActual = 'POR VENCER';
+                }
+
+                // Filtro Condición
+                if ($condicionFiltro === 'VENCIDOS' && $condActual !== 'VENCIDO') continue;
+                if ($condicionFiltro === 'POR_VENCER' && $condActual !== 'POR VENCER') continue;
+
+                fputcsv($output, [
+                    $row['id_producto'], $row['nombre'], $row['precio_compra'], $row['precio_venta'], 
+                    $row['stock_actual'], $row['stock_minimo'], $condActual, $prox_venc ?: 'Sin Registros'
+                ], ';');
+            }
+        } elseif ($tipo === 'lotes') {
+            $condicionFiltro = $_GET['condicion'] ?? 'TODOS';
+            $idProductoFiltro = $_GET['id_producto'] ?? 'TODOS';
+
+            fputcsv($output, ['ID Lote', 'Producto', 'Stock Actual', 'Stock Inicial', 'P. Compra', 'P. Venta', 'Vencimiento', 'Dias para vencer', 'Condicion'], ';');
+            $data = $model->getAllLotes();
+            
+            foreach ($data as $row) {
+                // Filtro Producto Específico
+                if ($idProductoFiltro !== 'TODOS' && $row['id_producto'] != $idProductoFiltro) continue;
+
+                // Condicion Lote
+                $condicion = 'AL DIA';
+                if ($row['dias_para_vencer'] !== null) {
+                    if ($row['dias_para_vencer'] <= 0) $condicion = 'VENCIDO';
+                    elseif ($row['dias_para_vencer'] <= 30) $condicion = 'POR VENCER';
+                }
+
+                // Filtro Condición
+                if ($condicionFiltro === 'VENCIDOS' && $condicion !== 'VENCIDO') continue;
+                if ($condicionFiltro === 'POR_VENCER' && $condicion !== 'POR VENCER') continue;
+
+                fputcsv($output, [
+                    $row['id_lote'], $row['producto_nombre'], 
+                    $row['cantidad_actual'], $row['cantidad_inicial'],
+                    $row['precio_compra'], $row['precio_venta'],
+                    $row['fecha_vencimiento'] ?: 'N/A',
+                    $row['dias_para_vencer'] !== null ? $row['dias_para_vencer'] : 'N/A',
+                    $condicion
+                ], ';');
+            }
+        } elseif ($tipo === 'kardex') {
+            $idProductoFiltro = $_GET['id_producto'] ?? 'TODOS';
+            $movFiltro = $_GET['movimiento'] ?? 'TODOS';
+            $f_inicio = $_GET['fecha_inicio'] ?? '';
+            $f_fin = $_GET['fecha_fin'] ?? '';
+
+            fputcsv($output, ['Fecha', 'Operacion', 'Referencia', 'Detalle Producto', 'Lote Modificado', 'Cantidad', 'Registrado Por'], ';');
+            
+            // Optimización de consulta: Si hay ID, solo traer su kardex
+            $data = ($idProductoFiltro !== 'TODOS') ? $model->getKardex($idProductoFiltro) : $model->getKardexGlobal(10000); 
+            
+            foreach ($data as $row) {
+                // Filtro de Movimiento
+                if ($movFiltro !== 'TODOS' && $row['tipo'] !== $movFiltro) continue;
+
+                // Filtro de Fechas
+                $fecha_corta = substr($row['fecha'], 0, 10);
+                if ($f_inicio && $fecha_corta < $f_inicio) continue;
+                if ($f_fin && $fecha_corta > $f_fin) continue;
+
+                $nombre_producto = $row['producto_nombre'] ?? 'Producto #' . $row['id_producto'];
+
+                fputcsv($output, [
+                    $row['fecha_fmt'], $row['tipo'], $row['referencia'], 
+                    $nombre_producto,
+                    $row['id_lote'] ? '#' . $row['id_lote'] : 'Multi-lote', 
+                    $row['cantidad'], $row['usuario_nombre']
+                ], ';');
+            }
+        }
+        fclose($output);
+        exit;
     }
 }
 

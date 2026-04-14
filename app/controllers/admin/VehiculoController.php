@@ -4,6 +4,7 @@ namespace Controllers\Admin;
 use Exception;
 use Vehiculo;
 use Cliente; 
+use CategoriaVehiculo;
 
 class VehiculoController
 {
@@ -164,6 +165,109 @@ class VehiculoController
                 echo json_encode(['success' => false, 'message' => 'Error crítico: ' . $e->getMessage()]);
             }
             return;
+        }
+    }
+
+    // ==========================================
+    // 6. CATEGORÍAS VISTA
+    // ==========================================
+    public function categorias()
+    {
+        requireAuth();
+        require VIEW_PATH . '/admin/lista_categorias.view.php';
+    }
+
+    // ==========================================
+    // 7. CATEGORÍAS API (JSON)
+    // ==========================================
+    public function getallcategorias()
+    {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+
+        $categoriaModel = new CategoriaVehiculo($pdo);
+        $data = $categoriaModel->getAll();
+
+        echo json_encode(['data' => $data]);
+    }
+
+    public function registrarcategoria()
+    {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            global $pdo;
+            header('Content-Type: application/json');
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            if (empty($input['nombre'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El nombre es obligatorio.']);
+                return;
+            }
+
+            $categoriaModel = new CategoriaVehiculo($pdo);
+            try {
+                if ($categoriaModel->registrar($input)) {
+                    echo json_encode(['success' => true, 'message' => 'Categoría registrada correctamente.']);
+                } else {
+                    throw new Exception("Error al insertar.");
+                }
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            }
+        }
+    }
+
+    public function editarcategoria()
+    {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            global $pdo;
+            header('Content-Type: application/json');
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            if (empty($input['id_categoria']) || empty($input['nombre'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
+                return;
+            }
+
+            $categoriaModel = new CategoriaVehiculo($pdo);
+            try {
+                if ($categoriaModel->editar($input)) {
+                    echo json_encode(['success' => true, 'message' => 'Categoría actualizada.']);
+                } else {
+                    echo json_encode(['success' => true, 'message' => 'Sin cambios.']);
+                }
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            }
+        }
+    }
+
+    public function eliminarcategoria()
+    {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            global $pdo;
+            header('Content-Type: application/json');
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            $categoriaModel = new CategoriaVehiculo($pdo);
+            try {
+                if ($categoriaModel->eliminar($input['id_categoria'])) {
+                    echo json_encode(['success' => true, 'message' => 'Categoría eliminada.']);
+                } else {
+                    http_response_code(409);
+                    echo json_encode(['success' => false, 'message' => 'No se puede eliminar, posiblemente tiene vehículos asignados.']);
+                }
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            }
         }
     }
 }

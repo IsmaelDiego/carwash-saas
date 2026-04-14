@@ -1,4 +1,5 @@
 <?php
+
 namespace Controllers\Admin;
 
 class DashboardController
@@ -60,11 +61,14 @@ class DashboardController
             FROM ordenes WHERE DATE(fecha_creacion) = CURDATE()");
         $data['ordenes_hoy'] = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
 
-        // ═══ INGRESOS MES (1 query) ═══
+        // ═══ INGRESOS MES E HISTÓRICO (2 queries) ═══
         $stmt = $this->pdo->query("SELECT COALESCE(SUM(total_final), 0) as total 
             FROM ordenes WHERE estado = 'FINALIZADO' 
             AND MONTH(fecha_cierre) = MONTH(CURDATE()) AND YEAR(fecha_cierre) = YEAR(CURDATE())");
         $data['ingresos_mes'] = $stmt->fetch()['total'] ?? 0;
+
+        $stmtTot = $this->pdo->query("SELECT COALESCE(SUM(total_final), 0) as total FROM ordenes WHERE estado = 'FINALIZADO'");
+        $data['ingresos_totales'] = $stmtTot->fetch()['total'] ?? 0;
 
         // ═══ TEMPORADA ACTIVA (1 query) ═══
         $stmt = $this->pdo->query("SELECT * FROM temporadas WHERE estado = 1 LIMIT 1");
@@ -106,46 +110,68 @@ class DashboardController
         return $data;
     }
 
-    private function getIngresosPorMes(): array
+    private function getIngresosPorMes($meses_rango = 6): array
     {
-        // Una sola query que trae los últimos 6 meses de una vez
-        $stmt = $this->pdo->query("
+        $stmt = $this->pdo->prepare("
             SELECT 
                 DATE_FORMAT(fecha_cierre, '%Y-%m') as mes_key,
                 MONTH(fecha_cierre) as mes_num,
                 COALESCE(SUM(total_final), 0) as total
             FROM ordenes 
             WHERE estado = 'FINALIZADO' 
-                AND fecha_cierre >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                AND fecha_cierre >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL :rango MONTH), '%Y-%m-01')
             GROUP BY mes_key, mes_num
             ORDER BY mes_key ASC
         ");
+        $stmt->execute([':rango' => $meses_rango - 1]); // -1 porque cuenta el actual
         $dbResults = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Mapear resultados a los 6 meses
-        $meses = [1=>'Ene',2=>'Feb',3=>'Mar',4=>'Abr',5=>'May',6=>'Jun',7=>'Jul',8=>'Ago',9=>'Sep',10=>'Oct',11=>'Nov',12=>'Dic'];
+        $meses = [1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr', 5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic'];
         $indexed = [];
         foreach ($dbResults as $r) {
             $indexed[$r['mes_key']] = (float)$r['total'];
         }
 
         $result = [];
-        for ($i = 5; $i >= 0; $i--) {
+        for ($i = $meses_rango - 1; $i >= 0; $i--) {
             $key = date('Y-m', strtotime("-$i months"));
             $mesNum = (int)date('m', strtotime("-$i months"));
             $result[] = [
-                'mes'   => $meses[$mesNum],
+                'mes'   => $meses[$mesNum] . ' ' . date('y', strtotime("-$i months")),
                 'total' => $indexed[$key] ?? 0
             ];
         }
         return $result;
     }
 
-    public function apinotifications()
+    public function apifinanzas()
     {
         requireAuth();
         header('Content-Type: application/json');
         
+        $rango = isset($_GET['rango']) ? (int)$_GET['rango'] : 6;
+        if($rango < 1) $rango = 6;
+
+        // Calcular ingreso del periodo seleccionado (para el KPI)
+        $stmt = $this->pdo->prepare("SELECT COALESCE(SUM(total_final), 0) as total 
+            FROM ordenes WHERE estado = 'FINALIZADO' 
+            AND fecha_cierre >= DATE_SUB(CURDATE(), INTERVAL :rango MONTH)");
+        $stmt->execute([':rango' => $rango - 1]);
+        $ingresos_periodo = $stmt->fetch()['total'] ?? 0;
+
+        echo json_encode([
+            'success' => true,
+            'grafico' => $this->getIngresosPorMes($rango),
+            'ingresos_periodo' => $ingresos_periodo
+        ]);
+        exit;
+    }
+
+    public function apinotifications()
+    {
+        requireAuth();
+        header('Content-Type: application/json');
+
         // Force refresh cache
         if (isset($_SESSION['_notif_cache'])) {
             unset($_SESSION['_notif_cache']);

@@ -62,6 +62,22 @@
 
  <script src="<?= BASE_URL ?>/public/assets/vendor/datatables/js/datatables.js"></script>
  <script src="<?= BASE_URL ?>/public/assets/vendor/datatables/js/datatables.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+ <script>
+$(document).ready(function() {
+    if ($.fn.select2) {
+        $('.select2-clientes, .select2-ordenes-activas, select.form-select.select2').select2({
+            width: '100%'
+        });
+        $('.modal').on('shown.bs.modal', function () {
+            $(this).find('select.select2, select.select2-clientes, select.select2-ordenes-activas').select2({
+                dropdownParent: $(this),
+                width: '100%'
+            });
+        });
+    }
+});
+</script>
 
  <!-- SWEETALERT2 -->
 

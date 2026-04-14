@@ -5,9 +5,9 @@
 <!-- Modal: Cobrar Orden -->
 <div class="modal fade" id="modalCobrar" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden">
-            <div class="modal-header" style="background:linear-gradient(135deg,#71dd37,#56c41a);color:#fff;border:0">
-                <h5 class="modal-title fw-bold"><i class="bx bx-check-double me-1"></i>Finalizar Orden #<span id="cobrar_id"></span></h5>
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white p-3">
+                <h5 class="modal-title fw-bold"  style="color: white !important;"><i class="bx bx-check-double me-1"></i>Finalizar Orden #<span id="cobrar_id"></span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -18,10 +18,22 @@
                 <div class="mb-3" id="cobrar_detalle" style="max-height:120px;overflow-y:auto"></div>
                 <label class="form-label fw-bold small">Método de Pago</label>
                 <div class="row g-2 mb-3">
-                    <div class="col-6"><div class="pay-method-btn selected" data-metodo="EFECTIVO" onclick="selMetodo(this)"><i class="bx bx-money text-success"></i><small class="fw-bold">Efectivo</small></div></div>
-                    <div class="col-6"><div class="pay-method-btn" data-metodo="YAPE" onclick="selMetodo(this)"><i class="bx bx-mobile" style="color:#6f2da8"></i><small class="fw-bold">Yape</small></div></div>
-                    <div class="col-6"><div class="pay-method-btn" data-metodo="PLIN" onclick="selMetodo(this)"><i class="bx bx-mobile-alt text-info"></i><small class="fw-bold">Plin</small></div></div>
-                    <div class="col-6"><div class="pay-method-btn" data-metodo="TARJETA" onclick="selMetodo(this)"><i class="bx bx-credit-card text-warning"></i><small class="fw-bold">Tarjeta</small></div></div>
+                    <div class="col-6"><div class="pay-method-btn selected" data-metodo="EFECTIVO" onclick="selMetodo(this)">
+                        <div class="pm-icon-wrapper" style="background:#e8fadf; color:#71dd37;"><i class="bx bx-money"></i></div>
+                        <span class="pm-label">EFECTIVO</span>
+                    </div></div>
+                    <div class="col-6"><div class="pay-method-btn" data-metodo="YAPE" onclick="selMetodo(this)">
+                        <div class="pm-icon-wrapper" style="background:#f4e8fb; color:#8c52ff;"><i class="bx bx-qr"></i></div>
+                        <span class="pm-label">YAPE</span>
+                    </div></div>
+                    <div class="col-6"><div class="pay-method-btn" data-metodo="PLIN" onclick="selMetodo(this)">
+                        <div class="pm-icon-wrapper" style="background:#e1f9fc; color:#00e4ff;"><i class="bx bx-qr-scan"></i></div>
+                        <span class="pm-label">PLIN</span>
+                    </div></div>
+                    <div class="col-6"><div class="pay-method-btn" data-metodo="TARJETA" onclick="selMetodo(this)">
+                        <div class="pm-icon-wrapper" style="background:#fff2d6; color:#ffab00;"><i class="bx bx-credit-card-front"></i></div>
+                        <span class="pm-label">TARJETA</span>
+                    </div></div>
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 px-4 pb-4">
@@ -34,9 +46,9 @@
 <!-- Modal: Venta Directa -->
 <div class="modal fade" id="modalVenta" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden">
-            <div class="modal-header" style="background:linear-gradient(135deg,#696cff,#9b9dff);color:#fff;border:0">
-                <h5 class="modal-title fw-bold"><i class="bx bx-cart me-1"></i>Procesar Venta Directa</h5>
+        <div class="modal-content" >
+            <div class="modal-header bg-primary p-3">
+                <h5 class="modal-title fw-bold"  style="color: white !important;"><i class="bx bx-cart me-1"></i>Procesar Venta Directa</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -46,10 +58,22 @@
                 </div>
                 <label class="form-label fw-bold small">Método de Pago</label>
                 <div class="row g-2">
-                    <div class="col-6"><div class="pay-method-btn selected" data-metodo="EFECTIVO" onclick="selMetodoVenta(this)"><i class="bx bx-money text-success"></i><small class="fw-bold">Efectivo</small></div></div>
-                    <div class="col-6"><div class="pay-method-btn" data-metodo="YAPE" onclick="selMetodoVenta(this)"><i class="bx bx-mobile" style="color:#6f2da8"></i><small class="fw-bold">Yape</small></div></div>
-                    <div class="col-6"><div class="pay-method-btn" data-metodo="PLIN" onclick="selMetodoVenta(this)"><i class="bx bx-mobile-alt text-info"></i><small class="fw-bold">Plin</small></div></div>
-                    <div class="col-6"><div class="pay-method-btn" data-metodo="TARJETA" onclick="selMetodoVenta(this)"><i class="bx bx-credit-card text-warning"></i><small class="fw-bold">Tarjeta</small></div></div>
+                    <div class="col-6"><div class="pay-method-btn selected" data-metodo="EFECTIVO" onclick="selMetodoVenta(this)">
+                        <div class="pm-icon-wrapper" style="background:#e8fadf; color:#71dd37;"><i class="bx bx-money"></i></div>
+                        <span class="pm-label">EFECTIVO</span>
+                    </div></div>
+                    <div class="col-6"><div class="pay-method-btn" data-metodo="YAPE" onclick="selMetodoVenta(this)">
+                        <div class="pm-icon-wrapper" style="background:#f4e8fb; color:#8c52ff;"><i class="bx bx-qr"></i></div>
+                        <span class="pm-label">YAPE</span>
+                    </div></div>
+                    <div class="col-6"><div class="pay-method-btn" data-metodo="PLIN" onclick="selMetodoVenta(this)">
+                        <div class="pm-icon-wrapper" style="background:#e1f9fc; color:#00e4ff;"><i class="bx bx-qr-scan"></i></div>
+                        <span class="pm-label">PLIN</span>
+                    </div></div>
+                    <div class="col-6"><div class="pay-method-btn" data-metodo="TARJETA" onclick="selMetodoVenta(this)">
+                        <div class="pm-icon-wrapper" style="background:#fff2d6; color:#ffab00;"><i class="bx bx-credit-card-front"></i></div>
+                        <span class="pm-label">TARJETA</span>
+                    </div></div>
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 px-4 pb-4">
@@ -77,6 +101,40 @@
                     <textarea class="form-control" id="anular_motivo" rows="2" placeholder="¿Por qué se anula?" style="border-radius:12px"></textarea>
                 </div>
                 <button class="btn btn-danger w-100 fw-bold rounded-pill mb-2" onclick="confirmarAnulacion()">ANULAR CON TOKEN</button>
+                <button class="btn btn-outline-secondary w-100 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Terminar Lavado -->
+<div class="modal fade" id="modalTerminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;border-top:4px solid #ffab00">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="bx bx-check-double text-warning" style="font-size:3.5rem"></i>
+                    <h5 class="fw-bold mt-2">Terminar Lavado #<span id="terminar_id"></span></h5>
+                    <p class="text-muted small">¿Estás seguro de marcar esta orden como terminada y lista para cobrar?</p>
+                </div>
+                <button class="btn btn-warning w-100 fw-bold rounded-pill mb-2 text-dark" onclick="confirmarTerminarLavado()">SÍ, TERMINAR LAVADO</button>
+                <button class="btn btn-outline-secondary w-100 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Iniciar Lavado -->
+<div class="modal fade" id="modalIniciar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;border-top:4px solid #696cff">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="bx bx-play-circle text-primary" style="font-size:3.5rem"></i>
+                    <h5 class="fw-bold mt-2">Iniciar Lavado #<span id="iniciar_id"></span></h5>
+                    <p class="text-muted small">¿Confirmas que el vehículo ya está en la zona de lavado?</p>
+                </div>
+                <button class="btn btn-primary w-100 fw-bold rounded-pill mb-2 text-white" onclick="confirmarIniciarLavado()">SÍ, INICIAR LAVADO</button>
                 <button class="btn btn-outline-secondary w-100 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
             </div>
         </div>
@@ -255,6 +313,26 @@
                                 </div>
                             </div>
                             <?php endif; ?>
+                            
+                            <!-- Cobro Anticipado -->
+                            <div class="mb-4 bg-label-success p-3 rounded-3 border border-success">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="chk_pago_anticipado" onchange="togglePagoAnticipado(this)">
+                                    <label class="form-check-label fw-bold small text-success" for="chk_pago_anticipado">
+                                        <i class="bx bx-dollar-circle me-1"></i>PAGO ANTICIPADO (Opcional)
+                                    </label>
+                                </div>
+                                <div id="panel_metodos_pago_anticipado" style="display:none; transition: all 0.3s">
+                                    <label class="form-label fw-bold small">Método de Pago</label>
+                                    <div class="row g-2">
+                                        <div class="col-6"><div class="pay-method-btn selected" data-metodo="EFECTIVO" onclick="selMetodoAnticipado(this)"><i class="bx bx-money text-success"></i><small class="fw-bold">Efectivo</small></div></div>
+                                        <div class="col-6"><div class="pay-method-btn" data-metodo="YAPE" onclick="selMetodoAnticipado(this)"><i class="bx bx-mobile" style="color:#6f2da8"></i><small class="fw-bold">Yape</small></div></div>
+                                        <div class="col-6"><div class="pay-method-btn" data-metodo="PLIN" onclick="selMetodoAnticipado(this)"><i class="bx bx-mobile-alt text-info"></i><small class="fw-bold">Plin</small></div></div>
+                                        <div class="col-6"><div class="pay-method-btn" data-metodo="TARJETA" onclick="selMetodoAnticipado(this)"><i class="bx bx-credit-card text-warning"></i><small class="fw-bold">Tarjeta</small></div></div>
+                                    </div>
+                                    <input type="hidden" id="metodo_anticipado" value="EFECTIVO">
+                                </div>
+                            </div>
                             
                             <!-- Resumen del Total -->
                             <div class="bg-light p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center border">

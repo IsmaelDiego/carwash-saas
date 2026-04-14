@@ -20,11 +20,11 @@
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-    <title><?= $pageTitle ?> — Carwash XP</title>
-    <meta name="description" content="Panel <?= $pageTitle ?> Carwash XP" />
+    <title><?= $pageTitle ?> — <?= htmlspecialchars($config['abreviatura'] ?? 'Carwash XP') ?></title>
+    <meta name="description" content="Panel <?= $pageTitle ?> <?= htmlspecialchars($config['nombre_negocio'] ?? 'Carwash XP') ?>" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>/template/assets/img/favicon/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>/<?= !empty($config['logo']) ? $config['logo'] : 'template/assets/img/favicon/favicon.ico' ?>" />
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -38,6 +38,7 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/css/dark-mode.css" />
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <!-- Helpers -->
     <script src="<?= BASE_URL ?>/template/assets/vendor/js/helpers.js"></script>
     <script src="<?= BASE_URL ?>/template/assets/js/config.js"></script>
@@ -95,7 +96,12 @@
                         <!-- Brand -->
                         <div class="navbar-nav align-items-center">
                             <div class="nav-item d-flex align-items-center gap-2">
-                                <span class="text-primary fw-bold"><i class="icon-base bx bx-droplet icon-md me-1"></i>Carwash XP</span>
+                                <?php if (!empty($config['logo'])): ?>
+                                    <img src="<?= BASE_URL ?>/<?= $config['logo'] ?>" alt="Logo" style="height: 30px; width: auto;" class="me-1">
+                                <?php else: ?>
+                                    <span class="text-primary fw-bold"><i class="icon-base bx bx-droplet icon-md me-1"></i></span>
+                                <?php endif; ?>
+                                <span class="text-primary fw-bold"><?= htmlspecialchars($config['nombre_negocio'] ?? 'Carwash XP') ?></span>
                                 <span class="badge <?= $roleBadge ?>"><?= $pageTitle ?></span>
                             </div>
                         </div>

@@ -1,16 +1,20 @@
 <?php
+
 namespace Controllers\Admin;
 
 use Exception;
 use PDO;
 
-class CajaController {
+class CajaController
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         requireRole(1); // Solo admin
     }
 
-    public function index() {
+    public function index()
+    {
         requireAuth();
         require VIEW_PATH . '/admin/caja.view.php';
     }
@@ -18,27 +22,18 @@ class CajaController {
     /**
      * API: Listar arqueos (sesiones de caja)
      */
-    public function getarqueos() {
+    public function getarqueos()
+    {
         requireAuth();
-        global $pdo;
+        require_once BASE_PATH . '/app/models/CajaSesion.php';
         header('Content-Type: application/json');
 
         try {
             $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
             $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
 
-            $sql = "SELECT cs.*, u.nombres as cajero_nombre,
-                        (SELECT COALESCE(SUM(po.monto), 0) 
-                         FROM pagos_orden po 
-                         JOIN ordenes o ON po.id_orden = o.id_orden 
-                         WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO') as recaudado_acumulado
-                    FROM caja_sesiones cs
-                    LEFT JOIN usuarios u ON cs.id_usuario = u.id_usuario
-                    WHERE MONTH(cs.fecha_apertura) = :m AND YEAR(cs.fecha_apertura) = :y
-                    ORDER BY cs.fecha_apertura DESC";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':m' => $month, ':y' => $year]);
-            $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $cajaModel = new \CajaSesion();
+            $res = $cajaModel->getArqueosPorMes($month, $year);
 
             echo json_encode(['success' => true, 'data' => $res]);
         } catch (Exception $e) {
@@ -49,44 +44,30 @@ class CajaController {
     /**
      * API: Ver detalle de una sesión (desglose por métodos de pago)
      */
-    public function detallesesion() {
+    public function detallesesion()
+    {
         requireAuth();
-        global $pdo;
+        require_once BASE_PATH . '/app/models/CajaSesion.php';
         header('Content-Type: application/json');
 
         $id = $_GET['id'] ?? 0;
         if (!$id) {
-            echo json_encode(['success' => false, 'message' => 'ID no proporcionado']); return;
+            echo json_encode(['success' => false, 'message' => 'ID no proporcionado']);
+            return;
         }
 
         try {
+            $cajaModel = new \CajaSesion();
+            
             // 1. Datos básicos
-            $stmt = $pdo->prepare("SELECT cs.*, u.nombres as cajero FROM caja_sesiones cs JOIN usuarios u ON cs.id_usuario = u.id_usuario WHERE id_sesion = ?");
-            $stmt->execute([$id]);
-            $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
-
+            $sesion = $cajaModel->getSesionInfo($id);
             if (!$sesion) throw new Exception("Sesión no encontrada");
 
             // 2. Desglose por método de pago
-            $sqlMetodos = "SELECT po.metodo_pago, SUM(po.monto) as total
-                           FROM pagos_orden po
-                           INNER JOIN ordenes o ON po.id_orden = o.id_orden
-                           WHERE o.id_caja_sesion = ? AND o.estado = 'FINALIZADO'
-                           GROUP BY po.metodo_pago";
-            $stmtM = $pdo->prepare($sqlMetodos);
-            $stmtM->execute([$id]);
-            $metodos = $stmtM->fetchAll(PDO::FETCH_ASSOC);
+            $metodos = $cajaModel->getResumenCaja($id);
 
             // 3. Resumen de productos vendidos en esta sesión
-            $sqlProds = "SELECT p.nombre, SUM(do.cantidad) as total_cant, SUM(do.subtotal) as total_monto
-                         FROM detalle_orden do
-                         INNER JOIN ordenes o ON do.id_orden = o.id_orden
-                         INNER JOIN productos p ON do.id_producto = p.id_producto
-                         WHERE o.id_caja_sesion = ? AND o.estado = 'FINALIZADO'
-                         GROUP BY p.id_producto";
-            $stmtP = $pdo->prepare($sqlProds);
-            $stmtP->execute([$id]);
-            $productos = $stmtP->fetchAll(PDO::FETCH_ASSOC);
+            $productos = $cajaModel->getProductosVendidos($id);
 
             echo json_encode([
                 'success' => true,
@@ -94,9 +75,63 @@ class CajaController {
                 'metodos' => $metodos,
                 'productos' => $productos
             ]);
-
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * API: Exportar arqueos a CSV
+     */
+    public function exportararqueos()
+    {
+        requireAuth();
+        require_once BASE_PATH . '/app/models/CajaSesion.php';
+
+        $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
+        $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
+
+        $cajaModel = new \CajaSesion();
+        $arqueos = $cajaModel->getArqueosPorMes($month, $year);
+
+        $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        $nombreMes = $meses[$month - 1];
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=arqueos_'.$nombreMes.'_'.$year.'.csv');
+        $output = fopen('php://output', 'w');
+
+        // BOM for Excel compatibility
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Cabecera plana en CSV separada por punto y coma (;)
+        fputcsv($output, ['ID MES', 'CAJERO', 'FECHA APERTURA', 'FECHA CIERRE', 'MONTO INICIAL (S/)', 'MONTO ESPERADO (S/)', 'RECAUDADO REAL (S/)', 'DIFERENCIA (S/)', 'ESTADO'], ';');
+
+        $correlativo = 1;
+        foreach ($arqueos as $cs) {
+            $montoEsperado = floatval($cs['monto_esperado']);
+            if ($cs['estado'] === 'ABIERTA') {
+                $montoEsperado = floatval($cs['monto_apertura']) + floatval($cs['recaudado_acumulado']);
+            }
+            $montoReal = $cs['monto_cierre_real'] !== null ? number_format((float)$cs['monto_cierre_real'], 2, '.', '') : '-';
+            $diff = $cs['diferencia'] !== null ? number_format((float)$cs['diferencia'], 2, '.', '') : '-';
+
+            fputcsv($output, [
+                $correlativo,
+                $cs['cajero_nombre'],
+                $cs['fecha_apertura'],
+                $cs['fecha_cierre'] ?: '-',
+                number_format((float)$cs['monto_apertura'], 2, '.', ''),
+                number_format($montoEsperado, 2, '.', ''),
+                $montoReal,
+                $diff,
+                $cs['estado']
+            ], ';');
+            
+            $correlativo++;
+        }
+
+        fclose($output);
+        exit;
     }
 }

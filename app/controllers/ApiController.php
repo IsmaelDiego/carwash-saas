@@ -23,7 +23,7 @@ class ApiController
             exit;
         }
 
-        $token = '53d7b96a7831d87028c875ef76f5bccdb7ecb515eef69de6b975a467e0ac01c5';
+        $token = '14f7052063fd269673be7268b0bb824ea6d804614a792e780b3342d783e9661f';
         $curl = curl_init();
 
         $endpoint = "https://apiperu.dev/api/dni";
@@ -40,7 +40,8 @@ class ApiController
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_POSTFIELDS => $params,
-            CURLOPT_SSL_VERIFYPEER => false, 
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4, // Fuerza IPv4 para evitar errores de DNS "Could not resolve host" en Windows/XAMPP
             CURLOPT_HTTPHEADER => [
                 'Accept: application/json',
                 'Content-Type: application/json',
@@ -52,11 +53,11 @@ class ApiController
         $err = curl_error($curl);
         curl_close($curl);
 
-        
+
         if ($err) {
             echo json_encode(['success' => false, 'message' => 'Error de conexión: ' . $err]);
         } else {
-            echo $response; 
+            echo $response;
         }
         exit;
     }

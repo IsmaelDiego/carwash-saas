@@ -17,7 +17,7 @@ const ordenes = {
             processing: true,
             responsive: true,
             autoWidth: false,
-            ordering: true,
+            ordering: false,
             ajax: `${BASE_URL}/admin/orden/getlista`,
             dom: '<"row mx-2"<"col-md-12 my-2"l>>t<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
             columns: [
@@ -36,7 +36,14 @@ const ordenes = {
                     else if(d === 'ANULADO') color = 'danger';
                     return `<span class="badge bg-label-${color}">${d}</span>`;
                 }},
-                { data: 'total_final', className: 'text-end fw-bold', render: d => `S/ ${parseFloat(d).toFixed(2)}` }
+                { data: 'total_final', className: 'text-end fw-bold', render: d => `S/ ${parseFloat(d).toFixed(2)}` },
+                { data: null, className: 'text-center', orderable: false, render: function(data) {
+                    return `
+                    <button class="btn btn-sm btn-icon btn-label-primary shadow-sm rounded-circle" onclick="ordenes.verDetalle(${data.id_orden})" title="Ver Detalles">
+                        <i class="bx bx-show"></i>
+                    </button>
+                    `;
+                }}
             ],
             buttons: [{
                 extend: 'excelHtml5',
@@ -128,6 +135,90 @@ const ordenes = {
             }
             return true;
         });
+    },
+
+    verDetalle: async function(id) {
+        try {
+            const res = await fetch(`${BASE_URL}/admin/orden/getdetalle?id=${id}`);
+            const data = await res.json();
+            
+            if (!data.success) {
+                alert("Error: " + data.message);
+                return;
+            }
+
+            const ord = data.orden;
+            const det = data.detalles;
+
+            // Datos Base
+            document.getElementById('mo_title').textContent = `ORDEN #${ord.id_orden}`;
+            
+            // Set Header color based on status
+            const header = document.getElementById('mo_header_bg');
+            const icon = document.getElementById('mo_icon');
+            let colorHex = '#696cff'; // primary default
+            let statusIcon = 'bx-receipt';
+            
+            if (ord.estado === 'FINALIZADO') { colorHex = '#71dd37'; statusIcon = 'bx-check-double'; }
+            else if (ord.estado === 'POR_COBRAR') { colorHex = '#ffab00'; statusIcon = 'bx-dollar-circle'; }
+            else if (ord.estado === 'EN_PROCESO') { colorHex = '#03c3ec'; statusIcon = 'bx-cog bx-spin'; }
+            else if (ord.estado === 'ANULADO') { colorHex = '#ff3e1d'; statusIcon = 'bx-x-circle'; }
+            
+            header.style.backgroundColor = colorHex;
+            icon.className = `bx ${statusIcon} fs-2`;
+            icon.style.color = colorHex;
+
+            const dateParsed = new Date(ord.fecha_creacion.replace(/-/g, "/")).toLocaleString('es-PE');
+            document.getElementById('mo_fecha_estado').innerHTML = `<i class="bx bx-calendar me-1"></i> ${dateParsed}  —  <strong class="text-white text-uppercase" style="letter-spacing: 0.5px;">${ord.estado}</strong>`;
+
+            // Cards info
+            document.getElementById('mo_cliente_nombre').textContent = ord.cliente_nombres ? `${ord.cliente_nombres} ${ord.cliente_apellidos}` : 'Consumidor Final';
+            document.getElementById('mo_cliente_dni').textContent = ord.cliente_dni || 'Sin Documento';
+
+            document.getElementById('mo_placa').textContent = ord.placa || 'NINGUNA';
+            document.getElementById('mo_color').textContent = ord.vehiculo_color || '---';
+            document.getElementById('mo_categoria').textContent = ord.categoria_vehiculo || 'Sin Vehículo';
+
+            document.getElementById('mo_creador').textContent = ord.creador_nombre || 'Desconocido';
+
+            // Tabla de detalles (Productos y Servicios)
+            const tbody = document.getElementById('mo_body_detalles');
+            tbody.innerHTML = '';
+            
+            if (!det || det.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No hay servicios ni productos registrados en esta orden.</td></tr>`;
+            } else {
+                det.forEach(d => {
+                    let nombreItem = d.servicio_nombre || d.producto_nombre || 'Item desconocido';
+                    let isServicio = d.servicio_nombre ? true : false;
+                    let iconItem = isServicio ? '<i class="bx bx-wrench text-info me-2"></i>' : '<i class="bx bx-box text-success me-2"></i>';
+                    
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="text-dark fw-semibold">${iconItem} ${nombreItem}</td>
+                        <td class="text-center">${d.cantidad}</td>
+                        <td class="text-end">S/ ${parseFloat(d.precio_unitario).toFixed(2)}</td>
+                        <td class="text-end fw-bold">S/ ${parseFloat(d.subtotal).toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('mo_total_final').textContent = `S/ ${parseFloat(ord.total_final).toFixed(2)}`;
+
+            // Logs adicionales
+            let logs = [];
+            if(ord.fecha_cierre) logs.push(`Cierre: ${new Date(ord.fecha_cierre.replace(/-/g, "/")).toLocaleString('es-PE')}`);
+            if(ord.motivo_anulacion) logs.push(`Motivo Anulación: <b>${ord.motivo_anulacion}</b>`);
+            document.getElementById('mo_logs_estado').innerHTML = logs.length > 0 ? logs.join(' &nbsp; | &nbsp; ') : 'No hay historial de cierres.';
+
+            // Mostrar
+            new bootstrap.Modal(document.getElementById('modalDetalleOrden')).show();
+
+        } catch (e) {
+            console.error(e);
+            alert("Ocurrió un error al cargar la orden.");
+        }
     }
 };
 

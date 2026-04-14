@@ -150,8 +150,8 @@
                             <i class="bx bx-bell bx-tada"></i>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="badgeAlertasVenc" style="display:none;">0</span>
                         </button>
-                        <button class="btn btn-outline-success" type="button" id="btnExportar">
-                            <i class="bx bxs-file-export p-2"></i>
+                        <button class="btn btn-outline-success" type="button" data-bs-toggle="modal" data-bs-target="#modalReportesInventario" title="Central de Reportes">
+                            <i class="bx bxs-file-export p-2"></i> Reportes
                         </button>
                         <button class="btn btn-primary shadow-sm" id="btnNuevoProducto">
                             <i class="bx bx-plus me-1"></i> Nuevo Producto

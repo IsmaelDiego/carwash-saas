@@ -61,7 +61,7 @@
 
     .welcome-banner::before {
         content: '\e9d0';
-        font-family: 'boxicons'!important;
+        font-family: 'boxicons' !important;
         position: absolute;
         right: 30px;
         top: 50%;
@@ -86,7 +86,7 @@
 
     /* ─── KPI CARDS ─── */
     .kpi-card {
-        border: 1px solid rgba(0,0,0,0.04);
+        border: 1px solid rgba(0, 0, 0, 0.04);
         border-radius: 20px;
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         background: #fff;
@@ -132,16 +132,16 @@
         text-align: center;
         flex: 1;
         min-width: 90px;
-        background: rgba(255,255,255,0.15);
+        background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         transition: transform 0.2s;
     }
 
     .order-pill:hover {
         transform: translateY(-3px);
-        background: rgba(255,255,255,0.25);
+        background: rgba(255, 255, 255, 0.25);
     }
 
     .order-pill .opv {
@@ -154,7 +154,7 @@
     .order-pill .opl {
         font-size: 0.75rem;
         font-weight: 600;
-        color: rgba(255,255,255,0.9);
+        color: rgba(255, 255, 255, 0.9);
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -163,6 +163,7 @@
     .dash-table {
         margin-bottom: 0;
     }
+
     .dash-table th {
         font-size: 0.75rem;
         text-transform: uppercase;
@@ -179,10 +180,11 @@
         font-size: 0.9rem;
         padding: 1rem 0.85rem;
     }
-    
+
     .dash-table tbody tr {
         transition: background 0.2s;
     }
+
     .dash-table tbody tr:hover {
         background: rgba(105, 108, 255, 0.03);
     }
@@ -236,10 +238,17 @@
         <!-- ═══ KPI CARDS ═══ -->
         <div class="row mb-4">
             <?php
+            // Ingresos Históricos ocultos por defecto
+            $valHist = number_format($dashData['ingresos_totales'] ?? 0, 2);
+            $htmlHist = "<span id='ing_hist_val' class='d-none'>S/ {$valHist}</span> 
+                         <span id='ing_hist_blur'>S/ ***.**</span> 
+                         <button class='btn btn-xs btn-icon btn-outline-secondary ms-2 rounded-circle' onclick='toggleHist()'><i class='bx bx-show' id='ing_hist_icon'></i></button>";
+
             $kpis = [
-                ['val' => 'S/ ' . number_format($oh['ingresos_hoy'] ?? 0, 2), 'lbl' => 'Ingresos Hoy', 'icon' => 'bx-dollar-circle', 'color' => 'success'],
+                ['val' => 'S/ ' . number_format($oh['ingresos_hoy'] ?? 0, 2), 'lbl' => 'Ingresos Hoy', 'icon' => 'bx-dollar-circle', 'color' => 'success', 'id' => 'kpi_ing_hoy'],
                 ['val' => 'S/ ' . number_format($dashData['ingresos_mes'] ?? 0, 2), 'lbl' => 'Ingresos del Mes', 'icon' => 'bx-wallet', 'color' => 'primary'],
-                ['val' => $dashData['total_clientes'], 'lbl' => 'Clientes', 'icon' => 'bx-user', 'color' => 'info'],
+                ['val' => $htmlHist, 'lbl' => 'Ingresos Históricos', 'icon' => 'bx-building-house', 'color' => 'secondary', 'id' => 'kpi_ing_hist'],
+                ['val' => $dashData['total_clientes'], 'lbl' => 'Clientes', 'icon' => 'bx-user', 'color' => 'info', 'id' => 'kpi_clientes'],
                 ['val' => $dashData['total_puntos_clientes'], 'lbl' => 'Puntos Globales', 'icon' => 'bx-star', 'color' => 'warning'],
                 ['val' => $dashData['total_servicios'], 'lbl' => 'Servicios Activos', 'icon' => 'bx-badge-check', 'color' => 'success'],
                 ['val' => $dashData['total_productos'], 'lbl' => 'Productos Tienda', 'icon' => 'bx-package', 'color' => 'dark'],
@@ -251,21 +260,24 @@
             ];
             foreach ($kpis as $i => $kpi): ?>
                 <div class="col-sm-6 col-md-4 col-xl-5th mb-3 dash-animate" style="flex: 1 0 20%;">
-                    <?php if(!empty($kpi['url']) && $kpi['url'] !== '#'): ?><a href="<?= $kpi['url'] ?>" style="text-decoration:none; color:inherit; display:block; height:100%;"><?php endif; ?>
-                    <div class="card kpi-card h-100" <?= (!empty($kpi['url']) && $kpi['url'] !== '#') ? 'style="cursor:pointer;"' : '' ?>>
-                        <div class="card-body p-4 d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3 w-100">
-                                <div class="kpi-icon bg-label-<?= $kpi['color'] ?> shadow-sm flex-shrink-0">
-                                    <i class="bx <?= $kpi['icon'] ?> text-<?= $kpi['color'] ?>"></i>
-                                </div>
-                                <div class="overflow-hidden">
-                                    <small class="text-muted fw-bold text-uppercase d-block mb-1 text-truncate" style="font-size:0.7rem; letter-spacing: 0.5px;"><?= $kpi['lbl'] ?></small>
-                                    <div class="kpi-value text-<?= $kpi['color'] ?> text-truncate" title="<?= strip_tags($kpi['val']) ?>"><?= $kpi['val'] ?></div>
+                    <?php if (!empty($kpi['url']) && $kpi['url'] !== '#'): ?><a href="<?= $kpi['url'] ?>" style="text-decoration:none; color:inherit; display:block; height:100%;"><?php endif; ?>
+                        <div class="card kpi-card h-100" <?= (!empty($kpi['url']) && $kpi['url'] !== '#') ? 'style="cursor:pointer;"' : '' ?>>
+                            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3 w-100">
+                                    <div class="kpi-icon bg-label-<?= $kpi['color'] ?> shadow-sm flex-shrink-0">
+                                        <i class="bx <?= $kpi['icon'] ?> text-<?= $kpi['color'] ?>"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <small class="text-muted fw-bold text-uppercase d-block mb-1 text-truncate" style="font-size:0.7rem; letter-spacing: 0.5px;"><?= $kpi['lbl'] ?></small>
+                                        <div class="kpi-value text-<?= $kpi['color'] ?> text-truncate d-flex align-items-center" <?= isset($kpi['id']) ? 'id="'.$kpi['id'].'"' : '' ?> title="<?= strip_tags($kpi['val']) ?>">
+                                            <?= $kpi['val'] ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <?php if(!empty($kpi['url']) && $kpi['url'] !== '#'): ?></a><?php endif; ?>
+                        <?php if (!empty($kpi['url']) && $kpi['url'] !== '#'): ?>
+                        </a><?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -274,8 +286,15 @@
             <!-- ═══ CHART: INGRESOS POR MES ═══ -->
             <div class="col-lg-8 mb-4 dash-animate">
                 <div class="card h-100" style="border: 1px solid rgba(0,0,0,0.04); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                    <div class="card-header border-0 pb-0 pt-4 px-4">
-                        <h6 class="mb-0 fw-bold fs-5"><i class="bx bx-dollar-circle text-success me-2 fs-4 align-middle"></i>Ingresos por Mes <span class="text-muted fw-normal fs-6 ms-1">(6 meses)</span></h6>
+                    <div class="card-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold fs-5"><i class="bx bx-line-chart text-success me-2 fs-4 align-middle"></i>Evolución de Ingresos</h6>
+                        <select class="form-select form-select-sm w-auto shadow-sm" id="filtroRangoFinanzas">
+                            <option value="1">Mes Actual</option>
+                            <option value="2">Últimos 2 meses</option>
+                            <option value="3">Últimos 3 meses</option>
+                            <option value="6" selected>Últimos 6 meses</option>
+                            <option value="12">Últimos 12 meses</option>
+                        </select>
                     </div>
                     <div class="card-body px-3 pb-3 pt-0 mt-2">
                         <div id="chartIngresosMes"></div>
@@ -426,7 +445,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <?php if($cli['telefono']): ?>
+                                                <?php if ($cli['telefono']): ?>
                                                     <span class="badge bg-label-secondary fw-medium px-3"><i class="bx bx-phone me-1"></i><?= $cli['telefono'] ?></span>
                                                 <?php else: ?>
                                                     <span class="text-muted small fst-italic">—</span>
@@ -458,37 +477,65 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof ApexCharts === 'undefined') return;
 
-        // Chart: Ingresos por Mes
-        const ingresosMeses = <?= json_encode(array_column($dashData['ingresos_por_mes'], 'mes')) ?>;
-        const ingresosData = <?= json_encode(array_column($dashData['ingresos_por_mes'], 'total')) ?>;
+        // Chart: Ingresos por Mes (Dinámico)
+        let chartIngresos = null;
+        
+        async function cargarFinanzas(rango) {
+            try {
+                const res = await fetch(`<?= BASE_URL ?>/admin/dashboard/apifinanzas?rango=${rango}`);
+                const resData = await res.json();
+                
+                if (resData.success) {
+                    const meses = resData.grafico.map(d => d.mes);
+                    const totales = resData.grafico.map(d => parseFloat(d.total));
 
-        new ApexCharts(document.querySelector('#chartIngresosMes'), {
-            series: [{
-                name: 'Ingresos',
-                data: ingresosData
-            }],
-            chart: {
-                type: 'area',
-                height: 280,
-                toolbar: { show: false },
-                fontFamily: 'Public Sans'
-            },
-            colors: ['#71dd37'],
-            fill: {
-                type: 'gradient',
-                gradient: { opacityFrom: 0.35, opacityTo: 0.05 }
-            },
-            stroke: { curve: 'smooth', width: 3 },
-            xaxis: { categories: ingresosMeses },
-            yaxis: {
-                labels: { formatter: (value) => 'S/ ' + value.toFixed(0) }
-            },
-            tooltip: {
-                y: { formatter: (value) => 'S/ ' + value.toFixed(2) }
-            },
-            dataLabels: { enabled: false },
-            grid: { borderColor: '#f0f0f0' }
-        }).render();
+                    // Destruir instancia anterior si existe para evitar conflictos de Tooltips/Estados
+                    if (chartIngresos) {
+                        chartIngresos.destroy();
+                    }
+
+                    const options = {
+                        series: [{ name: 'Ingresos', data: totales }],
+                        chart: { type: 'area', height: 280, toolbar: { show: false }, fontFamily: 'Public Sans', animations: { enabled: false } },
+                        colors: ['#71dd37'],
+                        fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0.05 } },
+                        stroke: { curve: 'smooth', width: 3 },
+                        xaxis: { categories: meses },
+                        yaxis: { labels: { formatter: (value) => 'S/ ' + value.toFixed(0) } },
+                        tooltip: { y: { formatter: (value) => 'S/ ' + value.toFixed(2) } },
+                        dataLabels: { enabled: false },
+                        grid: { borderColor: '#f0f0f0' }
+                    };
+                    chartIngresos = new ApexCharts(document.querySelector('#chartIngresosMes'), options);
+                    chartIngresos.render();
+                }
+            } catch (e) {
+                console.error("Error al cargar finanzas:", e);
+            }
+        }
+
+        // Cargar por defecto lo que viene en el dashData y dejar listo el watcher
+        cargarFinanzas(6);
+
+        $('#filtroRangoFinanzas').on('change', function() {
+            cargarFinanzas(this.value);
+        });
+
+        // Toggle visibility de Ingresos Históricos
+        window.toggleHist = function() {
+            const valEl = document.getElementById('ing_hist_val');
+            const blurEl = document.getElementById('ing_hist_blur');
+            const iconEl = document.getElementById('ing_hist_icon');
+            if (valEl.classList.contains('d-none')) {
+                valEl.classList.remove('d-none');
+                blurEl.classList.add('d-none');
+                iconEl.classList.replace('bx-show', 'bx-hide');
+            } else {
+                valEl.classList.add('d-none');
+                blurEl.classList.remove('d-none');
+                iconEl.classList.replace('bx-hide', 'bx-show');
+            }
+        };
 
         // Chart: Vehículos por Categoría
         const vehLabels = <?= json_encode(array_column($dashData['vehiculos_por_categoria'], 'nombre')) ?>;

@@ -19,18 +19,25 @@
                     <div class="divider text-start mb-4"><div class="divider-text text-uppercase fw-bold text-muted" style="font-size: 0.75rem;">Detalles del Servicio</div></div>
 
                     <div class="row g-4 mb-4">
-                        <div class="col-md-7">
+                        <div class="col-md-5">
                             <label class="form-label fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">Nombre Comercial</label>
                             <div class="input-group input-group-merge shadow-sm">
                                 <span class="input-group-text bg-white"><i class='bx bx-briefcase-alt-2 text-muted'></i></span>
-                                <input type="text" class="form-control fw-bold text-dark" name="nombre" placeholder="Ej. Lavado de Salón Premium" required>
+                                <input type="text" class="form-control fw-bold text-dark" name="nombre" placeholder="Ej. Lavado Premium" required>
                             </div>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">Tarifa Base (S/)</label>
                             <div class="input-group input-group-merge shadow-sm">
                                 <span class="input-group-text bg-white"><i class='bx bx-money text-success'></i></span>
                                 <input type="number" class="form-control text-success fw-bold" name="precio_base" step="0.01" placeholder="Ej. 45.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">Tiempo (Min)</label>
+                            <div class="input-group input-group-merge shadow-sm">
+                                <span class="input-group-text bg-white"><i class='bx bx-time text-primary'></i></span>
+                                <input type="number" class="form-control text-primary fw-bold" name="tiempo_estimado" step="1" placeholder="Ej. 45" required>
                             </div>
                         </div>
                     </div>
@@ -119,18 +126,25 @@
                     <div class="divider text-start mb-4"><div class="divider-text text-uppercase fw-bold text-muted" style="font-size: 0.75rem;">Detalles del Servicio</div></div>
 
                     <div class="row g-4 mb-4">
-                        <div class="col-md-7">
+                        <div class="col-md-5">
                             <label class="form-label fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">Nombre Comercial</label>
                             <div class="input-group input-group-merge shadow-sm">
                                 <span class="input-group-text bg-white"><i class='bx bx-briefcase-alt-2 text-muted'></i></span>
                                 <input type="text" id="edit_nombre" name="nombre" class="form-control fw-bold text-dark" required>
                             </div>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">Tarifa Base (S/)</label>
                             <div class="input-group input-group-merge shadow-sm">
                                 <span class="input-group-text bg-white"><i class='bx bx-money text-success'></i></span>
                                 <input type="number" id="edit_precio_base" name="precio_base" step="0.01" class="form-control text-success fw-bold" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">Tiempo (Min)</label>
+                            <div class="input-group input-group-merge shadow-sm">
+                                <span class="input-group-text bg-white"><i class='bx bx-time text-primary'></i></span>
+                                <input type="number" id="edit_tiempo_estimado" name="tiempo_estimado" step="1" class="form-control text-primary fw-bold" required>
                             </div>
                         </div>
                     </div>

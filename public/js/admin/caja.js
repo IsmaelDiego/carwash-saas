@@ -13,51 +13,102 @@ async function cargarArqueos() {
 
     if (data.success) {
         renderTable(data.data);
+        updateStats(data.data);
     } else {
         console.error("Error al cargar arqueos:", data.message);
     }
 }
 
+function updateStats(arqueos) {
+    const total = arqueos.length;
+    let cuadrados = 0, sobrantes = 0, faltantes = 0;
+
+    arqueos.forEach(cs => {
+        if (cs.estado === 'CERRADA') {
+            const diff = parseFloat(cs.diferencia || 0);
+            if (diff === 0) cuadrados++;
+            else if (diff > 0) sobrantes++;
+            else faltantes++;
+        }
+    });
+
+    const elTotal = document.getElementById('stat_arq_total');
+    const elCuad = document.getElementById('stat_arq_cuadrados');
+    const elSob = document.getElementById('stat_arq_sobrantes');
+    const elFalt = document.getElementById('stat_arq_faltantes');
+
+    if (elTotal) elTotal.textContent = total;
+    if (elCuad) elCuad.textContent = cuadrados;
+    if (elSob) elSob.textContent = sobrantes;
+    if (elFalt) elFalt.textContent = faltantes;
+}
+
 function renderTable(arqueos) {
+    if (typeof $ !== 'undefined' && $.fn.DataTable.isDataTable('#tbArqueos')) {
+        $('#tbArqueos').DataTable().destroy();
+    }
+
     const tbody = document.getElementById('tbodyArqueos');
     tbody.innerHTML = '';
 
-    if (arqueos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">No se encontraron cierres de caja en este periodo.</td></tr>`;
-        return;
+    if (arqueos.length > 0) {
+        arqueos.forEach((cs, index) => {
+            const numeroCorrelativo = index + 1;
+            let montoEsperado = parseFloat(cs.monto_esperado || 0);
+            let montoReal = cs.monto_cierre_real !== null ? parseFloat(cs.monto_cierre_real) : null;
+            
+            // Si está abierta, el esperado es monto_apertura + lo recaudado hasta ahora
+            if (cs.estado === 'ABIERTA') {
+                montoEsperado = parseFloat(cs.monto_apertura) + parseFloat(cs.recaudado_acumulado || 0);
+            }
+
+            const diff = cs.diferencia !== null ? parseFloat(cs.diferencia) : 0;
+            const diffBadge = cs.estado === 'CERRADA' ? getDiffBadge(diff) : '<span class="text-muted" style="font-size: 0.85em;">Cierre pendiente</span>';
+            const statusBadge = `<span class="badge bg-label-${cs.estado === 'ABIERTA' ? 'success' : 'secondary'}">${cs.estado}</span>`;
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="fw-bold text-center">${numeroCorrelativo}</td>
+                <td>${formatFecha(cs.fecha_apertura)}</td>
+                <td class="fw-semibold">${cs.cajero_nombre}</td>
+                <td>S/ ${parseFloat(cs.monto_apertura).toFixed(2)}</td>
+                <td class="fw-bold">S/ ${montoEsperado.toFixed(2)}</td>
+                <td class="text-primary fw-bold">S/ ${montoReal !== null ? montoReal.toFixed(2) : '-'}</td>
+                <td>${diffBadge}</td>
+                <td>${statusBadge}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-icon btn-label-primary shadow-none" onclick="verDetalleSesion(${cs.id_sesion}, ${numeroCorrelativo})" title="Ver Detalle">
+                        <i class="bx bx-show"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
-    arqueos.forEach(cs => {
-        let montoEsperado = parseFloat(cs.monto_esperado || 0);
-        let montoReal = cs.monto_cierre_real !== null ? parseFloat(cs.monto_cierre_real) : null;
-        
-        // Si está abierta, el esperado es monto_apertura + lo recaudado hasta ahora
-        if (cs.estado === 'ABIERTA') {
-            montoEsperado = parseFloat(cs.monto_apertura) + parseFloat(cs.recaudado_acumulado || 0);
-        }
+    // Inicializar DataTables
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        $('#tbArqueos').DataTable({
+            destroy: true,
+            ordering: false,
+            responsive: true,
+            autoWidth: false,
+            dom: '<"row mx-2"<"col-md-12 my-2"l>>t<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
+            language: {
+                lengthMenu: " _MENU_ ",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                infoEmpty: "0 registros",
+                infoFiltered: "(filtrado)",
+                paginate: { next: "Siguiente", previous: "Anterior" },
+                zeroRecords: `<div class="text-center p-5"><img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="mb-3 opacity-50"><h5 class="fw-bold text-muted">No hay cierres de caja en este periodo</h5></div>`
+            }
+        });
 
-        const diff = cs.diferencia !== null ? parseFloat(cs.diferencia) : 0;
-        const diffBadge = cs.estado === 'CERRADA' ? getDiffBadge(diff) : '<span class="text-muted small">Cierre pendiente</span>';
-        const statusBadge = `<span class="badge bg-label-${cs.estado === 'ABIERTA' ? 'success' : 'secondary'} fs-tiny">${cs.estado}</span>`;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="small fw-bold">#${cs.id_sesion}</td>
-            <td class="small">${formatFecha(cs.fecha_apertura)}</td>
-            <td class="small fw-semibold">${cs.cajero_nombre}</td>
-            <td class="small">S/ ${parseFloat(cs.monto_apertura).toFixed(2)}</td>
-            <td class="small fw-bold">S/ ${montoEsperado.toFixed(2)}</td>
-            <td class="small text-primary fw-bold">S/ ${montoReal !== null ? montoReal.toFixed(2) : '-'}</td>
-            <td class="small">${diffBadge}</td>
-            <td class="small">${statusBadge}</td>
-            <td class="text-end">
-                <button class="btn btn-sm btn-icon btn-label-primary shadow-none" onclick="verDetalleSesion(${cs.id_sesion})" title="Ver Detalle">
-                    <i class="bx bx-show"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+        // Vincular el buscador externo
+        $('#buscadorArqueos').off('keyup').on('keyup', function() {
+            $('#tbArqueos').DataTable().search(this.value).draw();
+        });
+    }
 }
 
 function formatFecha(fecha) {
@@ -68,12 +119,12 @@ function formatFecha(fecha) {
 }
 
 function getDiffBadge(diff) {
-    if (diff === 0) return `<span class="badge bg-label-success fs-tiny">Cuadrado</span>`;
-    if (diff > 0) return `<span class="badge bg-label-warning fs-tiny">Sobrante: S/ ${diff.toFixed(2)}</span>`;
-    return `<span class="badge bg-label-danger fs-tiny">Faltante: S/ ${Math.abs(diff).toFixed(2)}</span>`;
+    if (diff === 0) return `<span class="badge bg-label-success">Cuadrado</span>`;
+    if (diff > 0) return `<span class="badge bg-label-warning">Sobrante: S/ ${diff.toFixed(2)}</span>`;
+    return `<span class="badge bg-label-danger">Faltante: S/ ${Math.abs(diff).toFixed(2)}</span>`;
 }
 
-async function verDetalleSesion(id) {
+async function verDetalleSesion(id, numeroCorrelativo) {
     const res = await fetch(`${BASE_URL}/admin/caja/detallesesion?id=${id}`);
     const data = await res.json();
 
@@ -89,7 +140,10 @@ async function verDetalleSesion(id) {
             montoEsperadoTotal = parseFloat(s.monto_apertura) + recaudadoRealTime;
         }
 
-        document.getElementById('detIdSesion').textContent = s.id_sesion;
+        let selectMes = document.getElementById('filterMonth');
+        let nombreMes = selectMes.options[selectMes.selectedIndex].text;
+        document.getElementById('detIdSesion').textContent = numeroCorrelativo + ' perteneciente al mes de ' + nombreMes;
+        
         document.getElementById('detCajero').textContent = s.cajero;
         document.getElementById('detFechaApertura').textContent = formatFecha(s.fecha_apertura);
         document.getElementById('detFechaCierre').textContent = formatFecha(s.fecha_cierre);
@@ -143,4 +197,10 @@ async function verDetalleSesion(id) {
 
         new bootstrap.Modal(document.getElementById('modalDetalleSesion')).show();
     }
+}
+
+function exportarArqueos() {
+    const selMonth = document.getElementById('filterMonth').value;
+    const selYear = document.getElementById('filterYear').value;
+    window.location.href = `${BASE_URL}/admin/caja/exportararqueos?month=${selMonth}&year=${selYear}`;
 }

@@ -51,6 +51,14 @@ const ServicioModule = {
                         return `<span class="badge bg-label-success fs-6">S/ ${parseFloat(data).toFixed(2)}</span>`;
                     }
                 },
+                // TIEMPO
+                { 
+                    "data": "tiempo_estimado",
+                    "className": "text-center",
+                    "render": function(data) {
+                        return `<span class="badge bg-label-info fw-bold"><i class="bx bx-time me-1"></i> ${data > 0 ? data + ' Min' : 'N/A'}</span>`;
+                    }
+                },
                 // REGLAS
                 { 
                     "data": null, "className": "text-center",
@@ -138,8 +146,12 @@ const ServicioModule = {
                 <div class="row g-3">
                     <div class="col-12">
                         <div class="border rounded p-3 d-flex flex-column text-center h-100 bg-white shadow-sm border-light">
-                            <small class="text-muted fw-bold text-uppercase mb-1" style="font-size: 0.75rem;"><i class="bx bx-money text-success"></i> Tarifa Base</small>
-                            <span class="fw-bold text-success fs-3">S/ ${parseFloat(data.precio_base).toFixed(2)}</span>
+                            <small class="text-muted fw-bold text-uppercase mb-1" style="font-size: 0.75rem;"><i class="bx bx-money text-success"></i> Tarifa Base / Tiempo</small>
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <span class="fw-bold text-success fs-3">S/ ${parseFloat(data.precio_base).toFixed(2)}</span>
+                                <span class="text-muted">|</span>
+                                <span class="fw-bold text-info fs-6"><i class="bx bx-time"></i> ${data.tiempo_estimado > 0 ? data.tiempo_estimado + ' Min' : 'N/A'}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="col-6">
@@ -165,6 +177,7 @@ const ServicioModule = {
             $('#edit_id_servicio').val(data.id_servicio);
             $('#edit_nombre').val(data.nombre);
             $('#edit_precio_base').val(data.precio_base);
+            $('#edit_tiempo_estimado').val(data.tiempo_estimado);
             $('#edit_acumula').prop('checked', data.acumula_puntos == 1);
             $('#edit_canje').prop('checked', data.permite_canje == 1);
             new bootstrap.Modal(document.getElementById('modalEditar')).show();

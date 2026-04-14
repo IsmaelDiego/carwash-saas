@@ -42,6 +42,11 @@ class DashboardController
         $ordenModel = new Orden($pdo);
         $todasOrdenes = $ordenModel->getActivasCajero(false);
 
+        // --- SISTEMA CONFIG ---
+        require_once __DIR__ . '/../../models/ConfiguracionSistema.php';
+        $configModel = new \ConfiguracionSistema($pdo);
+        $config = $configModel->get();
+
         // --- TIENDA (PRODUCTOS) ---
         $productos = $pdo->query("
             SELECT p.*, DATEDIFF(p.fecha_caducidad, CURDATE()) as dias_vencimiento,
@@ -64,7 +69,6 @@ class DashboardController
         $promociones = $pdo->query("SELECT * FROM promociones WHERE estado = 1 AND fecha_inicio <= CURDATE() AND fecha_fin >= CURDATE() ORDER BY nombre")->fetchAll(\PDO::FETCH_ASSOC);
         
         // Meta puntos para canje
-        $config = $pdo->query("SELECT meta_puntos_canje FROM configuracion_sistema WHERE id_configuracion = 1")->fetch();
         $metaPuntos = $config['meta_puntos_canje'] ?? 10;
 
         // Órdenes activas para anexo en punto de venta (omnicanalidad)
@@ -116,7 +120,7 @@ class DashboardController
         global $pdo;
         header('Content-Type: application/json');
         $model = new Orden($pdo);
-        $activas = $model->getActivasCajero(true);
+        $activas = $model->getActivasCajero(false);
         $historial = $model->getHistorialHoyCajero();
 
         echo json_encode([
@@ -202,7 +206,7 @@ class DashboardController
         $input = json_decode(file_get_contents('php://input'), true);
         $id = $input['id_orden'] ?? 0;
         
-        $stmt = $pdo->prepare("UPDATE ordenes SET estado = 'EN_PROCESO' WHERE id_orden = ? AND estado = 'EN_COLA'");
+        $stmt = $pdo->prepare("UPDATE ordenes SET estado = 'EN_PROCESO', fecha_inicio_proceso = NOW() WHERE id_orden = ? AND estado IN ('EN_COLA', 'EN_ESPERA')");
         if ($stmt->execute([$id])) {
             echo json_encode(['success' => true, 'message' => 'Servicio iniciado.']);
         } else {
@@ -219,8 +223,9 @@ class DashboardController
         $input = json_decode(file_get_contents('php://input'), true);
         $id = $input['id_orden'] ?? 0;
 
-        $stmt = $pdo->prepare("UPDATE ordenes SET estado = 'POR_COBRAR' WHERE id_orden = ? AND estado = 'EN_PROCESO'");
+        $stmt = $pdo->prepare("UPDATE ordenes SET estado = 'POR_COBRAR', fecha_fin_proceso = NOW() WHERE id_orden = ? AND estado = 'EN_PROCESO'");
         if ($stmt->execute([$id])) {
+            $this->checkAutoAvanzarCola($pdo);
             echo json_encode(['success' => true, 'message' => 'Servicio finalizado. Enviado a cobro.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'No se pudo finalizar el servicio.']);
@@ -245,8 +250,18 @@ class DashboardController
             $pdo->beginTransaction();
             $temp = $pdo->query("SELECT id_temporada FROM temporadas WHERE estado = 1 LIMIT 1")->fetch();
             if (!$temp) throw new \Exception('No hay temporada activa.');
+            // Obtener factor_tiempo del vehículo
+            $factor = 1.0;
+            if (!empty($input['id_vehiculo'])) {
+                $v = $pdo->prepare("SELECT cv.factor_tiempo FROM vehiculos v JOIN categorias_vehiculos cv ON v.id_categoria = cv.id_categoria WHERE v.id_vehiculo = ?");
+                $v->execute([$input['id_vehiculo']]);
+                $cat = $v->fetch();
+                if ($cat && !empty($cat['factor_tiempo'])) {
+                    $factor = (float)$cat['factor_tiempo'];
+                }
+            }
 
-            $stmt = $pdo->prepare("INSERT INTO ordenes (id_temporada, id_cliente, id_vehiculo, id_promocion, id_usuario_creador, estado, ubicacion_en_local) VALUES (:t, :c, :v, :prm, :u, 'EN_PROCESO', :ub)");
+            $stmt = $pdo->prepare("INSERT INTO ordenes (id_temporada, id_cliente, id_vehiculo, id_promocion, id_usuario_creador, estado, ubicacion_en_local) VALUES (:t, :c, :v, :prm, :u, 'EN_COLA', :ub)");
             $stmt->execute([
                 ':t' => $temp['id_temporada'],
                 ':c' => $input['id_cliente'],
@@ -258,7 +273,16 @@ class DashboardController
             $idOrden = $pdo->lastInsertId();
 
             $totalServ = 0;
+            $tiempo_estimado_total = 0;
             foreach ($input['servicios'] as $s) {
+                // Sacar tiempo base del servicio
+                $sx = $pdo->prepare("SELECT tiempo_estimado FROM servicios WHERE id_servicio = ?");
+                $sx->execute([$s['id_servicio']]);
+                $srv = $sx->fetch();
+                if ($srv && $srv['tiempo_estimado']) {
+                    $tiempo_estimado_total += ($srv['tiempo_estimado'] * $factor);
+                }
+
                 $sub = $s['precio_unitario'] * ($s['cantidad'] ?? 1);
                 $totalServ += $sub;
                 $pdo->prepare("INSERT INTO detalle_orden (id_orden, id_servicio, cantidad, precio_unitario, subtotal) VALUES (:o, :s, :c, :pu, :st)")
@@ -273,7 +297,7 @@ class DashboardController
                 $promo = $p->fetch();
                 if ($promo) {
                     $descPromo = ($promo['tipo_descuento'] === 'PORCENTAJE') ? round($totalServ * ($promo['valor'] / 100), 2) : min($promo['valor'], $totalServ);
-                    $pdo->prepare("INSERT INTO historial_uso_promociones (id_promocion, id_cliente) VALUES (?, ?)")
+                    $pdo->prepare("INSERT IGNORE INTO historial_uso_promociones (id_promocion, id_cliente) VALUES (?, ?)")
                         ->execute([$input['id_promocion'], $input['id_cliente']]);
                 }
             }
@@ -284,8 +308,27 @@ class DashboardController
             }
 
             $totalFinal = max($totalServ - $descPromo - $descPuntos, 0);
-            $pdo->prepare("UPDATE ordenes SET total_servicios = :ts, descuento_promo = :dp, descuento_puntos = :dpt, total_final = :tf, estado = 'EN_PROCESO' WHERE id_orden = :id")
-                ->execute([':ts' => $totalServ, ':dp' => $descPromo, ':dpt' => $descPuntos, ':tf' => $totalFinal, ':id' => $idOrden]);
+            $tiempo_estimado_total = max((int)$tiempo_estimado_total, 0);
+
+            $estado_pago = 'PENDIENTE';
+            if (!empty($input['pago_anticipado']) && $input['pago_anticipado']) {
+                $estado_pago = 'PAGADO';
+                require_once __DIR__ . '/../../models/CajaSesion.php';
+                $cajaModel = new \CajaSesion($pdo);
+                $cajaActiva = $cajaModel->getCajaAbierta($_SESSION['user']['id']);
+                
+                if ($cajaActiva) {
+                    $pdo->prepare("INSERT INTO pagos_orden (id_orden, metodo_pago, monto) VALUES (:o, :m, :mo)")
+                        ->execute([':o' => $idOrden, ':m' => $input['metodo_pago'], ':mo' => $totalFinal]);
+                    $pdo->prepare("UPDATE ordenes SET estado_pago = 'PAGADO', id_caja_sesion = :caja WHERE id_orden = :id")
+                        ->execute([':caja' => $cajaActiva['id_sesion'], ':id' => $idOrden]);
+                }
+            }
+
+            $pdo->prepare("UPDATE ordenes SET total_servicios = :ts, descuento_promo = :dp, descuento_puntos = :dpt, total_final = :tf, estado_pago = :ep, estado = 'EN_COLA', tiempo_total_estimado = :tte WHERE id_orden = :id")
+                ->execute([':ts' => $totalServ, ':dp' => $descPromo, ':dpt' => $descPuntos, ':tf' => $totalFinal, ':ep' => $estado_pago, ':tte' => $tiempo_estimado_total, ':id' => $idOrden]);
+
+            $this->checkAutoAvanzarCola($pdo);
 
             $pdo->commit();
             echo json_encode(['success' => true, 'message' => "Orden #$idOrden creada en proceso.", 'id_orden' => $idOrden]);
@@ -324,14 +367,30 @@ class DashboardController
             return;
         }
 
-        $model->registrarPago($input['id_orden'], $input['metodo_pago'], $orden['total_final']);
-        $model->cambiarEstado($input['id_orden'], 'FINALIZADO', ['id_usuario_cajero' => $_SESSION['user']['id']]);
+        $pagadoStmt = $pdo->prepare("SELECT SUM(monto) as pagado FROM pagos_orden WHERE id_orden = ?");
+        $pagadoStmt->execute([$input['id_orden']]);
+        $totalPagado = (float)($pagadoStmt->fetch()['pagado'] ?? 0);
+        $saldoPendiente = (float)$orden['total_final'] - $totalPagado;
+
+        if ($saldoPendiente > 0 && empty($input['metodo_pago'])) {
+            echo json_encode(['success' => false, 'message' => 'Selecciona un método de pago para cubrir el saldo restante de S/ ' . number_format($saldoPendiente, 2)]);
+            return;
+        }
+
+        if ($saldoPendiente > 0) {
+            $model->registrarPago($input['id_orden'], $input['metodo_pago'], $saldoPendiente);
+        }
+
+        $model->cambiarEstado($input['id_orden'], 'FINALIZADO', ['id_usuario_cajero' => $_SESSION['user']['id'], 'estado_pago' => 'PAGADO']);
 
         // Ligar la transacción a la sesión de caja
-        $stmtV = $pdo->prepare("UPDATE ordenes SET id_caja_sesion = ? WHERE id_orden = ?");
+        $stmtV = $pdo->prepare("UPDATE ordenes SET id_caja_sesion = ?, estado_pago = 'PAGADO' WHERE id_orden = ?");
         $stmtV->execute([$cajaActiva['id_sesion'], $input['id_orden']]);
 
-        echo json_encode(['success' => true, 'message' => '¡Orden #' . $input['id_orden'] . ' cobrada!']);
+        // Decidir si imprime (Si hubo un pago nuevo, o es totalmente nueva, imprimir)
+        $imprimir = ($saldoPendiente > 0 || $totalPagado == 0);
+
+        echo json_encode(['success' => true, 'message' => '¡Orden #' . $input['id_orden'] . ' finalizada!', 'imprimir_ticket' => $imprimir]);
     }
 
     // API: VENTA DIRECTA (productos de tienda, sin orden de servicio)
@@ -428,7 +487,7 @@ class DashboardController
                 ->execute([':o' => $idOrden, ':m' => $input['metodo_pago'], ':mo' => $totalProd]);
 
             $pdo->commit();
-            echo json_encode(['success' => true, 'message' => "¡Venta directa #$idOrden por S/ " . number_format($totalProd, 2) . " procesada!"]);
+            echo json_encode(['success' => true, 'message' => "¡Venta directa #$idOrden por S/ " . number_format($totalProd, 2) . " procesada!", 'id_orden' => $idOrden]);
         } catch (\Exception $e) {
             $pdo->rollBack();
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
@@ -548,6 +607,7 @@ class DashboardController
         $model = new Orden($pdo);
         $extra = ['motivo_anulacion' => $input['motivo'], 'id_token_autorizacion' => $token['id_token']];
         if ($model->cambiarEstado($input['id_orden'], 'ANULADO', $extra)) {
+            $this->checkAutoAvanzarCola($pdo);
             echo json_encode(['success' => true, 'message' => 'Orden anulada con autorización.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al anular.']);
@@ -671,6 +731,38 @@ class DashboardController
             echo json_encode(['success' => true, 'message' => 'Caja cerrada y arqueada correctamente.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Hubo un problema cerrando tu caja.']);
+        }
+    }
+    // ════════════════════════════════════════
+    // HELPER: AVANZAR COLA (FIFO)
+    // ════════════════════════════════════════
+    private function checkAutoAvanzarCola($pdo)
+    {
+        // El requerimiento dice: "si hay 3 en proceso este pasara en cola... si se desocupa uno pasa automaticamente respetando FIFO"
+        $limite_bahias = 3; 
+
+        // 1. Contar cuántos están en proceso
+        $stmt_count = $pdo->query("SELECT COUNT(*) as activos FROM ordenes WHERE estado = 'EN_PROCESO'");
+        $activos = (int)$stmt_count->fetch()['activos'];
+
+        // Si hay espacio, busquemos las de la cola que están PAGADAS, ordenadas por más antigua
+        if ($activos < $limite_bahias) {
+            $espacios_libres = $limite_bahias - $activos;
+            
+            // Buscamos ordenes en cola (Inlcuyendo las que no han pagado)
+            $stmt_cola = $pdo->prepare("SELECT id_orden FROM ordenes WHERE estado IN ('EN_COLA', 'EN_ESPERA') ORDER BY fecha_creacion ASC LIMIT ?");
+            // Se debe pasar como entero porque LIMIT requiere int puro
+            $stmt_cola->bindValue(1, $espacios_libres, \PDO::PARAM_INT);
+            $stmt_cola->execute();
+            
+            $en_cola = $stmt_cola->fetchAll(\PDO::FETCH_ASSOC);
+
+            if (!empty($en_cola)) {
+                foreach ($en_cola as $row) {
+                    $pdo->prepare("UPDATE ordenes SET estado = 'EN_PROCESO', fecha_inicio_proceso = NOW() WHERE id_orden = ?")
+                        ->execute([$row['id_orden']]);
+                }
+            }
         }
     }
 }

@@ -4,7 +4,7 @@ namespace Services;
 
 class WhapiService
 {
-    private $apiToken = "r7o9gAaWHpPcSWJo3Hw3SI0CP8lEbtY6   ";
+    private $apiToken = "DYLHAtAKERFlHqaMtNq46BBkNmmq3x1r";
     private $apiUrl   = "https://gate.whapi.cloud/messages/text";
     private $codigoPais = "51";
 

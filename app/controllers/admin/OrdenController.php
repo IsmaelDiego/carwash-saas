@@ -121,5 +121,40 @@ class OrdenController {
         } catch (\Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+    } // <-- Llave faltante que cierra getgrafico
+
+    // API: Obtener detalle completo de una orden
+    public function getdetalle() {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+
+        if (empty($_GET['id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ID de orden no proporcionado']);
+            return;
+        }
+
+        try {
+            $modelo = new Orden($pdo);
+            $orden = $modelo->getById($_GET['id']);
+            
+            if (!$orden) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Orden no encontrada']);
+                return;
+            }
+
+            $detalles = $modelo->getDetalles($_GET['id']);
+            
+            echo json_encode([
+                'success' => true,
+                'orden' => $orden,
+                'detalles' => $detalles
+            ]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 }

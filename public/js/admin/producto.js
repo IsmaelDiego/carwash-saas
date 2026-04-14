@@ -121,13 +121,10 @@ const ProductoModule = {
                                 <i class="bx bx-archive-in me-1"></i> Agregar Lote
                             </a>
                             <a class="dropdown-item btn-ver-lotes" href="javascript:void(0);">
-                                <i class="bx bx-layer me-1"></i> Ver Lotes
+                                <i class="bx bx-layer me-1"></i> Ver Lotes / Dar de Baja
                             </a>
                             <a class="dropdown-item btn-kardex" href="javascript:void(0);">
                                 <i class="bx bx-history me-1"></i> Kardex
-                            </a>
-                            <a class="dropdown-item btn-stock" href="javascript:void(0);">
-                                <i class="bx bx-transfer me-1"></i> Ajustar Stock
                             </a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item btn-eliminar text-danger" href="javascript:void(0);">
@@ -406,6 +403,10 @@ const ProductoModule = {
             const data = await res.json();
             const lotes = data.data || [];
 
+            if ($.fn.DataTable.isDataTable('#tablaLotesModal')) {
+                $('#tablaLotesModal').DataTable().destroy();
+            }
+
             if (lotes.length === 0) {
                 $('#tbodyLotes').html('<tr><td colspan="7" class="text-center text-muted py-4">No hay lotes activos para este producto.</td></tr>');
                 return;
@@ -447,10 +448,20 @@ const ProductoModule = {
                 </tr>`;
             });
 
+            if ($.fn.DataTable.isDataTable('#tablaLotesModal')) {
+                $('#tablaLotesModal').DataTable().destroy();
+            }
             $('#tbodyLotes').html(html);
+            $('#tablaLotesModal').DataTable({
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                pageLength: 10,
+                autoWidth: false,
+                destroy: true
+            });
 
             // Handler para botones de merma dentro de Ver Lotes
-            $('#tbodyLotes').off('click', '.btn-merma-lote').on('click', '.btn-merma-lote', function() {
+            $('#tablaLotesModal').off('click', '.btn-merma-lote').on('click', '.btn-merma-lote', function() {
                 const btn = $(this);
                 // Cerrar modal de lotes primero
                 bootstrap.Modal.getInstance(document.getElementById('modalVerLotes'))?.hide();
@@ -467,6 +478,7 @@ const ProductoModule = {
     // 6. ALERTAS DE VENCIMIENTO
     // ════════════════════════════════════════════════════
     cargarAlertasVencimiento: async function() {
+        const self = this;
         try {
             const res = await fetch(`${BASE_URL}/admin/producto/alertasvencimiento`);
             const data = await res.json();
@@ -505,18 +517,36 @@ const ProductoModule = {
                 const textColor = esVencido ? 'text-danger' : 'text-warning';
                 const label = esVencido ? 'VENCIDO' : `Vence en ${a.dias} día${a.dias !== 1 ? 's' : ''}`;
 
-                html += `<div class="d-flex align-items-start gap-3 p-3 border-bottom" style="background:${bgColor}; border-left: 4px solid ${borderColor};">
+                html += `<div class="d-flex align-items-start gap-3 p-3 border-bottom position-relative" style="background:${bgColor}; border-left: 4px solid ${borderColor};">
                     <i class="bx ${icon} ${textColor} fs-4 mt-1"></i>
                     <div class="flex-grow-1">
                         <div class="fw-bold">${a.producto}</div>
                         <small class="text-muted">Lote #${a.lote} · ${a.cantidad} unidades</small>
                         <div class="mt-1"><span class="badge ${esVencido ? 'bg-danger' : 'bg-warning text-dark'}">${label}</span></div>
-                        <small class="text-muted">${a.fecha}</small>
+                        <small class="text-muted d-block mt-1">${a.fecha}</small>
+                        <div class="mt-2">
+                            <button class="btn btn-xs btn-outline-danger btn-merma-alerta" 
+                                data-id="${a.lote}" data-nombre="${self.escHtml(a.producto)}" 
+                                data-cantidad="${a.cantidad}" data-costo="${a.costo || 0}">
+                                <i class="bx bx-trash me-1"></i> Dar de Baja
+                            </button>
+                        </div>
                     </div>
                 </div>`;
             });
 
             container.innerHTML = html;
+
+            // Mapear eventos al generar el html
+            const selfObj = this;
+            $(container).find('.btn-merma-alerta').on('click', function() {
+                const btn = $(this);
+                // Cerrar Offcanvas primero
+                bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasAlertas'))?.hide();
+                setTimeout(() => {
+                    selfObj.abrirMerma(btn.data('id'), btn.data('nombre'), btn.data('cantidad'), btn.data('costo'));
+                }, 400);
+            });
         } catch (e) {
             console.error('Error alertas:', e);
         }
@@ -534,6 +564,10 @@ const ProductoModule = {
             const res = await fetch(`${BASE_URL}/admin/producto/getkardex?id=${idProducto}`);
             const data = await res.json();
             const movs = data.data || [];
+
+            if ($.fn.DataTable.isDataTable('#tablaKardexModal')) {
+                $('#tablaKardexModal').DataTable().destroy();
+            }
 
             if (movs.length === 0) {
                 $('#tbodyKardex').html('<tr><td colspan="6" class="text-center text-muted py-4">Sin movimientos registrados.</td></tr>');
@@ -560,7 +594,17 @@ const ProductoModule = {
                 </tr>`;
             });
 
+            if ($.fn.DataTable.isDataTable('#tablaKardexModal')) {
+                $('#tablaKardexModal').DataTable().destroy();
+            }
             $('#tbodyKardex').html(html);
+            $('#tablaKardexModal').DataTable({
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+                pageLength: 25,
+                autoWidth: false,
+                destroy: true
+            });
         } catch (e) {
             $('#tbodyKardex').html('<tr><td colspan="6" class="text-center text-danger py-4">Error cargando kardex.</td></tr>');
         }
@@ -592,10 +636,12 @@ const ProductoModule = {
     },
 
     initVisualFixes: function() {
-        $('.modal-backdrop, .offcanvas-backdrop').remove();
-        $('body').removeClass('modal-open offcanvas-open').css('overflow', '').css('padding-right', '');
+        setTimeout(() => {
+            $('.modal-backdrop, .offcanvas-backdrop').remove();
+            $('body').removeClass('modal-open offcanvas-open').css('overflow', '').css('padding-right', '');
+        }, 400);
 
-        $("#modalRegistro").on("hidden.bs.modal", function () {
+        $("#modalRegistro").off("hidden.bs.modal").on("hidden.bs.modal", function () {
             const form = document.querySelector('#modalRegistro form');
             if (form) form.reset();
         });

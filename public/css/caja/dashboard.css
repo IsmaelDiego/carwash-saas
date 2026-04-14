@@ -37,6 +37,20 @@
     .order-card.st-POR_COBRAR .status-indicator { background: linear-gradient(90deg, #71dd37, #b4ec94); }
     .order-card.st-EN_PROCESO .status-indicator { background: linear-gradient(90deg, #ffab00, #ffd37a); }
     .order-card.st-EN_COLA .status-indicator { background: linear-gradient(90deg, #8592a3, #d4d8dd); }
+    
+    /* ─── TIMER & DELAYED STATES ─── */
+    .order-card.delayed { border-color: #ff3e1d !important; box-shadow: 0 0 15px rgba(255, 62, 29, 0.2); animation: pulse-border 2s infinite; }
+    @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(255, 62, 29, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 62, 29, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 62, 29, 0); }
+    }
+
+    .timer-badge { font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 50px; display: inline-flex; align-items: center; gap: 4px; }
+    .timer-normal { background: #e7e7ff; color: #696cff; border: 1px solid #c5c6ff; }
+    .timer-warning { background: #fff2e2; color: #ffab00; border: 1px solid #ffe5b5; }
+    .timer-overdue { background: #ffe5e5; color: #ff3e1d; border: 1px solid #ffcccc; animation: blinker 1.5s linear infinite; }
+    @keyframes blinker { 50% { opacity: 0.6; } }
 
     .oc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
     .oc-id { font-weight: 800; font-size: 1.1rem; color: #32475c; }
@@ -77,12 +91,18 @@
         text-align: center; color: #fff; margin: 12px 0; }
     .cart-total-box .ctb-val { font-size: 1.8rem; font-weight: 800; }
 
-    /* ─── PAYMENT MODAL ─── */
-    .pay-method-btn { padding: 14px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;
-        border: 2px solid #eee; }
-    .pay-method-btn:hover { border-color: #c5c6ff; }
-    .pay-method-btn.selected { border-color: #696cff; background: #f0f0ff; }
-    .pay-method-btn i { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+    /* ─── PAYMENT MODAL ENHANCED ─── */
+    .pay-method-btn { padding: 16px 10px; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border: 2px solid #f0f2f4; background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.02); position: relative; overflow: hidden; }
+    .pay-method-btn::after { content: '\eaeb'; font-family: 'boxicons'; position: absolute; top: 8px; right: 8px; font-size: 1.1rem; color: #fff; opacity: 0; transform: scale(0.5); transition: all 0.3s; background: #696cff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .pay-method-btn:hover { border-color: #d9dee3; transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
+    .pay-method-btn.selected { border-color: #696cff; background: #f4f5ff; box-shadow: 0 8px 20px rgba(105,108,255,0.15); transform: translateY(-3px); }
+    .pay-method-btn.selected::after { opacity: 1; transform: scale(1); }
+    
+    .pm-icon-wrapper { width: 45px; height: 45px; border-radius: 12px; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .pay-method-btn:hover .pm-icon-wrapper { transform: scale(1.15) rotate(-3deg); }
+    .pay-method-btn .pm-label { font-weight: 800; font-size: 0.75rem; color: #566a7f; display: block; letter-spacing: 0.5px; }
+    .pay-method-btn.selected .pm-label { color: #696cff; }
 
     /* ─── DETALLE OFFCANVAS ─── */
     .detalle-line { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f4f4f4; font-size: 0.88rem; }
@@ -95,3 +115,13 @@
     .promo-option { border: 2px solid #eee; border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 8px;}
     .promo-option:hover { border-color: #ff3e1d; background: #fff5f3; }
     .promo-option.selected { border-color: #ff3e1d; background: #fff5f3; }
+
+    .select2-container--default .select2-selection--single {
+    background-color: #fff;
+    border: 1px solid #d9dee3;
+    border-radius: 6px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+}

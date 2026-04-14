@@ -161,6 +161,7 @@
 
                     <th style="color: #f0f0f0;">Nombre Servicio</th>
                     <th style="color: #f0f0f0;"> Precio Base</th>
+                    <th style="color: #f0f0f0;" class="text-center"> Tiempo Est.</th>
                     <th class="text-center" style="color: #f0f0f0;">Reglas</th>
                     <th class="text-center" style="color: #f0f0f0;">Estado</th>
                     <th class="text-center" style="color: #f0f0f0;">Acciones</th>

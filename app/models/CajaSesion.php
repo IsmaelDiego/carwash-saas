@@ -130,4 +130,56 @@ class CajaSesion {
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Obtiene el listado de arqueos/sesiones por mes y año
+     */
+    public function getArqueosPorMes($month, $year) {
+        $query = "SELECT cs.*, u.nombres as cajero_nombre,
+                    (SELECT COALESCE(SUM(po.monto), 0) 
+                     FROM pagos_orden po 
+                     JOIN ordenes o ON po.id_orden = o.id_orden 
+                     WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO') as recaudado_acumulado
+                FROM caja_sesiones cs
+                LEFT JOIN usuarios u ON cs.id_usuario = u.id_usuario
+                WHERE MONTH(cs.fecha_apertura) = :m AND YEAR(cs.fecha_apertura) = :y
+                ORDER BY cs.fecha_apertura ASC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':m', $month, PDO::PARAM_INT);
+        $stmt->bindParam(':y', $year, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene datos básicos de una sesión por ID
+     */
+    public function getSesionInfo($id_sesion) {
+        $query = "SELECT cs.*, u.nombres as cajero 
+                  FROM caja_sesiones cs 
+                  JOIN usuarios u ON cs.id_usuario = u.id_usuario 
+                  WHERE cs.id_sesion = :id_sesion";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_sesion', $id_sesion, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Resumen de productos de tienda vendidos en una sesión específica
+     */
+    public function getProductosVendidos($id_sesion) {
+        $query = "SELECT p.nombre, SUM(do.cantidad) as total_cant, SUM(do.subtotal) as total_monto
+                  FROM detalle_orden do
+                  INNER JOIN ordenes o ON do.id_orden = o.id_orden
+                  INNER JOIN productos p ON do.id_producto = p.id_producto
+                  WHERE o.id_caja_sesion = :id_sesion AND o.estado = 'FINALIZADO'
+                  GROUP BY p.id_producto";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_sesion', $id_sesion, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -33,12 +33,13 @@ class Servicio {
     // REGISTRAR
     public function registrar($data) {
         try {
-            $sql = "INSERT INTO servicios (nombre, precio_base, acumula_puntos, permite_canje, estado) 
-                    VALUES (:nombre, :precio_base, :acumula, :canje, 1)";
+            $sql = "INSERT INTO servicios (nombre, precio_base, tiempo_estimado, acumula_puntos, permite_canje, estado) 
+                    VALUES (:nombre, :precio_base, :tiempo, :acumula, :canje, 1)";
             $stmt = $this->pdo->prepare($sql);
             return $stmt->execute([
                 ':nombre'      => trim($data['nombre']),
                 ':precio_base' => $data['precio_base'],
+                ':tiempo'      => isset($data['tiempo_estimado']) && $data['tiempo_estimado'] !== '' ? $data['tiempo_estimado'] : 0,
                 // CORRECCIÓN: Verificamos si VALE 1, no solo si existe
                 ':acumula'     => (isset($data['acumula_puntos']) && $data['acumula_puntos'] == 1) ? 1 : 0,
                 ':canje'       => (isset($data['permite_canje']) && $data['permite_canje'] == 1) ? 1 : 0
@@ -52,6 +53,7 @@ class Servicio {
             $sql = "UPDATE servicios SET 
                         nombre = :nombre, 
                         precio_base = :precio_base, 
+                        tiempo_estimado = :tiempo,
                         acumula_puntos = :acumula, 
                         permite_canje = :canje 
                     WHERE id_servicio = :id";
@@ -59,6 +61,7 @@ class Servicio {
             return $stmt->execute([
                 ':nombre'      => trim($data['nombre']),
                 ':precio_base' => $data['precio_base'],
+                ':tiempo'      => isset($data['tiempo_estimado']) && $data['tiempo_estimado'] !== '' ? $data['tiempo_estimado'] : 0,
                 // CORRECCIÓN: Verificamos si VALE 1
                 ':acumula'     => (isset($data['acumula_puntos']) && $data['acumula_puntos'] == 1) ? 1 : 0,
                 ':canje'       => (isset($data['permite_canje']) && $data['permite_canje'] == 1) ? 1 : 0,

@@ -1,0 +1,373 @@
+/* =========================================================================
+   CARWASH SAAS - SISTEMA DE DISEÑO (LIGHT & DARK MODE)
+   ========================================================================= */
+
+/* 1. VARIABLES GLOBALES (Modo Claro Pordefecto / Custom) */
+:root {
+    /* Paleta Corporativa Blanca/Clara */
+    --cw-primary: #3b3dec;
+    --cw-primary-hover: #3235d2;
+    --cw-primary-subtle: rgba(59, 61, 236, 0.15);
+    
+    --cw-success: #28a745;
+    --cw-warning: #ffc107;
+    --cw-danger: #dc3545;
+
+    /* Textos (Claro) */
+    --cw-text-main: #333333;
+    --cw-text-secondary: #6c757d;
+
+    /* Fondos (Claro) */
+    --cw-bg-body: #f5f5f9;
+    --cw-bg-panel: #ffffff;
+    --cw-border: #d9dee3;
+}
+
+/* 2. VARIABLES MODO OSCURO (Activadas por data-bs-theme="dark") */
+:root[data-bs-theme="dark"] {
+    /* Paleta Corporativa Oscura */
+    --cw-primary: #3b3dec;
+    --cw-primary-hover: #4e50ff;
+    --cw-primary-subtle: rgba(59, 61, 236, 0.2);
+    
+    --cw-success: #28a745;
+    --cw-warning: #ffc107;
+    --cw-danger: #dc3545;
+
+    /* Textos (Oscuro) */
+    --cw-text-main: #E0E0E0;
+    --cw-text-secondary: #B0B0B0;
+
+    /* Fondos (Oscuro) */
+    --cw-bg-body: #121212;
+    --cw-bg-panel: #1E1E1E;
+    --cw-bg-panel-hover: #2C2C2C;
+    --cw-border: #333333;
+
+    /* Bootstrap Core Overrides (Sneat) */
+    --bs-body-bg: var(--cw-bg-body);
+    --bs-body-color: var(--cw-text-secondary);
+    --bs-heading-color: var(--cw-text-main);
+    --bs-border-color: var(--cw-border);
+    --bs-primary: var(--cw-primary);
+}
+
+
+/* =========================================================================
+   OVERRIDE PRINCIPAL DE COLOR CORPORATIVO (#3b3dec)
+   Aplicable tanto a Claro como Oscuro para consolidar la marca
+========================================================================= */
+.text-primary { color: var(--cw-primary) !important; }
+.bg-primary { background-color: var(--cw-primary) !important; color: #fff !important; }
+.btn-primary {
+    background-color: var(--cw-primary) !important;
+    border-color: var(--cw-primary) !important;
+    color: #fff !important;
+}
+.btn-primary:hover {
+    background-color: var(--cw-primary-hover) !important;
+    border-color: var(--cw-primary-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(59, 61, 236, 0.3) !important;
+}
+.btn-outline-primary {
+    color: var(--cw-primary) !important;
+    border-color: var(--cw-primary) !important;
+}
+.btn-outline-primary:hover {
+    background-color: var(--cw-primary) !important;
+    color: #ffffff !important;
+}
+
+
+/* =========================================================================
+   IMPLEMENTACIÓN ESPECÍFICA DEL MODO OSCURO (#121212 / #1E1E1E)
+========================================================================= */
+
+/* Fondos Multi-Estructurales */
+[data-bs-theme="dark"] body,
+[data-bs-theme="dark"] .layout-wrapper,
+[data-bs-theme="dark"] .layout-container,
+[data-bs-theme="dark"] .layout-page {
+    background-color: var(--cw-bg-body) !important;
+    color: var(--cw-text-main) !important;
+}
+
+/* Navbars & Sidebars & Footers */
+[data-bs-theme="dark"] .bg-navbar-theme,
+[data-bs-theme="dark"] .bg-menu-theme,
+[data-bs-theme="dark"] .bg-footer-theme,
+[data-bs-theme="dark"] .layout-navbar {
+    background-color: var(--cw-bg-panel) !important;
+    color: var(--cw-text-main) !important;
+    border-color: var(--cw-border) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Tipografía en Oscuro */
+[data-bs-theme="dark"] h1, [data-bs-theme="dark"] .h1,
+[data-bs-theme="dark"] h2, [data-bs-theme="dark"] .h2,
+[data-bs-theme="dark"] h3, [data-bs-theme="dark"] .h3,
+[data-bs-theme="dark"] h4, [data-bs-theme="dark"] .h4,
+[data-bs-theme="dark"] h5, [data-bs-theme="dark"] .h5,
+[data-bs-theme="dark"] h6, [data-bs-theme="dark"] .h6 {
+    color: var(--cw-text-main) !important;
+}
+
+[data-bs-theme="dark"] .text-muted,
+[data-bs-theme="dark"] .text-body-secondary,
+[data-bs-theme="dark"] small,
+[data-bs-theme="dark"] .small {
+    color: var(--cw-text-secondary) !important;
+}
+
+/* Paneles, Cards y Modales */
+[data-bs-theme="dark"] .card,
+[data-bs-theme="dark"] .modal-content,
+[data-bs-theme="dark"] .offcanvas,
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: var(--cw-bg-panel) !important;
+    color: var(--cw-text-secondary) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid var(--cw-border) !important;
+}
+
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+    border-color: var(--cw-border) !important;
+    background-color: transparent !important;
+}
+
+[data-bs-theme="dark"] .modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Menús Desplegables (Dropdowns) */
+[data-bs-theme="dark"] .dropdown-menu .dropdown-item,
+[data-bs-theme="dark"] .list-group-item {
+    background-color: transparent !important;
+    color: var(--cw-text-main) !important;
+    border-color: var(--cw-border) !important;
+}
+
+[data-bs-theme="dark"] .dropdown-menu .dropdown-item:hover,
+[data-bs-theme="dark"] .list-group-item:hover {
+    background-color: var(--cw-bg-panel-hover) !important;
+    color: var(--cw-primary) !important;
+}
+
+/* Formularios y Controles (Inputs, Selects, Textareas) */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select,
+[data-bs-theme="dark"] .input-group-text,
+[data-bs-theme="dark"] textarea {
+    background-color: var(--cw-bg-body) !important;
+    color: var(--cw-text-main) !important;
+    border-color: var(--cw-border) !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus,
+[data-bs-theme="dark"] textarea:focus {
+    border-color: var(--cw-primary) !important;
+    background-color: var(--cw-bg-panel) !important;
+    box-shadow: 0 0 0 0.2rem var(--cw-primary-subtle) !important;
+    color: #fff !important;
+}
+
+[data-bs-theme="dark"] .form-control::placeholder {
+    color: #757575 !important;
+}
+
+/* Tablas */
+[data-bs-theme="dark"] .table,
+[data-bs-theme="dark"] .table-hover tbody tr:hover td {
+    color: var(--cw-text-secondary) !important;
+    border-color: var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .table th {
+    background-color: var(--cw-bg-panel-hover) !important;
+    color: var(--cw-text-main) !important;
+    border-bottom: 2px solid var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .table td {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: var(--cw-text-secondary) !important;
+}
+
+/* Menú Lateral (Sidebar Links) */
+[data-bs-theme="dark"] .menu-link {
+    color: var(--cw-text-main) !important;
+}
+[data-bs-theme="dark"] .menu-item.active > .menu-link {
+    color: #ffffff !important;
+    background-color: var(--cw-primary-subtle) !important;
+}
+[data-bs-theme="dark"] .menu-item.active > .menu-link i {
+    color: var(--cw-primary) !important;
+}
+[data-bs-theme="dark"] .menu-item:not(.active) > .menu-link:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--cw-primary) !important;
+}
+
+/* =========================================================================
+   ELEMENTOS ESPECÍFICOS DE LA APP (DASHBOARD CAJA / POS)
+========================================================================= */
+
+/* Estructura Layout de Caja */
+[data-bs-theme="dark"] .pos-layout .pos-sidebar {
+    background-color: var(--cw-bg-panel) !important;
+    border-left: 1px solid var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .ps-header,
+[data-bs-theme="dark"] .ps-footer,
+[data-bs-theme="dark"] .nav-pills.nav-fill {
+    background-color: var(--cw-bg-panel) !important;
+    border-color: var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .nav-pills[style*="background: #f4f5f7"] {
+    background-color: var(--cw-bg-body) !important;
+}
+
+/* Tarjetas de Producto y Píldoras de Estadísticas */
+[data-bs-theme="dark"] .stat-pill,
+[data-bs-theme="dark"] .order-tabs,
+[data-bs-theme="dark"] .order-card,
+[data-bs-theme="dark"] .prod-item {
+    background-color: var(--cw-bg-panel) !important;
+    border: 1px solid var(--cw-border) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-bs-theme="dark"] .prod-item:hover,
+[data-bs-theme="dark"] .order-card:hover {
+    background-color: var(--cw-bg-panel-hover) !important;
+    border-color: var(--cw-primary) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Sistema de Pestañas Base */
+[data-bs-theme="dark"] .order-tab {
+    color: var(--cw-text-secondary) !important;
+}
+[data-bs-theme="dark"] .order-tab.active,
+[data-bs-theme="dark"] .order-tab:hover {
+    background-color: var(--cw-bg-panel-hover) !important;
+    color: var(--cw-primary) !important;
+}
+
+/* Identificadores Visuales por Estado de Orden */
+[data-bs-theme="dark"] .order-card.st-POR_COBRAR { border-left-color: var(--cw-success) !important; }
+[data-bs-theme="dark"] .order-card.st-EN_PROCESO { border-left-color: var(--cw-warning) !important; }
+[data-bs-theme="dark"] .order-card.st-FINALIZADO { border-left-color: #555 !important; opacity: 0.8; }
+[data-bs-theme="dark"] .order-card.st-ANULADO    { border-left-color: var(--cw-danger) !important; opacity: 0.6; }
+
+/* Productos Vencidos / Por Vencer */
+[data-bs-theme="dark"] .prod-item[style*="background-color:#fff3cd"] {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    border-color: rgba(255, 193, 7, 0.5) !important;
+}
+[data-bs-theme="dark"] .pi-icon[style*="background:#fff8e1"] {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+}
+[data-bs-theme="dark"] .prod-item[style*="background-color:#ffebe9"] {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-color: rgba(220, 53, 69, 0.5) !important;
+}
+[data-bs-theme="dark"] .pi-icon[style*="background:#ffe0db"] {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+}
+[data-bs-theme="dark"] .pi-icon:not([style*="background"]) {
+    background-color: var(--cw-primary-subtle) !important;
+    color: var(--cw-primary) !important;
+}
+
+/* Detalle de Carrito */
+[data-bs-theme="dark"] .cart-item,
+[data-bs-theme="dark"] .detalle-line {
+    border-bottom: 1px solid var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .cart-total-box {
+    box-shadow: 0 0px 10px var(--cw-primary-subtle) !important;
+}
+
+/* Selección de Métodos de Pago */
+[data-bs-theme="dark"] .pay-method-btn {
+    border-color: var(--cw-border) !important;
+    background-color: var(--cw-bg-body) !important;
+    color: var(--cw-text-main) !important;
+}
+[data-bs-theme="dark"] .pay-method-btn:hover {
+    border-color: var(--cw-primary) !important;
+}
+[data-bs-theme="dark"] .pay-method-btn.selected {
+    background-color: var(--cw-primary-subtle) !important;
+    border-color: var(--cw-primary) !important;
+    color: var(--cw-primary) !important;
+}
+
+/* Fixes Generales y Helpers (Bg-white a Bg-panel) */
+[data-bs-theme="dark"] .bg-light { background-color: var(--cw-bg-panel-hover) !important; border-color: var(--cw-border) !important; color: var(--cw-text-secondary) !important; }
+[data-bs-theme="dark"] .bg-white { background-color: var(--cw-bg-panel) !important; }
+[data-bs-theme="dark"] .border-top { border-top-color: var(--cw-border) !important; }
+[data-bs-theme="dark"] .border-bottom { border-bottom-color: var(--cw-border) !important; }
+[data-bs-theme="dark"] .border { border-color: var(--cw-border) !important; }
+[data-bs-theme="dark"] .border-light { border-color: var(--cw-border) !important; }
+
+/* Seguridad y Accesibilidad de Toast/Modales */
+[data-bs-theme="dark"] .bs-toast {
+    background-color: var(--cw-bg-panel-hover) !important;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .toast-header {
+    background-color: var(--cw-bg-panel) !important;
+    color: var(--cw-text-main) !important;
+    border-bottom: 1px solid var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .toast-body {
+    color: var(--cw-text-secondary) !important;
+}
+
+/* Modales de Login / Auth */
+[data-bs-theme="dark"] .authentication-inner .card {
+    background-color: var(--cw-bg-panel) !important;
+    box-shadow: 0 0 30px rgba(0,0,0,0.6) !important;
+    border: 1px solid var(--cw-border) !important;
+}
+[data-bs-theme="dark"] .authentication-wrapper .app-brand-text {
+    color: var(--cw-text-main) !important;
+}
+
+/* =========================================================================
+   SOPORTE PARA GRÁFICOS (ApexCharts / Chart.js / Datatables)
+========================================================================= */
+
+/* ApexCharts Override */
+[data-bs-theme="dark"] .apexcharts-tooltip {
+    background: var(--cw-bg-panel) !important;
+    border: 1px solid var(--cw-border) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+    color: var(--cw-text-main) !important;
+}
+[data-bs-theme="dark"] .apexcharts-tooltip-title {
+    background: var(--cw-bg-panel-hover) !important;
+    border-bottom: 1px solid var(--cw-border) !important;
+    font-weight: bold !important;
+}
+[data-bs-theme="dark"] .apexcharts-text tspan {
+    fill: var(--cw-text-secondary) !important;
+}
+[data-bs-theme="dark"] .apexcharts-legend-text {
+    color: var(--cw-text-secondary) !important;
+}
+[data-bs-theme="dark"] .apexcharts-gridline {
+    stroke: var(--cw-border) !important;
+}

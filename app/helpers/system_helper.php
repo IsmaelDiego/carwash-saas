@@ -1,7 +1,8 @@
 <?php
 // app/helpers/system_helper.php
 
-function getSystemConfig() {
+function getSystemConfig()
+{
     global $pdo;
     static $config = null;
     if ($config === null) {
@@ -22,11 +23,12 @@ function getSystemConfig() {
     return $config;
 }
 
-function getAdminNotifications() {
+function getAdminNotifications()
+{
     global $pdo;
     $notificaciones_admin = [];
     $total_notificaciones = 0;
-    
+
     if (isset($_SESSION['user']['role']) && (int)$_SESSION['user']['role'] === 1 && $pdo) {
         $cacheKey = '_notif_cache';
         $cacheTTL = 60; // segundos
@@ -42,15 +44,16 @@ function getAdminNotifications() {
             $stmtStockBajo = $pdo->query("SELECT COUNT(*) as total FROM productos WHERE stock_actual <= stock_minimo AND stock_minimo > 0");
             $countStockBajo = (int)($stmtStockBajo->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
-            $stmtVencer = $pdo->query("SELECT COUNT(*) as total FROM productos WHERE fecha_caducidad IS NOT NULL AND fecha_caducidad <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
+            // Nuevo método (Lotes): Contar LOTES que vencerán en 30 días o están vencidos
+            $stmtVencer = $pdo->query("SELECT COUNT(*) as total FROM producto_lotes WHERE estado = 'ACTIVO' AND fecha_vencimiento IS NOT NULL AND fecha_vencimiento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
             $countVencer = (int)($stmtVencer->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
             $stmtRecuperar = $pdo->query("SELECT COUNT(*) as total FROM notificaciones_recuperacion WHERE estado = 'PENDIENTE'");
             $countRecuperar = (int)($stmtRecuperar->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
             $_SESSION[$cacheKey] = [
-                'pagos' => $countPagos, 
-                'permisos' => $countPermisos, 
+                'pagos' => $countPagos,
+                'permisos' => $countPermisos,
                 'stock_bajo' => $countStockBajo,
                 'vencer' => $countVencer,
                 'recuperar' => $countRecuperar,
@@ -71,7 +74,7 @@ function getAdminNotifications() {
                 JOIN usuarios u ON n.id_usuario = u.id_usuario 
                 WHERE n.estado = 'PENDIENTE'
             ");
-            while($row = $stmtList->fetch()) {
+            while ($row = $stmtList->fetch()) {
                 $notificaciones_admin[] = [
                     'icono' => 'bx-key',
                     'color' => 'secondary',
@@ -117,14 +120,14 @@ function getAdminNotifications() {
             $notificaciones_admin[] = [
                 'icono' => 'bx-timer',
                 'color' => 'danger',
-                'titulo' => 'Productos por Vencer',
-                'descripcion' => "Hay $countVencer producto(s) por caducar en menos de 30 días o ya vencidos.",
+                'titulo' => 'Lotes por Vencer',
+                'descripcion' => "Hay $countVencer lote(s) por caducar en menos de 30 días o ya vencidos.",
                 'url' => BASE_URL . '/admin/producto'
             ];
             $total_notificaciones += $countVencer;
         }
     }
-    
+
     return [
         'lista' => $notificaciones_admin,
         'total' => $total_notificaciones

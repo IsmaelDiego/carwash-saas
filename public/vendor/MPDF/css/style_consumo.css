@@ -1,0 +1,221 @@
+.clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+
+
+
+a {
+  color: #000000;
+  text-decoration: underline;
+}
+
+body {
+  position: relative;
+  width: 21cm;  
+  height: 29.7cm; 
+  margin: 0 auto; 
+  color: #000000;
+  background: #FFFFFF; 
+  font-family: Arial, sans-serif; 
+  font-size: 12px; 
+  font-family: Arial;
+}
+
+header {
+  padding: 10px 0;
+  margin-bottom: 1px;
+}
+
+
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  border-spacing: 0;
+  margin-bottom: 20px;
+}
+
+/* table tr:nth-child(2n-1) td {
+
+} */
+
+/* table th,
+table td {
+  text-align: left !important;
+} */
+
+ #nombre{
+  color: rgb(218, 118, 52) !important;
+  font-size: 12px;
+  text-align: center !important;
+  
+}
+#alm{
+  text-align: left !important;
+}
+
+
+table th {
+  padding: 5px 10px; /*tamaño*/
+  color: #000000;
+
+  white-space: nowrap;        
+  font-weight: normal;
+
+}
+/* 
+table .service,
+table .desc {
+  text-align: left;
+} */
+
+/* table td {
+  padding: 5px;
+  text-align: right;
+} */
+
+/* table td {
+  padding: 5px;
+  text-align: right;
+} */
+
+table td.service,
+table td.desc {
+  vertical-align: top;
+}
+
+/* table td.unit,
+table td.qty,
+table td.total {
+
+} */
+
+table td.grand {
+  border-top: 1px solid #5D6975;;
+}
+
+#notices .notice {
+  color: #000000;
+  font-size: 1.2em;
+}
+
+footer {
+  color: #000000;
+  width: 100%;
+  height: 30px;
+  position: absolute;
+  bottom: 0;
+  border-top: 1px solid #C1CED9;
+  padding: 8px 0;
+  text-align: center;
+}
+
+
+
+/*
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.5em;
+}
+.page-full {
+  display: flex;
+  justify-content: space-between;
+}
+.page-left {
+  width: 50%;
+  padding-right: 2em;
+}
+.page-right {
+  width: 50%;
+  margin-left: 4em;
+  padding-left: 4em;
+  border-left: 2px dashed #000;
+}
+h1 {
+  display: inline;
+  font-size: 1.25em;
+  padding-right: 5em;
+  border-bottom: 2px solid #000;
+}
+.title-page {
+  text-align: center;
+  margin: 1em;
+}
+.datatime {
+  text-align: center;
+}
+.company-info {
+  text-align: left;
+  margin-right: 1em;
+}
+.header {
+  display: flex;
+}
+.name {
+  margin-right: 1em;
+  text-align: center;
+}
+.doc-ext {
+  padding-left: 2em;
+}
+table {
+  width: 90%;
+}
+.footer {
+  display: flex;
+  position: absolute;
+  bottom: 0;
+  width: 50%;
+  justify-content: space-around;
+}
+.footer>* {
+  width: 16em;
+  text-align: center;
+  border-top: 2px solid #000;
+  margin-bottom: 2em;
+}
+tbody tr:nth-child(3) {
+  width: 15%;
+}
+
+th:nth-child(4) {
+  text-align: right;
+}
+th:nth-child(5) {
+  text-align: right;
+}
+#cod_art {
+  text-align: center;
+}
+#und_art {
+  text-align: center;
+}
+#amt_art {
+  text-align: right;
+}
+#lote_art {
+  text-align: right;
+}
+#total_art {
+  text-align: right;
+  font-weight: bold;
+  font-size: 1.25em;
+}
+.generated > p {
+  margin: 0.5em 1em;
+}
+.recived > p {
+  margin: 0.5em 1em;
+}
+.vb > p {
+  margin: 0.5em 1em;
+}
+.powered {
+  position: absolute;
+  bottom: 0;
+  font-weight: bold;
+}*/

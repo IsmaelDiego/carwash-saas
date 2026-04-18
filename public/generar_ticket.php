@@ -1,4 +1,5 @@
 <?php
+
 /**
  * generar_ticket.php
  * Genera un ticket en PDF para órdenes de servicio o ventas directas.
@@ -18,7 +19,7 @@ use Mpdf\Output\Destination;
 
 
 // Obtener ID de orden
-$id_orden = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$id_orden = isset($_GET['id_orden']) ? (int)$_GET['id_orden'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
 
 if ($id_orden <= 0) {
     die("ID de orden no válido.");
@@ -32,12 +33,13 @@ try {
         SELECT o.*, 
                c.nombres AS cli_nombres, c.apellidos AS cli_apellidos, c.dni AS cli_dni,
                v.placa, v.color, cat.nombre AS categoria_vehiculo,
-               u.nombres AS usuario_creador
+               u.nombres AS usuario_creador, r.numero AS rampa_numero
         FROM ordenes o
         LEFT JOIN clientes c ON o.id_cliente = c.id_cliente
         LEFT JOIN vehiculos v ON o.id_vehiculo = v.id_vehiculo
         LEFT JOIN categorias_vehiculos cat ON v.id_categoria = cat.id_categoria
         LEFT JOIN usuarios u ON o.id_usuario_creador = u.id_usuario
+        LEFT JOIN rampas r ON o.id_rampa = r.id_rampa
         WHERE o.id_orden = ?
     ");
     $stmt->execute([$id_orden]);
@@ -116,7 +118,8 @@ try {
             <b>FECHA:</b> ' . $fecha . '<br>
             <b>CLIENTE:</b> ' . htmlspecialchars($orden['cli_nombres'] . ' ' . $orden['cli_apellidos']) . '<br>
             <b>D.N.I.:</b> ' . ($orden['cli_dni'] ?: '---') . '<br>
-            <b>PLACA:</b> ' . ($orden['placa'] ?: '---') . ' (' . ($orden['categoria_vehiculo'] ?: 'S/P') . ')
+            <b>PLACA:</b> ' . ($orden['placa'] ?: '---') . ' (' . ($orden['categoria_vehiculo'] ?: 'S/P') . ')<br>
+            ' . ($orden['rampa_numero'] ? '<b>RAMPA:</b> #' . $orden['rampa_numero'] : '') . '
         </div>
 
         <div class="divider"></div>
@@ -148,7 +151,7 @@ try {
 
         <table class="table">
             ';
-    
+
     if ($orden['descuento_promo'] > 0) {
         $html .= '<tr><td colspan="2" class="text-right">DSCTO PROMO:</td><td class="text-right">-' . number_format($orden['descuento_promo'], 2) . '</td></tr>';
     }
@@ -167,7 +170,7 @@ try {
 
         <div class="info text-center" style="margin-bottom:2px;"><b>FORMAS DE PAGO</b></div>
         <table class="table" style="margin-top:0px; margin-bottom: 5px;">';
-    
+
     if (empty($pagos)) {
         $html .= '<tr><td class="text-center">PENDIENTE DE PAGO</td></tr>';
     } else {
@@ -208,15 +211,14 @@ try {
     ]);
 
     $mpdf->SetDisplayMode('fullpage');
-    
+
     // Comando para abrir diálogo de impresión automáticamente
     $mpdf->SetJS('this.print();');
-    
+
     $mpdf->WriteHTML($html);
 
     // Salida al navegador
     $mpdf->Output("Ticket_" . $id_orden . ".pdf", Destination::INLINE);
-
 } catch (Throwable $e) {
     die("Error generando ticket: [" . get_class($e) . "] " . $e->getMessage() . " en " . $e->getFile() . ":" . $e->getLine());
 }

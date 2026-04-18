@@ -1,4 +1,12 @@
-<?php require VIEW_PATH . '/layouts/header_tunnel.view.php'; ?>
+<?php require VIEW_PATH . '/layouts/header_tunnel.view.php'; 
+
+function formatoMesAno($periodo) {
+    if (!$periodo || strlen($periodo) < 7) return htmlspecialchars($periodo ?? '—');
+    $meses = ['01'=>'Enero','02'=>'Febrero','03'=>'Marzo','04'=>'Abril','05'=>'Mayo','06'=>'Junio','07'=>'Julio','08'=>'Agosto','09'=>'Septiembre','10'=>'Octubre','11'=>'Noviembre','12'=>'Diciembre'];
+    $p = explode('-', substr($periodo, 0, 7));
+    return ($meses[$p[1]] ?? '') . ' ' . $p[0];
+}
+?>
 
 <!-- Content wrapper -->
 <div class="content-wrapper">
@@ -102,14 +110,17 @@
                 <!-- ═══ TAB: PERMISOS Y DESCANSOS ═══ -->
                 <div class="tab-panel" id="tab-calendario">
                     <div class="card" style="border:none;border-radius:14px">
-                        <div class="card-header border-0">
-                            <h5 class="fw-bold mb-0"><i class="bx bx-calendar text-primary me-1"></i>Mis Permisos y Descansos</h5>
-                            <small class="text-muted">Historial de permisos, descansos y vacaciones registrados por el administrador</small>
+                        <div class="card-header border-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="fw-bold mb-0"><i class="bx bx-calendar text-primary me-1"></i>Mis Permisos y Descansos</h5>
+                                <small class="text-muted">Historial de permisos, descansos y vacaciones registrados por el administrador</small>
+                            </div>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalSolicitarPermiso"><i class="bx bx-plus me-1"></i>Solicitar</button>
                         </div>
                         <div class="card-body pt-0">
                             <?php if (!empty($permisos)): ?>
                             <div class="table-responsive">
-                                <table class="table table-hover">
+                                <table class="table table-hover" id="tablaPermisos">
                                     <thead>
                                         <tr>
                                             <th style="font-size:0.72rem;text-transform:uppercase;color:#8592a3">Tipo</th>
@@ -148,14 +159,17 @@
                 <!-- ═══ TAB: MIS PAGOS ═══ -->
                 <div class="tab-panel" id="tab-pagos">
                     <div class="card" style="border:none;border-radius:14px">
-                        <div class="card-header border-0">
-                            <h5 class="fw-bold mb-0"><i class="bx bx-wallet text-success me-1"></i>Mis Pagos</h5>
-                            <small class="text-muted">Historial de salarios, bonos y adelantos</small>
+                        <div class="card-header border-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="fw-bold mb-0"><i class="bx bx-wallet text-success me-1"></i>Mis Pagos</h5>
+                                <small class="text-muted">Historial de salarios, bonos y adelantos</small>
+                            </div>
+                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalSolicitarAdelanto"><i class="bx bx-money-withdraw me-1"></i>Solicitar Adelanto</button>
                         </div>
                         <div class="card-body pt-0">
                             <?php if (!empty($pagos)): ?>
                             <div class="table-responsive">
-                                <table class="table table-hover">
+                                <table class="table table-hover" id="tablaPagos">
                                     <thead>
                                         <tr>
                                             <th style="font-size:0.72rem;text-transform:uppercase;color:#8592a3">Tipo</th>
@@ -173,7 +187,7 @@
                                         <tr>
                                             <td><span class="badge bg-label-<?= $coloresTP[$pago['tipo']] ?? 'secondary' ?>"><?= $pago['tipo'] ?></span></td>
                                             <td class="fw-bold">S/ <?= number_format($pago['monto'], 2) ?></td>
-                                            <td class="small"><?= htmlspecialchars($pago['periodo'] ?? '—') ?></td>
+                                            <td class="small text-capitalize"><?= formatoMesAno($pago['periodo']) ?></td>
                                             <td><?= date('d/m/Y', strtotime($pago['fecha_programada'])) ?></td>
                                             <td><span class="badge bg-<?= $coloresP[$pago['estado']] ?? 'secondary' ?>"><?= $pago['estado'] ?></span></td>
                                         </tr>
@@ -197,18 +211,114 @@
     </div>
 </div>
 
+<!-- Modal Solicitar Permiso -->
+<div class="modal fade" id="modalSolicitarPermiso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content shadow-lg border-0 rounded-4" onsubmit="enviarSolicitudPermiso(event)">
+            <div class="modal-header px-4 py-3 bg-primary">
+                <h5 class="modal-title text-white fw-bold"><i class="bx bx-calendar-plus me-1"></i> Solicitar Permiso</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Tipo de Solicitud</label>
+                    <select class="form-select" id="perm_tipo" required>
+                        <option value="PERMISO">Permiso / Ausencia Corta</option>
+                        <option value="VACACION">Vacaciones</option>
+                    </select>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold small">Desde</label>
+                        <input type="date" class="form-control" id="perm_desde" required min="<?= date('Y-m-d', strtotime('+1 day')) ?>">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold small">Hasta</label>
+                        <input type="date" class="form-control" id="perm_hasta" required min="<?= date('Y-m-d', strtotime('+1 day')) ?>">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Motivo / Descripción</label>
+                    <textarea class="form-control" id="perm_motivo" rows="2" maxlength="255" required placeholder="Describe brevemente..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold" id="btnReqPerm">Enviar Solicitud</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Solicitar Adelanto -->
+<div class="modal fade" id="modalSolicitarAdelanto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content shadow-lg border-0 rounded-4" onsubmit="enviarSolicitudAdelanto(event)">
+            <div class="modal-header px-4 py-3 bg-success">
+                <h5 class="modal-title text-white fw-bold"><i class="bx bx-money-withdraw me-1"></i> Solicitar Adelanto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Monto Solicitado (S/)</label>
+                    <input type="number" class="form-control" id="adelanto_monto" required min="10" step="0.50" placeholder="Ej: 50.00">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Detalle / Sustento</label>
+                    <textarea class="form-control" id="adelanto_motivo" rows="2" maxlength="255" required placeholder="Ej: Adelanto de quincena, emergencia..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-success w-100 fw-bold" id="btnReqAdelanto">Enviar Solicitud</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <?php require VIEW_PATH . '/layouts/footer_tunnel.view.php'; ?>
+<?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
+
+<!-- DataTables CSS & JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-function showTab(tab) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-pills .nav-link').forEach(l => l.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    event.target.closest('.nav-link').classList.add('active');
-}
+    const BASE_URL = "<?= BASE_URL ?>";
+
+    $(document).ready(function() {
+        const dtConfig = {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            lengthMenu: [5, 10, 25, 50],
+            pageLength: 5,
+            order: [[1, 'desc']], 
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
+        };
+
+        if ($('#tablaPermisos').length) {
+            window.dtPermisos = $('#tablaPermisos').DataTable(dtConfig);
+        }
+        if ($('#tablaPagos').length) {
+            window.dtPagos = $('#tablaPagos').DataTable({
+                ...dtConfig,
+                order: [[3, 'desc']] 
+            });
+        }
+    });
+
+    function showTab(tabId) {
+        $('.tab-panel').removeClass('active');
+        $('.nav-link').removeClass('active');
+        $(`#tab-${tabId}`).addClass('active');
+        $(`.nav-link[onclick="showTab('${tabId}')"]`).addClass('active');
+    }
 </script>
+<script src="<?= BASE_URL ?>/public/js/operaciones/perfil.js"></script>
+
 <style>
     .tab-panel { display: none; animation: fadeInTab 0.3s ease; }
     .tab-panel.active { display: block; }
     @keyframes fadeInTab { from { opacity:0; } to { opacity:1; } }
+
+    /* Estilos para integrar DataTable con Sneat */
+    .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0; margin-left: 2px; }
+    .dataTables_wrapper .dataTables_length select { margin: 0 5px; }
+    .dataTables_filter input { margin-left: 10px; border: 1px solid #d9dee3; border-radius: 0.375rem; padding: 0.422rem 0.875rem; }
 </style>

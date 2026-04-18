@@ -30,6 +30,31 @@
 <div class="content-wrapper" data-base-url="<?= BASE_URL ?>">
     <div class="container-fluid flex-grow-1 container-p-y">
 
+        <!-- ═══ SOLICITUDES DE CAJA (Dinámico) ═══ -->
+        <div class="alert alert-warning border border-warning shadow-sm mb-4" id="panelSolicitudesCaja" style="<?= empty($solicitudes) ? 'display: none;' : '' ?>">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bx bx-error-circle fs-3 me-2 text-warning"></i>
+                <h6 class="mb-0 fw-bold text-warning text-uppercase">Solicitudes Pendientes de Apertura</h6>
+            </div>
+            <div class="row g-3" id="listaPeticionesCaja">
+                <?php if (!empty($solicitudes)): ?>
+                    <?php foreach($solicitudes as $sol): ?>
+                    <div class="col-md-4 card-solicitud" id="solCard_<?= $sol['id_solicitud'] ?>">
+                        <div class="card shadow-none border bg-white">
+                            <div class="card-body p-3 d-flex flex-column">
+                                <span class="fs-6 fw-bold mb-1"><i class="bx bx-user me-1"></i><?= $sol['nombres'] ?></span>
+                                <span class="small text-muted mb-3"><i class="bx bx-time me-1"></i><?= $sol['fecha_solicitud'] ?></span>
+                                <button class="btn btn-sm btn-primary mt-auto" onclick="abrirModalAprobarCaja(<?= $sol['id_solicitud'] ?>, <?= $sol['id_usuario'] ?>, '<?= $sol['nombres'] ?>')">
+                                    <i class="bx bx-lock-open-alt me-1"></i> Aperturar Caja
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- ═══ STATS ═══ -->
         <div class="row mb-4 g-3" id="statsArqueos">
             <div class="col-sm-6 col-md-3">
@@ -117,8 +142,28 @@
                             </select>
                         </div>
 
-                        <button class="btn btn-outline-success border" style="padding: 0.4375rem 0.8rem;" type="button" onclick="exportarArqueos()" title="Exportar CSV">
-                            <i class="bx bxs-file-export fs-5"></i>
+                        <?php 
+                        $hayCajaAbierta = false;
+                        foreach ($empleados as $e) {
+                            if ($e['id_sesion_abierta']) {
+                                $hayCajaAbierta = true;
+                                break;
+                            }
+                        }
+                        ?>
+
+                        <button id="btnAperturaCajaPrincipal" 
+                                class="btn <?= $hayCajaAbierta ? 'btn-secondary' : 'btn-primary' ?> shadow-sm fw-bold border text-uppercase" 
+                                style="padding: 0.4375rem 0.8rem;" 
+                                type="button" 
+                                <?= $hayCajaAbierta ? 'disabled' : 'onclick="abrirModalAperturaManual()"' ?>
+                                title="<?= $hayCajaAbierta ? 'Ya existe una caja abierta' : 'Aperturar Caja' ?>">
+                            <i class="bx <?= $hayCajaAbierta ? 'bx-lock-alt' : 'bx-lock-open-alt' ?>"></i> 
+                            <span class="d-none d-md-inline ms-1">Caja Perturada</span>
+                        </button>
+
+                        <button class="btn btn-dark border"  type="button" data-bs-toggle="modal" data-bs-target="#modalReportesCaja" title="Central de Reportes">
+                            <i class="bx bxs-bar-chart-alt-2 p-1 fs-5"></i> <span class="d-none d-md-inline ms-1">Centro de Reportes BI</span>
                         </button>
                     </div>
                 </div>
@@ -194,6 +239,10 @@
                         <div class="col-sm-6 col-md-3">
                             <small class="text-muted fw-bold text-uppercase d-block" style="font-size: 0.65rem;">Monto Inicial</small>
                             <span class="fw-bold text-primary" id="detMontoApertura">-</span>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <small class="text-muted fw-bold text-uppercase d-block" style="font-size: 0.65rem;">Rol Apertura</small>
+                            <span class="badge bg-label-secondary fw-bold" id="detRolApertura">-</span>
                         </div>
                     </div>
                 </div>
@@ -295,5 +344,87 @@
     </div>
 </div>
 
+<!-- Modal Aprobar Solicitud / Abrir Caja -->
+<div class="modal fade" id="modalAprobarCaja" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-primary px-4 py-3">
+                <h5 class="modal-title text-white fw-bold"><i class="bx bx-lock-open-alt me-1"></i> Aperturar Caja</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="text-muted small mb-4">Vas a aperturar la caja remotamente para el cajero <b id="lblCajeroApertura" class="text-dark"></b>.</p>
+                <div class="form-group mb-4 text-start">
+                    <label class="form-label fw-bold">Monto Inicial en Caja (Efectivo)</label>
+                    <div class="input-group input-group-merge border rounded-pill overflow-hidden">
+                        <span class="input-group-text border-0 bg-transparent text-primary fw-bold">S/</span>
+                        <input type="number" class="form-control border-0 ps-1" id="montoAperturaAdmin" placeholder="0.00" value="0.00" step="0.01" min="0">
+                    </div>
+                </div>
+                <input type="hidden" id="aperturaIdSol">
+                <input type="hidden" id="aperturaIdCajero">
+                <button class="btn btn-primary w-100 fw-bold rounded-pill mb-2" id="btnConfirmarApertura" onclick="confirmarApertura()"><i class="bx bx-check-double me-1"></i> Confirmar Apertura</button>
+                <button class="btn btn-outline-secondary w-100 fw-bold rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Apertura Manual Anticipada -->
+<div class="modal fade" id="modalAperturaManual" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-success px-4 py-3">
+                <h5 class="modal-title text-white fw-bold"><i class="bx bx-plus-circle me-1"></i> Aperturar Anticipadamente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="text-muted small mb-4">Selecciona el cajero/operario para aperturarle su caja sin necesidad de que envíe solicitud.</p>
+                
+                <!-- Metadatos de Configuración Global -->
+                <div id="configMetadata" 
+                     data-modo-libre="<?= $globalConfig['modo_sin_cajero'] ?? 0 ?>" 
+                     data-op-responsable="<?= $globalConfig['id_operador_responsable'] ?? '' ?>">
+                </div>
+
+                <div class="alert alert-info py-2 px-3 mb-3 text-start" style="border-radius:12px; font-size: 0.75rem;">
+                    <i class="bx bx-info-circle me-1"></i>
+                    <?php if (($globalConfig['modo_sin_cajero'] ?? 0) == 1): ?>
+                        <b>Modo Libre Activo:</b> Se ha pre-asignado al operador responsable.
+                    <?php else: ?>
+                        Para aperturar a un <b>operario</b>, primero actívelo en <a href="<?= BASE_URL ?>/admin/configuracion" class="fw-bold">Ajustes</a>.
+                    <?php endif; ?>
+                </div>
+
+                <div class="form-group mb-3 text-start">
+                    <label class="form-label fw-bold">Operador / Cajero</label>
+                    <select class="form-select border rounded" id="selCajeroManual">
+                        <option value="">Seleccione Un Empleado</option>
+                        <?php foreach($empleados as $emp): ?>
+                        <option value="<?= $emp['id_usuario'] ?>" 
+                                data-rol="<?= $emp['id_rol'] ?>"
+                                <?= $emp['id_sesion_abierta'] ? 'disabled style="background:#f8fafc; color:#a1acb8;"' : '' ?>>
+                            <?= htmlspecialchars($emp['nombres']) ?> <?= $emp['id_sesion_abierta'] ? '(CON CAJA ABIERTA)' : '' ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group mb-4 text-start">
+                    <label class="form-label fw-bold">Monto Inicial en Caja (Efectivo)</label>
+                    <div class="input-group input-group-merge border rounded-pill overflow-hidden">
+                        <span class="input-group-text border-0 bg-transparent text-success fw-bold">S/</span>
+                        <input type="number" class="form-control border-0 ps-1" id="montoAperturaManual" placeholder="0.00" value="0.00" step="0.01" min="0">
+                    </div>
+                </div>
+
+                <button class="btn btn-success w-100 fw-bold rounded-pill mb-2" id="btnConfirmarAperturaManual" onclick="confirmarAperturaManual()"><i class="bx bx-check-double me-1"></i> Confirmar Apertura</button>
+                <button class="btn btn-outline-secondary w-100 fw-bold rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php require VIEW_PATH . '/partials/caja/modals_reporte.php'; ?>
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 <script src="<?= BASE_URL ?>/public/js/admin/caja.js"></script>

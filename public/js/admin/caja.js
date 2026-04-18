@@ -1,5 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     cargarArqueos();
+    checkNewRequests();
+    
+    // Sincronización Total cada 1 segundo (SPA Mode)
+    setInterval(() => {
+        cargarArqueos();
+        checkNewRequests();
+    }, 1000);
 });
 
 const BASE_URL = document.querySelector('.content-wrapper').dataset.baseUrl || '';
@@ -51,13 +58,16 @@ function renderTable(arqueos) {
     const tbody = document.getElementById('tbodyArqueos');
     tbody.innerHTML = '';
 
+    let hayCajaAbiertaActualmente = false;
+
     if (arqueos.length > 0) {
         arqueos.forEach((cs, index) => {
+            if (cs.estado === 'ABIERTA') hayCajaAbiertaActualmente = true;
+
             const numeroCorrelativo = index + 1;
             let montoEsperado = parseFloat(cs.monto_esperado || 0);
             let montoReal = cs.monto_cierre_real !== null ? parseFloat(cs.monto_cierre_real) : null;
             
-            // Si está abierta, el esperado es monto_apertura + lo recaudado hasta ahora
             if (cs.estado === 'ABIERTA') {
                 montoEsperado = parseFloat(cs.monto_apertura) + parseFloat(cs.recaudado_acumulado || 0);
             }
@@ -86,6 +96,9 @@ function renderTable(arqueos) {
         });
     }
 
+    // Actualizar el estado del botón principal automáticamente
+    updateAperturaButtonUI(hayCajaAbiertaActualmente);
+
     // Inicializar DataTables
     if (typeof $ !== 'undefined' && $.fn.DataTable) {
         $('#tbArqueos').DataTable({
@@ -104,7 +117,6 @@ function renderTable(arqueos) {
             }
         });
 
-        // Vincular el buscador externo
         $('#buscadorArqueos').off('keyup').on('keyup', function() {
             $('#tbArqueos').DataTable().search(this.value).draw();
         });
@@ -148,6 +160,7 @@ async function verDetalleSesion(id, numeroCorrelativo) {
         document.getElementById('detFechaApertura').textContent = formatFecha(s.fecha_apertura);
         document.getElementById('detFechaCierre').textContent = formatFecha(s.fecha_cierre);
         document.getElementById('detMontoApertura').textContent = 'S/ ' + parseFloat(s.monto_apertura).toFixed(2);
+        document.getElementById('detRolApertura').textContent = s.rol_apertura_nombre || 'N/A';
         document.getElementById('detMontoEsperado').textContent = 'S/ ' + montoEsperadoTotal.toFixed(2);
         document.getElementById('detMontoReal').textContent = 'S/ ' + (s.monto_cierre_real !== null ? parseFloat(s.monto_cierre_real).toFixed(2) : '-');
         
@@ -203,4 +216,236 @@ function exportarArqueos() {
     const selMonth = document.getElementById('filterMonth').value;
     const selYear = document.getElementById('filterYear').value;
     window.location.href = `${BASE_URL}/admin/caja/exportararqueos?month=${selMonth}&year=${selYear}`;
+}
+
+// ═══ APERTURA REMOTA ADMIN ═══
+function abrirModalAprobarCaja(id_solicitud, id_usuario, nombre) {
+    document.getElementById('lblCajeroApertura').textContent = nombre;
+    document.getElementById('aperturaIdSol').value = id_solicitud;
+    document.getElementById('aperturaIdCajero').value = id_usuario;
+    document.getElementById('montoAperturaAdmin').value = '0.00';
+    new bootstrap.Modal(document.getElementById('modalAprobarCaja')).show();
+}
+
+async function confirmarApertura() {
+    const idSol = document.getElementById('aperturaIdSol').value;
+    const idCajero = document.getElementById('aperturaIdCajero').value;
+    const monto = document.getElementById('montoAperturaAdmin').value;
+    const btn = document.getElementById('btnConfirmarApertura');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-1"></i> Abriendo...';
+
+    try {
+        const res = await fetch(`${BASE_URL}/admin/caja/aprobar_solicitud`, {
+            method: 'POST',
+            body: JSON.stringify({
+                id_solicitud: idSol,
+                id_cajero: idCajero,
+                monto_apertura: parseFloat(monto) || 0
+            }),
+            headers: {'Content-Type': 'application/json'}
+        });
+        const data = await res.json();
+        
+        if(data.success) {
+            if(typeof mostrarToast !== 'undefined') mostrarToast(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modalAprobarCaja')).hide();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bx bx-check-double me-1"></i> Confirmar Apertura';
+            
+            // Remover del panel (si la hay)
+            if (idSol != 0) {
+                const card = document.getElementById('solCard_' + idSol);
+                if (card) card.remove();
+                
+                // Si no quedan solicitudes, ocultar el panel
+                const pt = document.getElementById('listaPeticionesCaja');
+                if (pt && pt.children.length === 0) {
+                    const p = document.getElementById('panelSolicitudesCaja');
+                    if (p) p.style.display = 'none';
+                }
+            }
+
+            // Refrescar tabla visual y actualizar UI sin recargar
+            cargarArqueos();
+            updateAperturaButtonUI(true);
+        } else {
+            if(typeof mostrarToast !== 'undefined') mostrarToast(data.message, 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bx bx-check-double me-1"></i> Confirmar Apertura';
+        }
+    } catch(e) {
+        if(typeof mostrarToast !== 'undefined') mostrarToast('Error de red al aperturar caja.', 'danger');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bx bx-check-double me-1"></i> Confirmar Apertura';
+    }
+}
+
+function abrirModalAperturaManual() {
+    const meta = document.getElementById('configMetadata');
+    const modoLibreGlobal = meta.dataset.modoLibre == 1;
+    const opResponsable = meta.dataset.opResponsable;
+    const select = document.getElementById('selCajeroManual');
+
+    document.getElementById('montoAperturaManual').value = '0.00';
+    
+    // Filtrar según config global
+    filterEmployeesByRole();
+
+    if (modoLibreGlobal && opResponsable) {
+        select.value = opResponsable;
+        select.disabled = true; // Bloqueado porque ya está asignado en Ajustes
+    } else {
+        select.value = "";
+        select.disabled = false;
+    }
+
+    new bootstrap.Modal(document.getElementById('modalAperturaManual')).show();
+}
+
+function filterEmployeesByRole() {
+    const meta = document.getElementById('configMetadata');
+    const isFreeMode = meta.dataset.modoLibre == 1;
+    const select = document.getElementById('selCajeroManual');
+    const options = select.querySelectorAll('option');
+
+    options.forEach(opt => {
+        if (opt.value === "") return; // Placeholder
+        const rol = parseInt(opt.dataset.rol);
+        
+        if (isFreeMode) {
+            // En modo libre se muestran todos, pero el select estará bloqueado en el responsable
+            opt.hidden = false;
+        } else {
+            // Mostrar solo Cajeros (Rol 2)
+            if (rol === 2) {
+                opt.hidden = false;
+            } else {
+                opt.hidden = true;
+                if (select.value === opt.value) select.value = "";
+            }
+        }
+    });
+}
+
+// syncModoLibre ya no es necesaria desde aquí, se hace en Ajustes
+
+
+async function confirmarAperturaManual() {
+    const idCajero = document.getElementById('selCajeroManual').value;
+    const monto = document.getElementById('montoAperturaManual').value;
+    const btn = document.getElementById('btnConfirmarAperturaManual');
+
+    if (!idCajero) {
+        if(typeof mostrarToast !== 'undefined') mostrarToast('Seleccione un cajero u operario.', 'warning');
+        else alert('Seleccione un cajero u operario.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-1"></i> Abriendo...';
+
+    try {
+        const res = await fetch(`${BASE_URL}/admin/caja/aprobar_solicitud`, {
+            method: 'POST',
+            body: JSON.stringify({
+                id_solicitud: 0, // 0 = Sin petición previa (Manual)
+                id_cajero: parseInt(idCajero),
+                monto_apertura: parseFloat(monto) || 0
+            }),
+            headers: {'Content-Type': 'application/json'}
+        });
+        const data = await res.json();
+        
+        if(data.success) {
+            if(typeof mostrarToast !== 'undefined') mostrarToast(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modalAperturaManual')).hide();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bx bx-check-double me-1"></i> Confirmar Apertura';
+            
+            // Refrescar tabla de arqueos y actualizar UI sin recargar
+            cargarArqueos();
+            updateAperturaButtonUI(true);
+        } else {
+            if(typeof mostrarToast !== 'undefined') mostrarToast(data.message, 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bx bx-check-double me-1"></i> Confirmar Apertura';
+        }
+    } catch(e) {
+        if(typeof mostrarToast !== 'undefined') mostrarToast('Error de red al aperturar caja manual.', 'danger');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bx bx-check-double me-1"></i> Confirmar Apertura';
+    }
+}
+
+function updateAperturaButtonUI(hayCajaAbierta) {
+    const btn = document.getElementById('btnAperturaCajaPrincipal');
+    if (!btn) return;
+
+    if (hayCajaAbierta) {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+        btn.disabled = true;
+        btn.title = "Ya existe una caja abierta";
+        btn.innerHTML = '<i class="bx bx-lock-alt"></i> <span class="d-none d-md-inline ms-1">Caja Aperturada</span>';
+        btn.onclick = null;
+    } else {
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-primary');
+        btn.disabled = false;
+        btn.title = "Aperturar Caja";
+        btn.onclick = abrirModalAperturaManual;
+        btn.innerHTML = '<i class="bx bx-lock-open-alt"></i> <span class="d-none d-md-inline ms-1">Aperturar Caja</span>';
+    }
+}
+
+async function checkNewRequests() {
+    try {
+        // Añadimos un timestamp para evitar el caché del navegador
+        const res = await fetch(`${BASE_URL}/admin/caja/getpendingsolicitudes?t=${new Date().getTime()}`);
+        const data = await res.json();
+
+        if (data.success) {
+            renderSolicitudes(data.data);
+        }
+    } catch (e) {
+        console.error("Error monitoreando solicitudes:", e);
+    }
+}
+
+function renderSolicitudes(solicitudes) {
+    const panel = document.getElementById('panelSolicitudesCaja');
+    const container = document.getElementById('listaPeticionesCaja');
+    if (!panel || !container) return;
+
+    if (!solicitudes || solicitudes.length === 0) {
+        panel.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+
+    // Mostrar panel
+    panel.style.display = 'block';
+
+    // Limpiamos y redibujamos siempre para asegurar frescura total de datos
+    container.innerHTML = '';
+    solicitudes.forEach(sol => {
+        container.innerHTML += `
+            <div class="col-md-4 card-solicitud" id="solCard_${sol.id_solicitud}">
+                <div class="card shadow-none border bg-white border-warning">
+                    <div class="card-body p-3 d-flex flex-column">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bx bx-user me-2 text-warning fs-4"></i>
+                            <span class="fs-6 fw-bold">${sol.nombres}</span>
+                        </div>
+                        <span class="small text-muted mb-3"><i class="bx bx-time me-1"></i>${sol.fecha_solicitud}</span>
+                        <button class="btn btn-sm btn-primary mt-auto" onclick="abrirModalAprobarCaja(${sol.id_solicitud}, ${sol.id_usuario}, '${sol.nombres}')">
+                            <i class="bx bx-lock-open-alt me-1"></i> Aperturar Caja
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
 }

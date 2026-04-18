@@ -41,6 +41,7 @@ class Orden {
     // ════════════════════════════════════════
     public function getActivasCajero($excluirEnCola = false) {
         $sql = "SELECT o.*, c.nombres AS cli_nombres, c.apellidos AS cli_apellidos, c.puntos_acumulados, v.placa, pr.nombre AS nombre_promocion,
+                    r.numero AS rampa_numero, r.nombre AS rampa_nombre,
                     (SELECT SUM(d.cantidad) FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio WHERE d.id_orden = o.id_orden AND s.acumula_puntos = 1) AS puntos_ganados,
                     (SELECT GROUP_CONCAT(CONCAT(s.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio WHERE d.id_orden = o.id_orden) AS servicios_vendidos,
                     (SELECT GROUP_CONCAT(CONCAT(p.nombre, ' (x', d.cantidad, ')') SEPARATOR ', ') FROM detalle_orden d INNER JOIN productos p ON d.id_producto = p.id_producto WHERE d.id_orden = o.id_orden) AS productos_vendidos,
@@ -48,13 +49,16 @@ class Orden {
              FROM ordenes o
              LEFT JOIN clientes c ON o.id_cliente = c.id_cliente
              LEFT JOIN vehiculos v ON o.id_vehiculo = v.id_vehiculo
-             LEFT JOIN promociones pr ON o.id_promocion = pr.id_promocion";
+             LEFT JOIN promociones pr ON o.id_promocion = pr.id_promocion
+             LEFT JOIN rampas r ON o.id_rampa = r.id_rampa";
              
         if ($excluirEnCola) {
             $sql .= " WHERE o.estado IN ('EN_PROCESO', 'POR_COBRAR') ORDER BY o.fecha_creacion DESC";
         } else {
             $sql .= " WHERE o.estado IN ('EN_COLA', 'EN_PROCESO', 'POR_COBRAR')
-                      ORDER BY CASE o.estado WHEN 'POR_COBRAR' THEN 1 WHEN 'EN_PROCESO' THEN 2 WHEN 'EN_COLA' THEN 3 END ASC, o.id_orden DESC";
+                      ORDER BY CASE o.estado WHEN 'POR_COBRAR' THEN 1 WHEN 'EN_PROCESO' THEN 2 WHEN 'EN_COLA' THEN 3 END ASC, 
+                      CASE WHEN o.prioridad_adelanto > 0 THEN o.prioridad_adelanto ELSE 999999 END ASC,
+                      o.id_orden DESC";
         }
         return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }

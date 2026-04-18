@@ -48,7 +48,6 @@ $logo_path_app = !empty($config_sys_app['logo']) ? BASE_URL . '/' . $config_sys_
     <!-- build:css assets/vendor/css/theme.css  -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/css/core.css" />
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/css/demo.css" />
-    <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/css/dark-mode.css" />
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -76,7 +75,8 @@ $logo_path_app = !empty($config_sys_app['logo']) ? BASE_URL . '/' . $config_sys_
     <script>
         window.updateGlobalNotifications = async function() {
             try {
-                let res = await fetch(BASE_URL + '/admin/dashboard/apinotifications');
+                const baseUrl = '<?= BASE_URL ?>';
+                let res = await fetch(baseUrl + '/admin/caja/getglobalnotifications?t=' + new Date().getTime());
                 let data = await res.json();
                 if (data && data.success) {
                     let total = data.data.total;
@@ -86,90 +86,50 @@ $logo_path_app = !empty($config_sys_app['logo']) ? BASE_URL . '/' . $config_sys_
                     if (badgeCount) {
                         badgeCount.textContent = total;
                         badgeCount.style.display = total > 0 ? 'inline-block' : 'none';
-                    } else if (total > 0) {
-                        // Create badge if not exists
-                        let bellLink = document.querySelector('.dropdown-notifications .nav-link');
-                        if (bellLink) {
-                            bellLink.insertAdjacentHTML('beforeend', `<span class="badge bg-danger rounded-pill badge-notifications" id="badgeNotifCount">${total}</span>`);
-                        }
                     }
 
                     let titleCount = document.getElementById('badgeNotifTitleCount');
                     if (titleCount) {
                         titleCount.textContent = total + ' Nuevas';
                         titleCount.style.display = total > 0 ? 'inline-block' : 'none';
-                    } else if (total > 0) {
-                         let headerDiv = document.querySelector('.dropdown-menu-header .dropdown-header');
-                         if(headerDiv) headerDiv.insertAdjacentHTML('beforeend', `<span class="badge bg-primary rounded-pill" id="badgeNotifTitleCount">${total} Nuevas</span>`);
                     }
 
                     let ulItems = document.getElementById('listNotifItems');
                     if (ulItems) {
-                        ulItems.innerHTML = '';
                         if (lista.length === 0) {
                             ulItems.innerHTML = `<li class="list-group-item list-group-item-action dropdown-notifications-item"><div class="d-flex justify-content-center py-4"><span class="text-muted"><i class="bx bx-check-circle text-success me-1"></i> Sin alertas pendientes</span></div></li>`;
                         } else {
-                            lista.forEach(notif => {
-                                ulItems.innerHTML += `
-                                <li class="list-group-item list-group-item-action dropdown-notifications-item cursor-pointer" onclick="window.location.href='${notif.url}'">
-                                    <div class="d-flex" style="align-items: center;">
-                                        <div class="flex-shrink-0 me-3">
-                                            <div class="avatar shadow-sm d-flex align-items-center justify-content-center bg-label-${notif.color}" style="width: 40px; height: 40px; border-radius: 50%;">
-                                                <i class="bx ${notif.icono} fs-4"></i>
+                            // Solo redibujamos si el total cambió para no parpadear el dropdown abierto
+                            let currentItemsCount = ulItems.querySelectorAll('.dropdown-notifications-item').length;
+                            if (currentItemsCount !== lista.length || total > 0) {
+                                ulItems.innerHTML = '';
+                                lista.forEach(notif => {
+                                    ulItems.innerHTML += `
+                                    <li class="list-group-item list-group-item-action dropdown-notifications-item cursor-pointer" onclick="window.location.href='${notif.url}'">
+                                        <div class="d-flex" style="align-items: center;">
+                                            <div class="flex-shrink-0 me-3">
+                                                <div class="avatar shadow-sm d-flex align-items-center justify-content-center bg-label-${notif.color}" style="width: 40px; height: 40px; border-radius: 50%;">
+                                                    <i class="bx ${notif.icono} fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1" style="font-size: 0.85rem; font-weight: 700; color: #566a7f;">${notif.titulo}</h6>
+                                                <p class="mb-0 text-muted" style="font-size: 0.75rem; line-height: 1.3;">${notif.descripcion}</p>
                                             </div>
                                         </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1" style="font-size: 0.85rem; font-weight: 700; color: #566a7f;">${notif.titulo}</h6>
-                                            <p class="mb-0 text-muted" style="font-size: 0.75rem; line-height: 1.3;">${notif.descripcion}</p>
-                                        </div>
-                                    </div>
-                                </li>`;
-                            });
+                                    </li>`;
+                                });
+                            }
                         }
                     }
                 }
             } catch(e) { console.error('Error updating notifications:', e); }
         };
-    </script>
-    <script>
-        // Init Theme Settings
-        (function() {
-            const storedTheme = localStorage.getItem('theme') || 'light';
-            if (storedTheme === 'dark') {
-                document.documentElement.setAttribute('data-bs-theme', 'dark');
-                document.documentElement.classList.add('dark-style');
-            } else {
-                document.documentElement.setAttribute('data-bs-theme', 'light');
-                document.documentElement.classList.remove('dark-style');
-            }
-        })();
 
-        function toggleTheme() {
-            const htmlElement = document.documentElement;
-            let currentTheme = htmlElement.getAttribute('data-bs-theme') || 'light';
-            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            htmlElement.setAttribute('data-bs-theme', newTheme);
-            if(newTheme === 'dark') {
-                htmlElement.classList.add('dark-style');
-            } else {
-                htmlElement.classList.remove('dark-style');
-            }
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        }
-
-        function updateThemeIcon(theme) {
-            const icon = document.getElementById('theme-toggle-icon');
-            if(icon) {
-                icon.className = theme === 'dark' ? 'icon-base bx bx-moon icon-md' : 'icon-base bx bx-sun icon-md';
-            }
-        }
-        
-        document.addEventListener("DOMContentLoaded", function() {
-            const theme = localStorage.getItem('theme') || 'light';
-            updateThemeIcon(theme);
-        });
+        // Iniciar el monitor global de notificaciones (cada 1 segundo)
+        setInterval(window.updateGlobalNotifications, 500);
     </script>
+
 </head>
 
 <body>
@@ -242,13 +202,7 @@ $logo_path_app = !empty($config_sys_app['logo']) ? BASE_URL . '/' . $config_sys_
                                 </li>
                                 <!--/ Quick Shortcuts -->
 
-                                <!-- Theme Toggle -->
-                                <li class="nav-item me-3 me-xl-2">
-                                    <a class="nav-link hide-arrow" href="javascript:void(0);" onclick="toggleTheme()" title="Cambiar Tema">
-                                        <i class="icon-base bx bx-sun icon-md" id="theme-toggle-icon"></i>
-                                    </a>
-                                </li>
-                                <!--/ Theme Toggle -->
+
 
                                 <!-- Notifications -->
                                 <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">

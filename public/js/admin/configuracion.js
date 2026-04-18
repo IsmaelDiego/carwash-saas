@@ -18,7 +18,14 @@ async function cargarConfig() {
             document.getElementById('cfg_abrev').value = d.abreviatura || '';
             document.getElementById('cfg_moneda').value = d.moneda || 'S/';
             document.getElementById('cfg_meta').value = d.meta_puntos_canje || 10;
+            document.getElementById('cfg_num_rampas').value = d.num_rampas || 3;
             document.getElementById('cfg_modo_sin_cajero').checked = d.modo_sin_cajero == 1;
+            document.getElementById('cfg_cajero_abre_caja').checked = d.cajero_puede_abrir_caja == 1;
+            
+            const selOpRes = document.getElementById('cfg_id_operador_responsable');
+            if (selOpRes) selOpRes.value = d.id_operador_responsable || '';
+
+            toggleOpResponsableBox();
             
             // Actualizar Previsualización Inicial
             actualizarPreviewLive();
@@ -44,7 +51,14 @@ function actualizarPreviewLive() {
     document.getElementById('previewSidebarAbrev').textContent = abrev;
     document.getElementById('previewMoneda').textContent = moneda;
 
+    toggleOpResponsableBox();
     detectarCambios();
+}
+
+function toggleOpResponsableBox() {
+    const isActivo = document.getElementById('cfg_modo_sin_cajero').checked;
+    const box = document.getElementById('box_operador_responsable');
+    if (box) box.style.display = isActivo ? 'block' : 'none';
 }
 
 function detectarCambios() {
@@ -53,12 +67,15 @@ function detectarCambios() {
         abreviatura: document.getElementById('cfg_abrev').value,
         moneda: document.getElementById('cfg_moneda').value,
         meta_puntos_canje: document.getElementById('cfg_meta').value,
-        modo_sin_cajero: document.getElementById('cfg_modo_sin_cajero').checked ? 1 : 0
+        num_rampas: document.getElementById('cfg_num_rampas').value,
+        modo_sin_cajero: document.getElementById('cfg_modo_sin_cajero').checked ? 1 : 0,
+        cajero_puede_abrir_caja: document.getElementById('cfg_cajero_abre_caja').checked ? 1 : 0,
+        id_operador_responsable: document.getElementById('cfg_id_operador_responsable').value
     };
 
     let hasChanges = false;
     for (let key in current) {
-        if (current[key] != initialConfig[key]) {
+        if (current[key] != (initialConfig[key] || '')) {
             hasChanges = true;
             break;
         }
@@ -150,7 +167,7 @@ async function cargarTokens() {
 
 function initForms() {
     // Escuchar cambios en inputs para Live Preview y Cambio detección
-    ['cfg_nombre', 'cfg_abrev', 'cfg_moneda', 'cfg_meta', 'cfg_modo_sin_cajero'].forEach(id => {
+    ['cfg_nombre', 'cfg_abrev', 'cfg_moneda', 'cfg_meta', 'cfg_num_rampas', 'cfg_modo_sin_cajero', 'cfg_cajero_abre_caja', 'cfg_id_operador_responsable'].forEach(id => {
         const el = document.getElementById(id);
         if(el) {
             el.addEventListener('input', actualizarPreviewLive);
@@ -204,7 +221,9 @@ function initForms() {
             }
         }
         const modo = document.getElementById('cfg_modo_sin_cajero').checked ? 1 : 0;
+        const modoCaja = document.getElementById('cfg_cajero_abre_caja').checked ? 1 : 0;
         fd.set('modo_sin_cajero', modo);
+        fd.set('cajero_puede_abrir_caja', modoCaja);
         // Inyectar password verificado para el backend si es necesario (el controlador lo verificará de nuevo si queremos)
         fd.append('password_admin', password);
 

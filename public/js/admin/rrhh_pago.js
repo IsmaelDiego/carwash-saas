@@ -45,8 +45,15 @@ const PagoModule = {
                 { "data": "tipo" },
                 { 
                     "data": "periodo",
-                    "render": function(data) {
-                        return data ? data : '-';
+                    "render": function(data, type, row) {
+                        if (!data) return '-';
+                        if (data.length >= 7 && data.includes('-')) {
+                            const partes = data.split('-');
+                            const meses = {'01':'Enero','02':'Febrero','03':'Marzo','04':'Abril','05':'Mayo','06':'Junio','07':'Julio','08':'Agosto','09':'Septiembre','10':'Octubre','11':'Noviembre','12':'Diciembre'};
+                            const m = meses[partes[1].substring(0, 2)];
+                            if (m) return `<span class="text-capitalize">${m} ${partes[0]}</span>`;
+                        }
+                        return data;
                     }
                 },
                 { 
@@ -186,7 +193,7 @@ const PagoModule = {
     },
 
     initFormularios: function() {
-        const self = this;
+        const self = this;  
         $('#formRegistrarPago').on('submit', function(e) {
             e.preventDefault();
 

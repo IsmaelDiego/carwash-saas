@@ -31,7 +31,7 @@ function getAdminNotifications()
 
     if (isset($_SESSION['user']['role']) && (int)$_SESSION['user']['role'] === 1 && $pdo) {
         $cacheKey = '_notif_cache';
-        $cacheTTL = 60; // segundos
+        $cacheTTL = 10; // segundos (reducido para mejorar tiempo real de aperturas)
         $now = time();
 
         if (!isset($_SESSION[$cacheKey]) || ($now - ($_SESSION[$cacheKey]['ts'] ?? 0)) > $cacheTTL) {
@@ -51,12 +51,16 @@ function getAdminNotifications()
             $stmtRecuperar = $pdo->query("SELECT COUNT(*) as total FROM notificaciones_recuperacion WHERE estado = 'PENDIENTE'");
             $countRecuperar = (int)($stmtRecuperar->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
 
+            $stmtSolCaja = $pdo->query("SELECT COUNT(*) as total FROM solicitudes_caja WHERE estado = 'PENDIENTE'");
+            $countSolCaja = (int)($stmtSolCaja->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+
             $_SESSION[$cacheKey] = [
                 'pagos' => $countPagos,
                 'permisos' => $countPermisos,
                 'stock_bajo' => $countStockBajo,
                 'vencer' => $countVencer,
                 'recuperar' => $countRecuperar,
+                'sol_caja' => $countSolCaja,
                 'ts' => $now
             ];
         }
@@ -66,6 +70,7 @@ function getAdminNotifications()
         $countStockBajo = $_SESSION[$cacheKey]['stock_bajo'] ?? 0;
         $countVencer = $_SESSION[$cacheKey]['vencer'] ?? 0;
         $countRecuperar = $_SESSION[$cacheKey]['recuperar'] ?? 0;
+        $countSolCaja = $_SESSION[$cacheKey]['sol_caja'] ?? 0;
 
         if ($countRecuperar > 0) {
             $stmtList = $pdo->query("
@@ -125,6 +130,16 @@ function getAdminNotifications()
                 'url' => BASE_URL . '/admin/producto'
             ];
             $total_notificaciones += $countVencer;
+        }
+        if ($countSolCaja > 0) {
+            $notificaciones_admin[] = [
+                'icono' => 'bx-lock-open-alt',
+                'color' => 'primary',
+                'titulo' => 'Apertura de Caja Solicitada',
+                'descripcion' => "Tienes $countSolCaja cajero(s) esperando autorización para abrir caja.",
+                'url' => BASE_URL . '/admin/caja'
+            ];
+            $total_notificaciones += $countSolCaja;
         }
     }
 

@@ -18,14 +18,20 @@ class ConfiguracionSistema {
                     abreviatura = :abrev,
                     moneda = :moneda,
                     modo_sin_cajero = :modo,
-                    meta_puntos_canje = :meta";
+                    meta_puntos_canje = :meta,
+                    num_rampas = :num_rampas,
+                    cajero_puede_abrir_caja = :puede_abrir,
+                    id_operador_responsable = :id_op_resp";
                     
         $params = [
-            ':nombre' => trim($data['nombre_negocio']),
-            ':abrev'  => trim($data['abreviatura']),
-            ':moneda' => trim($data['moneda']),
-            ':modo'   => (int)($data['modo_sin_cajero'] ?? 0),
-            ':meta'   => (int)($data['meta_puntos_canje'] ?? 10)
+            ':nombre'     => trim($data['nombre_negocio']),
+            ':abrev'      => trim($data['abreviatura']),
+            ':moneda'     => trim($data['moneda']),
+            ':modo'       => (int)($data['modo_sin_cajero'] ?? 0),
+            ':meta'       => (int)($data['meta_puntos_canje'] ?? 10),
+            ':num_rampas' => (int)($data['num_rampas'] ?? 3),
+            ':puede_abrir'=> (int)($data['cajero_puede_abrir_caja'] ?? 1),
+            ':id_op_resp' => !empty($data['id_operador_responsable']) ? (int)$data['id_operador_responsable'] : null
         ];
 
         if (!empty($data['logo_path'])) {

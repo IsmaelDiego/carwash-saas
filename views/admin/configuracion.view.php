@@ -202,11 +202,32 @@
                                 <label class="form-label fw-bold text-dark">Puntos para Canje <small>(Metas Mágicas)</small></label>
                                 <input type="number" class="form-control config-input" name="meta_puntos_canje" id="cfg_meta" min="1" placeholder="Ej: 10">
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-dark"><i class="bx bx-car-wash me-1 text-primary"></i>Número de Rampas / Bahías</label>
+                                <input type="number" class="form-control config-input" name="num_rampas" id="cfg_num_rampas" min="1" max="20" placeholder="Ej: 3">
+                                <small class="text-muted">Define cuántas rampas/bahías tiene el negocio. Esto controla cuántas órdenes pueden estar en proceso simultáneamente.</small>
+                            </div>
                             <div class="mb-4 mt-4 p-3 rounded" style="background:#f8fafc; border-left:4px solid #00d4ff;">
-                                <div class="form-check form-switch mt-1">
+                                <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="cfg_modo_sin_cajero" name="modo_sin_cajero" value="1" style="width:2.5em; height:1.25em;">
                                     <label class="form-check-label fw-bold ms-2" for="cfg_modo_sin_cajero">
                                         Modo Operación Libre <br><small class="text-muted fw-normal">Permitir a operarios cobrar sin necesitar un Token de Admin</small>
+                                    </label>
+                                </div>
+                                <div class="form-group mb-3 ms-4" id="box_operador_responsable" style="display: none;">
+                                    <label class="form-label fw-bold text-dark mb-1 small text-uppercase">Operador Responsable en Libre</label>
+                                    <select class="form-select config-input" name="id_operador_responsable" id="cfg_id_operador_responsable">
+                                        <option value="">Selecciona Operador...</option>
+                                        <?php if(isset($operarios)): foreach($operarios as $op): ?>
+                                            <option value="<?= $op['id_usuario'] ?>"><?= htmlspecialchars($op['nombres']) ?></option>
+                                        <?php endforeach; endif; ?>
+                                    </select>
+                                    <small class="text-muted">Si se activa, este operador tomará el lugar del cajero y accederá a caja.</small>
+                                </div>
+                                <div class="form-check form-switch mt-1 pt-3 border-top">
+                                    <input class="form-check-input" type="checkbox" id="cfg_cajero_abre_caja" name="cajero_puede_abrir_caja" value="1" style="width:2.5em; height:1.25em;">
+                                    <label class="form-check-label fw-bold ms-2" for="cfg_cajero_abre_caja">
+                                        Cajero puede aperturar caja<br><small class="text-muted fw-normal">Si está desactivado, solo tú (Admin) podrás abrir la caja.</small>
                                     </label>
                                 </div>
                             </div>

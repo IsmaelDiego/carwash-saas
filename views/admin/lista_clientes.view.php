@@ -137,15 +137,17 @@
 
             <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
               <i class="bx bx-plus me-1"></i> Nuevo Cliente
-            </button>
-
-            <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
+          
+              <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
               <i class="bx bx-filter-alt me-1"></i> Filtros
             </button>
 
-            <button class="btn btn-outline-success" type="button" id="btnExportar">
-              <i class="bx bxs-file-export p-2"></i>
+
+             <!-- Botón de Reportes BI Sincronizado -->
+            <button type="button" class="btn btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalReportesCliente">
+                <i class="bx bxs-bar-chart-alt-2 p-1 fs-5"></i> <span class="d-none d-md-inline ms-1">Centro de Reportes BI</span>
             </button>
+          
           </div>
         </div>
       </div>
@@ -184,7 +186,10 @@
   const BASE_URL = "<?= BASE_URL ?>";
 </script>
 
-<?php require VIEW_PATH . '/partials/cliente/modals.php'; ?>
+<?php 
+    require VIEW_PATH . '/partials/cliente/modals.php'; 
+    require VIEW_PATH . '/partials/cliente/modal_reporte.php'; 
+?>
 
 
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>

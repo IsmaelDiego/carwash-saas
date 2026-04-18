@@ -10,10 +10,15 @@ class DashboardController {
         requireRole(3); // Solo Operario
     }
 
-    // ═══ VISTA PRINCIPAL — MODO TÚNEL ═══
-    public function index() { $this->dashboard(); }
+    // ═══ VISTA PRINCIPAL — PERFIL ═══
+    public function index() { $this->perfil(); }
 
     public function dashboard() {
+        $this->perfil();
+    }
+    
+    // Antiguo Dashboard Modo Túnel (Inhabilitado porque los operarios ya no operan ventas)
+    public function tunel_antiguo() {
         requireAuth();
         global $pdo;
 
@@ -110,11 +115,11 @@ class DashboardController {
         $stmt->execute([':id' => $_SESSION['user']['id']]);
         $usuario = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        $stmtP = $pdo->prepare("SELECT * FROM permisos_empleados WHERE id_usuario = :id ORDER BY fecha_inicio DESC LIMIT 10");
+        $stmtP = $pdo->prepare("SELECT * FROM permisos_empleados WHERE id_usuario = :id ORDER BY fecha_inicio DESC");
         $stmtP->execute([':id' => $_SESSION['user']['id']]);
         $permisos = $stmtP->fetchAll(\PDO::FETCH_ASSOC);
 
-        $stmtPg = $pdo->prepare("SELECT * FROM pagos_empleados WHERE id_usuario = :id ORDER BY fecha_programada DESC LIMIT 10");
+        $stmtPg = $pdo->prepare("SELECT * FROM pagos_empleados WHERE id_usuario = :id ORDER BY fecha_programada DESC");
         $stmtPg->execute([':id' => $_SESSION['user']['id']]);
         $pagos = $stmtPg->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -589,5 +594,54 @@ class DashboardController {
             'id_token_autorizacion' => $token['id_token']
         ]);
         echo json_encode(['success' => true, 'message' => 'Orden anulada.']);
+    }
+
+    // ════════════════════════════════════════
+    // API: SOLICITUDES DE EMPLEADO (Perfil)
+    // ════════════════════════════════════════
+
+    public function solicitar_permiso() {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        global $pdo;
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO permisos_empleados (id_usuario, id_admin_registrador, tipo, fecha_inicio, fecha_fin, motivo, estado) VALUES (:id_usr, :id_adm, :tipo, :ini, :fin, :motivo, 'PENDIENTE')");
+            $stmt->execute([
+                ':id_usr' => $_SESSION['user']['id'],
+                ':id_adm' => $_SESSION['user']['id'],
+                ':tipo' => $input['tipo'] ?? 'PERMISO',
+                ':ini' => $input['desde'],
+                ':fin' => $input['hasta'],
+                ':motivo' => $input['motivo']
+            ]);
+            echo json_encode(['success' => true, 'message' => 'Solicitud enviada correctamente. El administrador la revisará.']);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error al solicitar: ' . $e->getMessage()]);
+        }
+    }
+
+    public function solicitar_adelanto() {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        global $pdo;
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO pagos_empleados (id_usuario, id_admin_registrador, tipo, monto, periodo, estado, fecha_programada, observaciones) VALUES (:id_usr, :id_adm, 'ADELANTO', :monto, :periodo, 'PENDIENTE', CURDATE(), :obs)");
+            $stmt->execute([
+                ':id_usr' => $_SESSION['user']['id'],
+                ':id_adm' => $_SESSION['user']['id'],
+                ':monto' => $input['monto'],
+                ':periodo' => date('Y-m'),
+                ':obs' => $input['motivo']
+            ]);
+            echo json_encode(['success' => true, 'message' => 'Solicitud de adelanto enviada correctamente.']);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error al solicitar: ' . $e->getMessage()]);
+        }
     }
 }

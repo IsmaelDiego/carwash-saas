@@ -217,4 +217,104 @@ class ClienteController
             return;
         }
     }
+    // ==========================================
+    // 6. EXPORTAR REPORTES BI (PDF/CSV)
+    // URL: /admin/cliente/exportar
+    // ==========================================
+    public function exportar()
+    {
+        requireAuth();
+        global $pdo;
+        
+        // Sincronizar con la hora local (UTC-5)
+        date_default_timezone_set('America/Lima');
+
+        $tipo = $_GET['tipo'] ?? 'general';
+        $formato = $_GET['formato'] ?? 'pdf';
+        $minPuntos = (int)($_GET['min_puntos'] ?? 0);
+        $whatsappStatus = $_GET['whatsapp_status'] ?? 'TODOS';
+        $f_inicio = $_GET['f_inicio'] ?? date('Y-m-d');
+        $f_fin = $_GET['f_fin'] ?? date('Y-m-d');
+
+        // Lógica de Filtrado dinámico
+        $query = "SELECT * FROM clientes WHERE DATE(fecha_registro) BETWEEN ? AND ?";
+        $params = [$f_inicio, $f_fin];
+
+        if ($tipo === 'puntos') {
+            $query .= " AND puntos_acumulados >= ?";
+            $params[] = $minPuntos;
+            $query .= " ORDER BY puntos_acumulados DESC";
+        } elseif ($tipo === 'marketing') {
+            if ($whatsappStatus !== 'TODOS') {
+                $query .= " AND estado_whatsapp = ?";
+                $params[] = $whatsappStatus;
+            }
+            $query .= " ORDER BY nombres ASC";
+        } else {
+            $query .= " ORDER BY nombres ASC";
+        }
+
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        $clientes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $fecha_actual = date('d/m/Y');
+        
+        // Títulos profesionales diferenciados
+        $titulos_base = [
+            'general'   => "LISTADO MAESTRO DE CLIENTES",
+            'puntos'    => "RANKING DE FIDELIDAD POR PUNTOS",
+            'marketing' => "BASE DE DATOS PARA CAMPAÑAS WHATSAPP"
+        ];
+        $titulo_pdf = $titulos_base[$tipo] ?? "REPORTE DE CLIENTES";
+        $titulo_reporte = "$titulo_pdf ($fecha_actual)";
+
+        // --- EXPORTACIÓN ---
+        if ($formato === 'csv') {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=Reporte_Clientes_' . strtoupper($tipo) . '_' . date('Ymd_His') . '.csv');
+            $output = fopen('php://output', 'w');
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
+
+            fputcsv($output, ['ID', 'DNI', 'CLIENTE', 'TELEFONO', 'PUNTOS', 'WHATSAPP', 'REGISTRO'], ';');
+            foreach ($clientes as $c) {
+                fputcsv($output, [
+                    $c['id_cliente'],
+                    $c['dni'],
+                    $c['nombres'] . ' ' . $c['apellidos'],
+                    $c['telefono'],
+                    $c['puntos_acumulados'],
+                    $c['estado_whatsapp'] ? 'SI' : 'NO',
+                    $c['fecha_registro']
+                ], ';');
+            }
+            fclose($output);
+            exit;
+        } else {
+            // PDF con mPDF
+            try {
+                require_once BASE_PATH . '/vendor/MPDF/vendor/autoload.php';
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'margin_top' => 15,
+                    'margin_bottom' => 15
+                ]);
+
+                ob_start();
+                // Definimos variables para la vista
+                $lista = $clientes;
+                $logo_path = BASE_PATH . '/public/img/logo.png'; // Ajustar según config si es necesario
+
+                require VIEW_PATH . '/admin/reportes/cliente/listado.view.php';
+                $html = ob_get_clean();
+
+                $mpdf->WriteHTML($html);
+                $mpdf->SetTitle($titulo_reporte); // Fuerza el título en la pestaña
+                $mpdf->Output('Reporte_Clientes_' . date('Ymd_His') . '.pdf', 'I');
+            } catch (Exception $e) {
+                die("Error al generar PDF: " . $e->getMessage());
+            }
+        }
+    }
 }

@@ -13,12 +13,48 @@ let _saldoEsperado = 0;
 // ═══ INIT ═══
 document.addEventListener("DOMContentLoaded", () => {
   cargarOrdenes();
+  cargarRampas();
   // Iniciar cronómetros cada 30 segundos
   setInterval(actualizarCronometros, 30000);
+  // Auto-refresco completo cada 60 segundos para evitar datos estáticos
+  setInterval(() => {
+    cargarOrdenes();
+    cargarRampas();
+  }, 60000);
+
+  // --- AUTO-FORMATO DE PLACA ---
+  const inputPlaca = document.getElementById("nv_placa");
+  if (inputPlaca) {
+    inputPlaca.setAttribute("maxlength", "7");
+    inputPlaca.addEventListener("input", function (e) {
+      let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      let formatted = "";
+
+      if (val.length > 0) {
+        // Primeros 3: Alfanuméricos
+        formatted = val.substring(0, 3);
+        if (val.length > 3) {
+          // Guion automático + siguientes 3 solo números
+          let numbersPart = val.substring(3, 6).replace(/[^0-9]/g, "");
+          formatted += "-" + numbersPart;
+        }
+      }
+      e.target.value = formatted;
+    });
+  }
 });
 
 // ═══ CARGAR ÓRDENES ═══
-async function cargarOrdenes() {
+async function cargarOrdenes(btn = null) {
+  let icon = null;
+  if (btn) {
+    icon = btn.querySelector("i");
+    if (icon) icon.classList.add("bx-spin");
+    btn.disabled = true;
+  }
+  const mainCont = document.querySelector(".pos-layout");
+  if (mainCont) mainCont.style.opacity = "0.5";
+
   try {
     const res = await fetch(`${BASE_URL}/caja/dashboard/getordenes`);
     const json = await res.json();
@@ -29,6 +65,12 @@ async function cargarOrdenes() {
     actualizarDropdownTienda();
   } catch (e) {
     mostrarToast("Error cargando órdenes", "danger");
+  } finally {
+    if (btn) {
+      if (icon) icon.classList.remove("bx-spin");
+      btn.disabled = false;
+    }
+    if (mainCont) mainCont.style.opacity = "1";
   }
 }
 
@@ -130,9 +172,7 @@ function renderOrdenes() {
   let rawData = [];
 
   if (filtroActual === "HISTORIAL") {
-    // Here we could query backend for history or rely on a global history var if it exists.
-    // Wait, 'historialHoy' was used previously
-    rawData = typeof historialHoy !== "undefined" ? historialHoy : [];
+    rawData = window.historialHoy ? window.historialHoy : [];
   } else if (filtroActual === "TODAS") {
     rawData = todasOrdenes;
   } else {
@@ -174,6 +214,7 @@ function renderOrdenes() {
                                 <th class="py-3">SERVICIOS</th>
                                 <th class="py-3 text-end">TOTAL</th>
                                 <th class="py-3 text-center">ESTADO</th>
+                                <th class="py-3 text-center">ACCIÓN</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -194,6 +235,11 @@ function renderOrdenes() {
                                         <td class="small text-truncate" style="max-width:200px">${o.servicios_vendidos || "-"}</td>
                                         <td class="text-end fw-bold text-primary">S/ ${parseFloat(o.total_final).toFixed(2)}</td>
                                         <td class="text-center"><span class="badge bg-label-success rounded-pill px-3 py-1 fw-bold">PAGADO</span></td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-icon btn-label-primary rounded-pill" onclick="verDetalleOrden(${o.id_orden})" title="Ver Detalle">
+                                                <i class="bx bx-show"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 `;
                               })
@@ -231,7 +277,8 @@ function renderOrdenes() {
           } else if (est === "EN_PROCESO") {
             btnAction = `<button class="btn btn-warning w-100 fw-bold rounded-pill shadow-sm py-2 text-dark" onclick="pasaraPorCobrar(${o.id_orden})"><i class="bx bx-check-double me-1 fs-5"></i>TERMINAR LAVADO</button>`;
           } else if (est === "EN_COLA" || est === "EN_ESPERA") {
-            btnAction = `<button class="btn btn-primary w-100 fw-bold rounded-pill shadow-sm py-2 text-white" onclick="pasaraProceso(${o.id_orden})"><i class="bx bx-play-circle me-1 fs-5"></i>INICIAR LAVADO</button>`;
+            btnAction = `<button class="btn btn-primary w-100 fw-bold rounded-pill shadow-sm py-2 text-white mb-2" onclick="pasaraProceso(${o.id_orden})"><i class="bx bx-play-circle me-1 fs-5"></i>INICIAR LAVADO</button>
+                         <button class="btn btn-outline-warning w-100 fw-bold rounded-pill shadow-sm py-2" onclick="abrirModalAdelantar(${o.id_orden})"><i class="bx bx-up-arrow-circle me-1 fs-5 align-middle"></i> ADELANTAR AL INICIO</button>`;
           }
 
           const servs = o.servicios_vendidos || "-";
@@ -260,9 +307,18 @@ function renderOrdenes() {
                         <div>
                             <span class="oc-id fw-bold">#${o.id_orden}</span>
                             ${o.estado_pago === "PAGADO" ? '<span class="badge bg-success ms-2" style="font-size:0.6rem"><i class="bx bx-check-circle me-1"></i>PAGADO</span>' : '<span class="badge bg-secondary ms-2" style="font-size:0.6rem">PENDIENTE</span>'}
+                            ${
+                              o.prioridad_adelanto > 0
+                                ? `<span class="badge bg-danger ms-2 position-relative" style="font-size:0.6rem" title="Quitar Prioridad" onclick="event.stopPropagation(); quitarPrioridad(${o.id_orden})">
+                                <i class="bx bxs-zap me-1"></i>PRIORIDAD #${o.prioridad_adelanto} 
+                                <i class="bx bx-x ms-1 border rounded-circle" style="cursor:pointer"></i>
+                            </span>`
+                                : ""
+                            }
                         </div>
                         <div class="d-flex flex-column text-end">
                             <span class="badge ${badgeColors[est]} mb-1">${est.replace("_", " ")}</span>
+                            ${o.rampa_numero ? `<span class="badge bg-label-info mb-1" style="font-size:0.7rem"><i class="bx bxs-car-wash me-1"></i>RAMPA ${o.rampa_numero}</span>` : ""}
                             <span class="oc-total fs-5 fw-bold text-primary">S/ ${parseFloat(o.total_final || 0).toFixed(2)}</span>
                         </div>
                     </div>
@@ -367,8 +423,23 @@ function actualizarCronometros() {
 
 // ═══ CLIENTE ═══
 function abrirModalRegistrarCliente() {
+  const form = document.getElementById("registrarcliente");
+  if (form) {
+    form.reset();
+    document.getElementById("nombres").readOnly = false;
+    document.getElementById("apellidos").readOnly = false;
+    const fb = document.getElementById("dniFeedback");
+    if (fb) fb.innerHTML = "";
+  }
   new bootstrap.Modal(document.getElementById("modalRegistrar")).show();
 }
+
+document.getElementById("dni")?.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" || e.keyCode === 13) {
+    e.preventDefault();
+    document.getElementById("btnBuscarDni")?.click();
+  }
+});
 
 document.getElementById("btnBuscarDni")?.addEventListener("click", async () => {
   let dni = $("#dni").val().trim();
@@ -438,13 +509,23 @@ document
     e.preventDefault();
     const data = {
       dni: document.getElementById("dni").value.trim(),
-      nombres: document.getElementById("nombres").value,
-      apellidos: document.getElementById("apellidos").value,
+      nombres: document.getElementById("nombres").value.trim(),
+      apellidos: document.getElementById("apellidos").value.trim(),
       sexo: document.getElementById("sexo").value,
-      telefono: document.getElementById("telefono").value,
+      telefono: document.getElementById("telefono").value.trim(),
     };
     if (!data.dni || !data.nombres)
       return mostrarToast("Documento y nombres requeridos", "warning");
+
+    if (data.telefono) {
+      if (!data.telefono.startsWith("9") || data.telefono.length !== 9) {
+        return mostrarToast(
+          "El teléfono debe empezar con el número 9 y tener 9 dígitos",
+          "warning",
+        );
+      }
+    }
+
     try {
       const res = await fetch(`${BASE_URL}/caja/dashboard/registrarcliente`, {
         method: "POST",
@@ -471,7 +552,10 @@ async function pasaraProceso(id) {
     body: JSON.stringify({ id_orden: id }),
   });
   const r = await res.json();
-  if (r.success) cargarOrdenes();
+  if (r.success) {
+    cargarOrdenes();
+    cargarRampas();
+  }
   mostrarToast(r.message, r.success ? "success" : "danger");
 }
 
@@ -482,7 +566,10 @@ async function pasaraPorCobrar(id) {
     body: JSON.stringify({ id_orden: id }),
   });
   const r = await res.json();
-  if (r.success) cargarOrdenes();
+  if (r.success) {
+    cargarOrdenes();
+    cargarRampas();
+  }
   mostrarToast(r.message, r.success ? "success" : "danger");
 }
 
@@ -514,6 +601,7 @@ async function confirmarCobro() {
   if (data.success) {
     bootstrap.Modal.getInstance(document.getElementById("modalCobrar")).hide();
     cargarOrdenes();
+    cargarRampas();
   }
   mostrarToast(data.message, data.success ? "success" : "danger");
 }
@@ -541,14 +629,21 @@ function abrirModalNuevaOrden() {
   document.getElementById("nv_color").value = "";
   document.getElementById("camposNuevoVehiculo").style.display = "none";
 
-  document.querySelectorAll(".service-selectable").forEach((s) => s.classList.remove("selected"));
-  document.querySelectorAll(".promo-option").forEach((p) => p.classList.remove("selected"));
-  document.querySelector(".promo-option[data-id='']")?.classList.add("selected");
+  document
+    .querySelectorAll(".service-selectable")
+    .forEach((s) => s.classList.remove("selected"));
+  document
+    .querySelectorAll(".promo-option")
+    .forEach((p) => p.classList.remove("selected"));
+  document
+    .querySelector(".promo-option[data-id='']")
+    ?.classList.add("selected");
 
   const chkAnt = document.getElementById("chk_pago_anticipado");
   if (chkAnt) {
     chkAnt.checked = false;
-    document.getElementById("panel_metodos_pago_anticipado").style.display = "none";
+    document.getElementById("panel_metodos_pago_anticipado").style.display =
+      "none";
   }
 
   const lblTotal = document.getElementById("lbl_total_nueva_orden");
@@ -558,21 +653,108 @@ function abrirModalNuevaOrden() {
 }
 
 async function cargarVehiculosCliente(id) {
-  if (!id) return;
+  const seccionFid = document.getElementById("seccion_fidelizacion");
+  const camposNuevoVeh = document.getElementById("camposNuevoVehiculo");
+
+  // Limpiar y ocultar campos de nuevo vehículo cada vez que se cambia de cliente
+  if (camposNuevoVeh) {
+    camposNuevoVeh.style.display = "none";
+    document.getElementById("nv_placa").value = "";
+    document.getElementById("nv_color").value = "";
+    document.getElementById("nv_categoria").selectedIndex = 0;
+  }
+
+  if (!id) {
+    if (seccionFid) seccionFid.style.display = "none";
+    return;
+  }
   const res = await fetch(
     `${BASE_URL}/caja/dashboard/getvehiculos?id_cliente=${id}`,
   );
   const data = await res.json();
   const sel = document.getElementById("sel_vehiculo_orden");
   sel.innerHTML =
-    '<option value="">-- Seleccionar --</option>' +
+    '<option value="" data-factor="1.0">-- Seleccionar --</option>' +
     (data.data || [])
       .map(
         (v) =>
-          `<option value="${v.id_vehiculo}">${v.placa} (${v.categoria})</option>`,
+          `<option value="${v.id_vehiculo}" data-factor="${v.factor_precio || 1.0}">${v.placa} (${v.categoria})</option>`,
       )
       .join("") +
-    '<option value="NUEVO">+ REGISTRAR NUEVO</option>';
+    '<option value="NUEVO" data-factor="1.0">+ REGISTRAR NUEVO</option>';
+
+  // --- FIDELIZACIÓN ---
+  if (seccionFid && data.fidelizacion) {
+    seccionFid.style.display = "block";
+    const pts = parseInt(data.fidelizacion.puntos_acumulados) || 0;
+    const canjeado = data.fidelizacion.ya_canjeo_temporada_actual == 1;
+
+    const icon = document.getElementById("icon_pts_status");
+    const titulo = document.getElementById("titulo_pts_status");
+    const msg = document.getElementById("msg_pts_status");
+    const badge = document.getElementById("badge_pts_count");
+    const chkCanje = document.getElementById("chk_canjear_puntos");
+
+    // Resetear estilos
+    seccionFid.className = "mb-4 p-3 rounded-3 border";
+    icon.className = "bx bxs-star fs-3";
+    badge.className = "badge";
+    badge.textContent = `${pts} pts`;
+    chkCanje.checked = false;
+
+    if (pts >= 10 && !canjeado) {
+      // PREMIO DISPONIBLE
+      seccionFid.classList.add("bg-label-warning", "border-warning");
+      icon.classList.add("text-warning");
+      badge.classList.add("bg-warning");
+      titulo.textContent = "¡PREMIO DISPONIBLE!";
+      msg.innerHTML =
+        '<b class="text-dark">¡Este lavado puede ser GRATIS usando sus puntos!</b>';
+      chkCanje.checked = true; // Auto-activar canje
+    } else if (canjeado) {
+      // YA CANJEADO
+      seccionFid.classList.add("bg-light");
+      icon.classList.add("text-secondary");
+      badge.classList.add("bg-secondary");
+      titulo.textContent = "TEMPORADA COMPLETADA";
+      msg.textContent = "El cliente ya canjeó su premio en esta temporada.";
+    } else {
+      // FALTAN PUNTOS
+      seccionFid.classList.add("bg-label-info", "border-info");
+      icon.classList.add("text-info");
+      badge.classList.add("bg-info");
+      titulo.textContent = "ESTADO DE PUNTOS";
+      const faltan = 10 - pts;
+      msg.textContent = `Le faltan solo ${faltan} puntos para su próximo lavado GRATIS.`;
+    }
+  }
+
+  // --- BLOQUEO DE PROMOS USADAS ---
+  const usadas = (data.promos_usadas || []).map(String);
+  let promoReseted = false;
+
+  document.querySelectorAll(".promo-option").forEach((opt) => {
+    const idPromo = opt.dataset.id;
+    const isOnce = opt.dataset.once == "1";
+
+    if (idPromo && isOnce && usadas.includes(String(idPromo))) {
+      opt.style.display = "none";
+      if (opt.classList.contains("selected")) {
+        opt.classList.remove("selected");
+        promoReseted = true;
+      }
+    } else {
+      opt.style.display = "block";
+    }
+  });
+
+  // Si la promo que estaba seleccionada se ocultó, seleccionar "Sin promoción"
+  if (promoReseted) {
+    const sinPromo = document.querySelector(".promo-option[data-id='']");
+    if (sinPromo) sinPromo.classList.add("selected");
+  }
+
+  calcularTotalNuevaOrden();
 }
 
 function checkNuevoVeh(val) {
@@ -597,29 +779,50 @@ function selectPromoOrden(el) {
 }
 
 function calcularTotalNuevaOrden() {
-  let maxServicio = null;
-  let totalServicios = 0;
+  let totalBaseServicios = 0;
   document.querySelectorAll(".service-selectable.selected").forEach((s) => {
-    totalServicios += parseFloat(s.dataset.precio || 0);
+    totalBaseServicios += parseFloat(s.dataset.precio || 0);
   });
 
+  // Determinar Factor de Precio según Categoría de Vehículo
+  let factor = 1.0;
+  const selVeh = document.getElementById("sel_vehiculo_orden");
+  if (selVeh.value === "NUEVO") {
+    const selCat = document.getElementById("nv_categoria");
+    const optCat = selCat.options[selCat.selectedIndex];
+    factor = parseFloat(optCat ? optCat.dataset.factor : 1.0);
+  } else if (selVeh.value !== "") {
+    const optVeh = selVeh.options[selVeh.selectedIndex];
+    factor = parseFloat(optVeh ? optVeh.dataset.factor : 1.0);
+  }
+
+  const totalConFactor = totalBaseServicios * factor;
+
   let descPromo = 0;
+  let descPuntos = 0;
+
   const promoNode = document.querySelector(".promo-option.selected");
   if (promoNode && promoNode.dataset.id && promoNode.dataset.id !== "") {
     const tipo = promoNode.dataset.tipo;
     const valor = parseFloat(promoNode.dataset.valor || 0);
     if (tipo === "PORCENTAJE") {
-      descPromo = totalServicios * (valor / 100);
+      descPromo = totalConFactor * (valor / 100);
     } else {
-      descPromo = Math.min(valor, totalServicios);
+      descPromo = Math.min(valor, totalConFactor);
     }
   }
 
-  const totalFinal = Math.max(0, totalServicios - descPromo);
+  // Canje de Puntos (Servicio Gratis)
+  const chkPuntos = document.getElementById("chk_canjear_puntos");
+  if (chkPuntos && chkPuntos.checked) {
+    descPuntos = totalConFactor - descPromo;
+  }
+
+  const totalFinal = Math.max(0, totalConFactor - descPromo - descPuntos);
   const lbl = document.getElementById("lbl_total_nueva_orden");
   if (lbl) {
-    if (descPromo > 0) {
-      lbl.innerHTML = `<span class="text-danger text-decoration-line-through fs-6 fw-normal me-2">S/ ${totalServicios.toFixed(2)}</span>S/ ${totalFinal.toFixed(2)}`;
+    if (factor !== 1.0 || descPromo > 0 || descPuntos > 0) {
+      lbl.innerHTML = `<span class="text-secondary opacity-75 text-decoration-line-through fs-6 fw-normal me-2">S/ ${totalBaseServicios.toFixed(2)}</span>S/ ${totalFinal.toFixed(2)}`;
     } else {
       lbl.innerHTML = `S/ ${totalFinal.toFixed(2)}`;
     }
@@ -647,9 +850,22 @@ async function confirmarCreacionOrden() {
     return mostrarToast("Cliente y vehículo requeridos", "warning");
 
   if (idVehiculo === "NUEVO") {
+    const placa = document
+      .getElementById("nv_placa")
+      .value.trim()
+      .toUpperCase();
+    const regexPlaca = /^[A-Z0-9]{3}-[0-9]{3}$/;
+
+    if (!regexPlaca.test(placa)) {
+      return mostrarToast(
+        "Formato de placa inválido. Debe ser: 3 letras/números, un guion y 3 números (ej: ABC-123)",
+        "warning",
+      );
+    }
+
     const nvData = {
       id_cliente: idCliente,
-      placa: document.getElementById("nv_placa").value.trim(),
+      placa: placa,
       color: document.getElementById("nv_color").value,
       id_categoria: document.getElementById("nv_categoria").value,
     };
@@ -684,6 +900,8 @@ async function confirmarCreacionOrden() {
     ? document.getElementById("metodo_anticipado").value
     : null;
 
+  const chkCanje = document.getElementById("chk_canjear_puntos");
+
   const res = await fetch(`${BASE_URL}/caja/dashboard/crearorden`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -694,6 +912,7 @@ async function confirmarCreacionOrden() {
       id_promocion: idPromocion,
       pago_anticipado: pagoAnticipado,
       metodo_pago: metodoPagoAnt,
+      canjear_puntos: chkCanje && chkCanje.checked,
     }),
   });
   const r = await res.json();
@@ -1023,10 +1242,10 @@ function procesarCarrito() {
           if (res.success) {
             mostrarToast(res.message, "success");
             carrito = [];
-            
+
             // Reset select
             $("#sel_anexar_orden").val("").trigger("change");
-            
+
             renderCarrito();
             cargarOrdenes();
             btn.disabled = false;
@@ -1103,7 +1322,7 @@ async function confirmarVenta() {
       }
 
       carrito = [];
-      
+
       // Reset select
       $("#sel_anexar_orden").val("").trigger("change");
 
@@ -1197,7 +1416,7 @@ function renderCarrito() {
                     <i class="bx bx-trash fs-6"></i>
                 </button>
             </div>
-        </div>`
+        </div>`,
       )
       .join("");
   }
@@ -1215,9 +1434,12 @@ function eliminarDelCarrito(id) {
 }
 
 function filtrarTienda() {
-  const query = document.getElementById("buscadorTienda").value.toLowerCase().trim();
+  const query = document
+    .getElementById("buscadorTienda")
+    .value.toLowerCase()
+    .trim();
   const items = document.querySelectorAll(".prod-item");
-  
+
   items.forEach((item) => {
     const nombre = item.textContent.toLowerCase();
     if (nombre.includes(query)) {
@@ -1229,12 +1451,14 @@ function filtrarTienda() {
 
   // Mostrar mensaje si no hay resultados en el tab actual
   const tabs = ["tabDisponibles", "tabVencidos"];
-  tabs.forEach(tabId => {
+  tabs.forEach((tabId) => {
     const tabEl = document.getElementById(tabId);
-    if(!tabEl) return;
-    const visibleItems = tabEl.querySelectorAll(".prod-item:not([style*='display: none'])");
+    if (!tabEl) return;
+    const visibleItems = tabEl.querySelectorAll(
+      ".prod-item:not([style*='display: none'])",
+    );
     let msg = tabEl.querySelector(".no-results-msg");
-    
+
     if (visibleItems.length === 0 && query !== "") {
       if (!msg) {
         msg = document.createElement("div");
@@ -1246,4 +1470,467 @@ function filtrarTienda() {
       msg.remove();
     }
   });
+}
+
+// ════════════════════════════════════════════════════════
+// ═══ SISTEMA DE RAMPAS ═══
+// ════════════════════════════════════════════════════════
+
+let _rampasData = [];
+let _operariosData = [];
+
+async function cargarRampas(btn = null) {
+  let icon = null;
+  if (btn) {
+    icon = btn.querySelector("i");
+    if (icon) icon.classList.add("bx-spin");
+    btn.disabled = true;
+  }
+  const contenedor = document.getElementById("contenedorRampas");
+  if (contenedor) contenedor.style.opacity = "0.5";
+
+  try {
+    const res = await fetch(`${BASE_URL}/caja/dashboard/getrampas`);
+    const data = await res.json();
+    if (data.success) {
+      _rampasData = data.rampas || [];
+      _operariosData = data.operarios || [];
+      renderizarRampas();
+    }
+  } catch (e) {
+    console.warn("Error al cargar rampas:", e);
+  } finally {
+    if (btn) {
+      if (icon) icon.classList.remove("bx-spin");
+      btn.disabled = false;
+    }
+    if (contenedor) contenedor.style.opacity = "1";
+  }
+}
+
+function renderizarRampas() {
+  const contenedor = document.getElementById("contenedorRampas");
+  if (!contenedor) return;
+
+  if (!_rampasData.length) {
+    contenedor.innerHTML = `<div class="col-12 text-center text-muted py-3">
+      <i class="bx bx-info-circle me-1"></i>No hay rampas configuradas. El admin debe configurarlas en Ajustes.
+    </div>`;
+    return;
+  }
+
+  contenedor.innerHTML = _rampasData
+    .map((r) => {
+      const estadoConfig = {
+        ACTIVA: {
+          cls: "success",
+          icon: "bx-check-circle",
+          label: "ACTIVA",
+          bg: "#e8f5e9",
+          border: "#4caf50",
+        },
+        DESCANSO: {
+          cls: "warning",
+          icon: "bx-coffee",
+          label: "DESCANSO",
+          bg: "#fff8e1",
+          border: "#ffab00",
+        },
+        INACTIVA: {
+          cls: "danger",
+          icon: "bx-x-circle",
+          label: "INACTIVA",
+          bg: "#ffeaea",
+          border: "#ff3e1d",
+        },
+      };
+      const ec = estadoConfig[r.estado] || estadoConfig["INACTIVA"];
+      const operadorNombre = r.operador_nombre || "— Sin operario —";
+      const tieneOrden = r.orden_activa > 0;
+
+      return `
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid ${ec.border} !important; background: ${ec.bg}; border-radius: 12px; cursor:pointer;"
+           onclick="abrirModalRampa(${r.id_rampa})">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="fw-bold mb-0">Rampa ${r.numero}</h6>
+            <span class="badge bg-${ec.cls}" style="font-size:0.65rem">${ec.label}</span>
+          </div>
+          <div class="small text-muted mb-1">
+            <i class="bx bx-user me-1"></i>${operadorNombre}
+          </div>
+          ${tieneOrden ? `<div class="small text-primary fw-bold"><i class="bx bx-car me-1"></i>En proceso</div>` : ""}
+          ${r.proximo_estado ? `<div class="badge bg-label-danger py-1 px-2 mt-2" style="font-size:0.6rem; width:100%; white-space: normal;"><i class="bx bx-error-circle me-1"></i>CIERRE DIFERIDO: ${r.proximo_estado}</div>` : ""}
+          ${r.motivo_estado ? `<div class="small text-muted fst-italic mt-1" style="font-size:0.7rem"><i class="bx bx-info-circle me-1"></i>${r.motivo_estado}</div>` : ""}
+          <div class="mt-2 text-center">
+            <small class="text-muted" style="font-size:0.65rem"><i class="bx bx-pencil me-1"></i>Click para gestionar</small>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    })
+    .join("");
+}
+
+function abrirModalRampa(id_rampa) {
+  const rampa = _rampasData.find((r) => r.id_rampa == id_rampa);
+  if (!rampa) return;
+
+  document.getElementById("gr_id_rampa").value = rampa.id_rampa;
+  document.getElementById("gr_numero").textContent = rampa.numero;
+  document.getElementById("gr_estado").value = rampa.estado || "ACTIVA";
+
+  // Poblar operarios
+  const sel = document.getElementById("gr_operador");
+  // Obtener IDs de operarios ya ocupados en otras rampas
+  const ocupados = _rampasData
+    .filter((r) => r.id_rampa != rampa.id_rampa && r.id_operador)
+    .map((r) => String(r.id_operador));
+
+  sel.innerHTML =
+    '<option value="">— Sin asignar —</option>' +
+    _operariosData
+      .map((o) => {
+        const isTaken = ocupados.includes(String(o.id_usuario));
+        const isCurrent = rampa.id_operador == o.id_usuario;
+        return `<option value="${o.id_usuario}" 
+                  ${isCurrent ? "selected" : ""} 
+                  ${isTaken ? "disabled" : ""}>
+                    ${o.nombres} ${isTaken ? "(Ocupado en otra rampa)" : ""}
+                  </option>`;
+      })
+      .join("");
+
+  // Marcar estado activo visualmente
+  document.querySelectorAll(".rampa-estado-btn").forEach((btn) => {
+    const isActive = btn.dataset.estado === rampa.estado;
+    btn.style.background = isActive ? "#696cff" : "";
+    btn.style.color = isActive ? "#fff" : "";
+    btn.style.borderColor = isActive ? "#696cff" : "#dee2e6";
+  });
+
+  // Mostrar/ocultar campo motivo
+  const mc = document.getElementById("gr_motivo_container");
+  mc.style.display = rampa.estado !== "ACTIVA" ? "block" : "none";
+  if (rampa.motivo_estado) {
+    document.getElementById("gr_motivo").value = rampa.motivo_estado;
+  }
+
+  // Mostrar aviso de cierre diferido en el modal
+  const aviso = document.getElementById("avisoCierreDiferido");
+  if (aviso) {
+    if (rampa.proximo_estado) {
+      aviso.innerHTML = `
+        <div class="alert alert-danger p-2 mb-2 d-flex justify-content-between align-items-center" style="font-size:0.75rem">
+          <span><i class="bx bx-time me-1"></i>Cierre programado a: <b>${rampa.proximo_estado}</b></span>
+          <button type="button" class="btn btn-xs btn-outline-danger border-0" onclick="cancelarCierreDiferido(${rampa.id_rampa})"><i class="bx bx-trash"></i></button>
+        </div>`;
+      aviso.style.display = "block";
+    } else {
+      aviso.style.display = "none";
+    }
+  }
+
+  new bootstrap.Modal(document.getElementById("modalGestionRampa")).show();
+}
+
+let _ordenQuitarPrio = 0;
+async function quitarPrioridad(id) {
+  _ordenQuitarPrio = id;
+  document.getElementById("quitar_prio_id").textContent = id;
+  new bootstrap.Modal(document.getElementById("modalQuitarPrioridad")).show();
+}
+
+async function confirmarQuitarPrioridad() {
+  const res = await fetch(`${BASE_URL}/caja/dashboard/quitar_prioridad`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id_orden: _ordenQuitarPrio }),
+  });
+  const r = await res.json();
+  if (r.success) {
+    bootstrap.Modal.getInstance(
+      document.getElementById("modalQuitarPrioridad"),
+    ).hide();
+    cargarOrdenes();
+  }
+  mostrarToast(r.message, r.success ? "success" : "danger");
+}
+
+async function cancelarCierreDiferido(id) {
+  const res = await fetch(`${BASE_URL}/caja/dashboard/actualizarrampa`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id_rampa: id, estado: "ACTIVA" }), // Volver a activar limpia el diferido
+  });
+  const r = await res.json();
+  if (r.success) {
+    cargarRampas();
+    bootstrap.Modal.getInstance(
+      document.getElementById("modalGestionRampa"),
+    ).hide();
+  }
+  mostrarToast(
+    r.success ? "Cierre programado cancelado" : r.message,
+    r.success ? "success" : "danger",
+  );
+}
+
+function selEstadoRampa(el) {
+  const estado = el.dataset.estado;
+
+  document.querySelectorAll(".rampa-estado-btn").forEach((btn) => {
+    btn.style.background = "";
+    btn.style.color = "";
+    btn.style.borderColor = "#dee2e6";
+  });
+  el.style.background = "#696cff";
+  el.style.color = "#fff";
+  el.style.borderColor = "#696cff";
+
+  document.getElementById("gr_estado").value = estado;
+
+  // Lógica: Inactiva quita operador, descanso lo mantiene
+  if (estado === "INACTIVA") {
+    document.getElementById("gr_operador").value = "";
+  }
+
+  // Mostrar motivo si no es activa
+  const mc = document.getElementById("gr_motivo_container");
+  mc.style.display = estado !== "ACTIVA" ? "block" : "none";
+}
+
+async function confirmarGestionRampa() {
+  const id_rampa = document.getElementById("gr_id_rampa").value;
+  const estado = document.getElementById("gr_estado").value;
+  const id_operador = document.getElementById("gr_operador").value;
+  const motivo = document.getElementById("gr_motivo")?.value || null;
+
+  if (!id_rampa || !estado) return mostrarToast("Datos incompletos", "warning");
+
+  try {
+    const res = await fetch(`${BASE_URL}/caja/dashboard/actualizarrampa`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id_rampa,
+        estado,
+        id_operador: id_operador || null,
+        motivo,
+      }),
+    });
+    const r = await res.json();
+    if (r.success) {
+      bootstrap.Modal.getInstance(
+        document.getElementById("modalGestionRampa"),
+      ).hide();
+      mostrarToast(r.message, "success");
+      cargarRampas();
+      cargarOrdenes(); // Actualizar ordenes porque puede haber avanzado la cola
+    } else {
+      mostrarToast(r.message, "danger");
+    }
+  } catch (e) {
+    mostrarToast("Error de conexión", "danger");
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// ═══ ADELANTAR ORDEN EN COLA ═══
+// ════════════════════════════════════════════════════════
+
+let _ordenAdelantando = null;
+
+function abrirModalAdelantar(id_orden) {
+  _ordenAdelantando = id_orden;
+  document.getElementById("adelantar_id").textContent = id_orden;
+  new bootstrap.Modal(document.getElementById("modalAdelantar")).show();
+}
+
+async function confirmarAdelantar() {
+  if (!_ordenAdelantando) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/caja/dashboard/adelantarorden`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_orden: _ordenAdelantando }),
+    });
+    const r = await res.json();
+    if (r.success) {
+      bootstrap.Modal.getInstance(
+        document.getElementById("modalAdelantar"),
+      ).hide();
+      mostrarToast(r.message, "success");
+      cargarOrdenes();
+      cargarRampas();
+    } else {
+      mostrarToast(r.message, "danger");
+    }
+  } catch (e) {
+    mostrarToast("Error de conexión", "danger");
+  }
+  _ordenAdelantando = null;
+}
+
+// Cargar rampas al iniciar
+document.addEventListener("DOMContentLoaded", () => {
+  cargarRampas();
+});
+
+// Solicitud de apertura al Admin
+async function solicitarAperturaCaja() {
+  const btn = document.getElementById("btnSolicitarCajaVirtual");
+  if (!btn) return;
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="bx bx-loader-alt bx-spin me-1"></i> Enviando solicitud...`;
+
+  try {
+    const res = await fetch(`${BASE_URL}/caja/dashboard/solicitar_apertura`, {
+      method: "POST",
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById("msjCajaVirtualEstado").innerHTML =
+        `<span class="badge bg-success p-2 fs-6 mt-3"><i class="bx bx-check-double me-1"></i> SOLICITUD ENVIADA CON ÉXITO</span><br><br>Por favor, espera a que el Administrador responda.`;
+      btn.style.display = "none";
+    } else {
+      mostrarToast(data.message, "danger");
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  } catch (e) {
+    mostrarToast("Error de conexión", "danger");
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+async function verDetalleOrden(id) {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/caja/dashboard/getdetalle?id_orden=${id}`,
+    );
+    const data = await res.json();
+
+    if (!data.success) return mostrarToast(data.message, "danger");
+
+    const o = data.orden;
+    document.getElementById("det_id_orden").textContent = o.id_orden;
+    document.getElementById("det_cliente").textContent =
+      `${o.nombres} ${o.apellidos}`;
+    document.getElementById("det_vehiculo").textContent =
+      `${o.placa || "S/P"} (${o.categoria || "S/CAT"})`;
+
+    const sub =
+      parseFloat(o.total_servicios || 0) + parseFloat(o.total_productos || 0);
+    const desc =
+      parseFloat(o.descuento_promo || 0) + parseFloat(o.descuento_puntos || 0);
+    const total = parseFloat(o.total_final || 0);
+
+    document.getElementById("det_subtotal").textContent =
+      `S/ ${sub.toFixed(2)}`;
+    document.getElementById("det_descuento").textContent =
+      `- S/ ${desc.toFixed(2)}`;
+    document.getElementById("det_total").textContent = `S/ ${total.toFixed(2)}`;
+
+    const lista = document.getElementById("det_lista_servicios");
+    lista.innerHTML = (data.detalles || [])
+      .map(
+        (d) => `
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom border-light">
+                <div>
+                    <div class="fw-bold small text-dark">${d.nombre_item}</div>
+                    <div class="text-muted" style="font-size:0.7rem">Cant: ${d.cantidad}</div>
+                </div>
+                <div class="fw-bold text-dark small">S/ ${parseFloat(d.subtotal).toFixed(2)}</div>
+            </div>
+        `,
+      )
+      .join("");
+
+    // Configurar botón de reimpresión
+    const btnPrint = document.getElementById("btnReimprimirDetalle");
+    if (btnPrint) {
+      btnPrint.onclick = () => {
+        window.open(
+          `${BASE_URL}/public/generar_ticket.php?id_orden=${id}`,
+          "_blank",
+          "width=400,height=600",
+        );
+      };
+    }
+
+    new bootstrap.Modal(document.getElementById("modalDetalleOrden")).show();
+  } catch (e) {
+    console.error(e);
+    mostrarToast("Error al obtener detalles", "danger");
+  }
+}
+
+// Sobreescribir mostrarToast para usar el sistema de notificaciones disponible
+function mostrarToast(mensaje, tipo = "success") {
+  console.log("Notificación (" + tipo + "): " + mensaje);
+
+  // 1. Intentar llamar al padre (Tunnel Layout / mFrame)
+  if (
+    window.parent &&
+    window.parent !== window &&
+    typeof window.parent.mostrarToast === "function"
+  ) {
+    window.parent.mostrarToast(mensaje, tipo);
+    return;
+  }
+
+  // 2. Intentar usar SweetAlert2 si está disponible localmente
+  if (typeof Swal !== "undefined") {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      icon: tipo === "danger" || tipo === "error" ? "error" : tipo,
+      title: mensaje,
+    });
+    return;
+  }
+
+  // 3. Intentar usar el Toast de Bootstrap 5 nativo (#toastSistema)
+  const toastEl = document.getElementById("toastSistema");
+  if (toastEl && typeof bootstrap !== "undefined") {
+    const toastMsj = document.getElementById("toastMensaje");
+    if (toastMsj) toastMsj.textContent = mensaje;
+
+    // Ajustar color
+    toastEl.classList.remove(
+      "bg-success",
+      "bg-danger",
+      "bg-warning",
+      "bg-info",
+      "bg-primary",
+    );
+    const colorMap = {
+      success: "bg-success",
+      danger: "bg-danger",
+      warning: "bg-warning",
+      info: "bg-info",
+      error: "bg-danger",
+    };
+    toastEl.classList.add(colorMap[tipo] || "bg-primary");
+
+    try {
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+      return;
+    } catch (e) {
+      console.error("Error BS Toast:", e);
+    }
+  }
+
+  // 4. Fallback final (Alert) solo si es crítico
+  if (tipo === "danger" || tipo === "error" || tipo === "warning") {
+    alert(mensaje);
+  }
 }

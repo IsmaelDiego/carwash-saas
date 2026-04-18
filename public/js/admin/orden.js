@@ -2,12 +2,21 @@ const ordenes = {
     tabla: null,
 
     init: function() {
+        const self = this;
         this.initTabla();
         this.initFiltrosUI();
 
         $('#tbOrdenes').on('xhr.dt', () => {
             setTimeout(() => this.computeStats(), 100);
         });
+
+        // Monitor en Tiempo Real (cada 1.5 seg)
+        setInterval(() => {
+            // Solo refrescamos si no hay un modal abierto para evitar interrumpir al usuario
+            if (!document.querySelector('.modal.show')) {
+                self.tabla.ajax.reload(null, false); // false para mantener la paginación actual
+            }
+        }, 1500);
     },
 
     initTabla: function() {

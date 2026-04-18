@@ -76,15 +76,21 @@
                 <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
                   <i class="bx bx-plus me-1"></i> Nuevo Vehículo
                 </button>
+               
+
                 <a href="<?= BASE_URL ?>/admin/vehiculo/categorias" class="btn btn-label-primary shadow-sm">
                   <i class="bx bx-category me-1"></i> Categorías
                 </a>
                 <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
                   <i class="bx bx-filter-alt me-1"></i> Filtros
                 </button>
-                <button class="btn btn-outline-success" type="button" id="btnExportar">
-                  <i class="bx bxs-file-export p-2"></i>
+
+                 
+                <!-- Botón de Reportes BI Sincronizado -->
+                <button type="button" class="btn btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalReportesVehiculo">
+                    <i class="bx bxs-bar-chart-alt-2 p-1 fs-5"></i> <span class="d-none d-md-inline ms-1">Centro de Reportes BI</span>
                 </button>
+                
             </div>
         </div>
       </div>
@@ -111,8 +117,11 @@
 
 <script> const BASE_URL = "<?= BASE_URL ?>"; </script>
 
-<?php require VIEW_PATH . '/partials/vehiculo/modals.php'; ?>
-<?php require VIEW_PATH . '/partials/vehiculo/filtros.php'; ?>
+<?php 
+    require VIEW_PATH . '/partials/vehiculo/modals.php'; 
+    require VIEW_PATH . '/partials/vehiculo/modal_reporte.php'; 
+    require VIEW_PATH . '/partials/vehiculo/filtros.php'; 
+?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 

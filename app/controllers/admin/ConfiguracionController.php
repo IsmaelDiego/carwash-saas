@@ -14,6 +14,8 @@ class ConfiguracionController {
     // VISTA PRINCIPAL
     public function index() {
         requireAuth();
+        global $pdo;
+        $operarios = $pdo->query("SELECT id_usuario, nombres FROM usuarios WHERE id_rol = 3 AND estado = 1 ORDER BY nombres")->fetchAll(\PDO::FETCH_ASSOC);
         require VIEW_PATH . '/admin/configuracion.view.php';
     }
 
@@ -59,10 +61,67 @@ class ConfiguracionController {
 
             $model = new ConfiguracionSistema($pdo);
             if ($model->actualizar($input)) {
+                // ★ Sincronizar rampas con el nuevo número configurado
+                require_once __DIR__ . '/../../models/Rampa.php';
+                $rampaModel = new \Rampa($pdo);
+                $rampaModel->sincronizarRampas((int)($input['num_rampas'] ?? 3));
+
                 echo json_encode(['success' => true, 'message' => '¡Configuración guardada!']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Error al guardar.']);
             }
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // API: RAMPAS (Solo Admin puede configurar)
+    // ═════════════════════════════════════════
+
+    // API: LISTAR RAMPAS CON OPERADORES
+    public function getrampas() {
+        requireAuth();
+        global $pdo;
+        header('Content-Type: application/json');
+        require_once __DIR__ . '/../../models/Rampa.php';
+        $model = new \Rampa($pdo);
+        $operarios = $pdo->query(
+            "SELECT id_usuario, nombres, dni FROM usuarios WHERE id_rol IN (2,3) AND estado = 1 ORDER BY nombres"
+        )->fetchAll(\PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'rampas' => $model->getAll(), 'operarios' => $operarios]);
+    }
+
+    // API: ACTUALIZAR ESTADO/OPERADOR DE RAMPA (Admin)
+    public function actualizarrampa() {
+        requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        global $pdo;
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($input['id_rampa']) || empty($input['estado'])) {
+            echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
+            return;
+        }
+
+        $estados_validos = ['ACTIVA', 'INACTIVA', 'DESCANSO'];
+        if (!in_array($input['estado'], $estados_validos)) {
+            echo json_encode(['success' => false, 'message' => 'Estado no válido.']);
+            return;
+        }
+
+        require_once __DIR__ . '/../../models/Rampa.php';
+        $model = new \Rampa($pdo);
+        $ok = $model->actualizarEstado(
+            (int)$input['id_rampa'],
+            $input['estado'],
+            !empty($input['id_operador']) ? (int)$input['id_operador'] : null,
+            $input['motivo'] ?? null
+        );
+
+        if ($ok) {
+            echo json_encode(['success' => true, 'message' => 'Rampa actualizada correctamente.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar rampa.']);
         }
     }
 
@@ -85,14 +144,13 @@ class ConfiguracionController {
 
             $minutos = (int)($input['minutos_validez'] ?? 60);
             if ($minutos < 5) $minutos = 5;
-            if ($minutos > 1440) $minutos = 1440; // Máx 24h
+            if ($minutos > 1440) $minutos = 1440;
 
             $limite = (int)($input['limite_usos'] ?? 1);
-            if ($limite < 0) $limite = 1; // 0 podría ser ilimitado si queremos, pero por ahora 1 min
+            if ($limite < 0) $limite = 1;
 
             $model = new TokenSeguridad($pdo);
             
-            // 🛑 LIMITE: Solo 1 token activo a la vez para evitar creación masiva
             if ($model->contarActivos() >= 1) {
                 echo json_encode(['success' => false, 'message' => 'Ya existe un token activo. Úsalo o espera a que expire para generar uno nuevo.']);
                 return;
@@ -137,7 +195,6 @@ class ConfiguracionController {
             $token = $model->validar($input['codigo']);
 
             if ($token) {
-                // Marcar como usado
                 $model->marcarUsado($token['id_token']);
                 echo json_encode([
                     'success'  => true,

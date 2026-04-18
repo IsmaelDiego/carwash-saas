@@ -88,8 +88,8 @@
                         <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
                             <i class="bx bx-filter-alt me-1"></i> Filtros
 
-                        <button class="btn btn-outline-success" type="button" id="btnExportar">
-                            <i class="bx bxs-file-export p-2"></i>
+                        <button class="btn btn-dark border shadow-sm fw-bold" style="padding: 0.4375rem 0.8rem;" type="button" data-bs-toggle="modal" data-bs-target="#modalReportesOrden" title="Central de Reportes BI">
+                            <i class="bx bxs-bar-chart-alt-2 p-1 fs-5"></i> <span class="d-none d-md-inline ms-1">Centro de Reportes BI</span>
                         </button>
                     </div>
                 </div>

@@ -135,15 +135,29 @@ class CajaSesion {
      * Obtiene el listado de arqueos/sesiones por mes y año
      */
     public function getArqueosPorMes($month, $year) {
-        $query = "SELECT cs.*, u.nombres as cajero_nombre,
+        $query = "SELECT cs.*, u.nombres as cajero_nombre, r.nombre as rol_apertura_nombre,
                     (SELECT COALESCE(SUM(po.monto), 0) 
                      FROM pagos_orden po 
                      JOIN ordenes o ON po.id_orden = o.id_orden 
-                     WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO') as recaudado_acumulado
+                     WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO') as recaudado_acumulado,
+                    (SELECT COALESCE(SUM(po.monto), 0) 
+                     FROM pagos_orden po 
+                     JOIN ordenes o ON po.id_orden = o.id_orden 
+                     WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO' AND po.metodo_pago = 'EFECTIVO') as total_efectivo,
+                    (SELECT COALESCE(SUM(po.monto), 0) 
+                     FROM pagos_orden po 
+                     JOIN ordenes o ON po.id_orden = o.id_orden 
+                     WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO' AND po.metodo_pago IN ('YAPE', 'PLIN', 'TRANSFERENCIA')) as total_transferencia,
+                    (SELECT COALESCE(SUM(po.monto), 0) 
+                     FROM pagos_orden po 
+                     JOIN ordenes o ON po.id_orden = o.id_orden 
+                     WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO' AND po.metodo_pago IN ('TARJETA')) as total_tarjeta,
+                    (SELECT COUNT(*) FROM ordenes WHERE id_caja_sesion = cs.id_sesion AND estado = 'FINALIZADO') as total_atenciones
                 FROM caja_sesiones cs
                 LEFT JOIN usuarios u ON cs.id_usuario = u.id_usuario
+                LEFT JOIN roles r ON cs.id_rol_apertura = r.id_rol
                 WHERE MONTH(cs.fecha_apertura) = :m AND YEAR(cs.fecha_apertura) = :y
-                ORDER BY cs.fecha_apertura ASC";
+                ORDER BY cs.fecha_apertura DESC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':m', $month, PDO::PARAM_INT);
@@ -154,12 +168,79 @@ class CajaSesion {
     }
 
     /**
+     * Obtiene arqueos por rango de fechas (Cualquier rango)
+     */
+    public function getArqueosPorRango($f_inicio, $f_fin) {
+        $query = "SELECT cs.*, u.nombres as cajero_nombre, r.nombre as rol_apertura_nombre,
+                    (SELECT COALESCE(SUM(po.monto), 0) FROM pagos_orden po JOIN ordenes o ON po.id_orden = o.id_orden WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO') as recaudado_acumulado,
+                    (SELECT COALESCE(SUM(po.monto), 0) FROM pagos_orden po JOIN ordenes o ON po.id_orden = o.id_orden WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO' AND po.metodo_pago = 'EFECTIVO') as total_efectivo,
+                    (SELECT COALESCE(SUM(po.monto), 0) FROM pagos_orden po JOIN ordenes o ON po.id_orden = o.id_orden WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO' AND po.metodo_pago IN ('YAPE', 'PLIN', 'TRANSFERENCIA')) as total_transferencia,
+                    (SELECT COALESCE(SUM(po.monto), 0) FROM pagos_orden po JOIN ordenes o ON po.id_orden = o.id_orden WHERE o.id_caja_sesion = cs.id_sesion AND o.estado = 'FINALIZADO' AND po.metodo_pago IN ('TARJETA')) as total_tarjeta,
+                    (SELECT COUNT(*) FROM ordenes WHERE id_caja_sesion = cs.id_sesion AND estado = 'FINALIZADO') as total_atenciones
+                FROM caja_sesiones cs
+                LEFT JOIN usuarios u ON cs.id_usuario = u.id_usuario
+                LEFT JOIN roles r ON cs.id_rol_apertura = r.id_rol
+                WHERE DATE(cs.fecha_apertura) BETWEEN :f1 AND :f2
+                ORDER BY cs.fecha_apertura DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':f1', $f_inicio);
+        $stmt->bindParam(':f2', $f_fin);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene el desglose detallado de todos los servicios y productos vendidos en un rango
+     */
+    public function getOperacionesPorRango($f_inicio, $f_fin, $idUsuario = 'TODOS') {
+        $query = "SELECT 
+                    o.id_orden, o.id_caja_sesion, o.fecha_creacion as fecha_registro,
+                    u.nombres as cajero_nombre,
+                    CASE 
+                        WHEN d.id_servicio IS NOT NULL THEN s.nombre 
+                        ELSE p.nombre 
+                    END as item_nombre,
+                    CASE 
+                        WHEN d.id_servicio IS NOT NULL THEN 'SERVICIO' 
+                        ELSE 'PRODUCTO' 
+                    END as tipo_item,
+                    d.precio_unitario,
+                    d.cantidad,
+                    d.subtotal as total
+                FROM ordenes o
+                JOIN caja_sesiones cs ON o.id_caja_sesion = cs.id_sesion
+                LEFT JOIN usuarios u ON cs.id_usuario = u.id_usuario
+                JOIN detalle_orden d ON o.id_orden = d.id_orden
+                LEFT JOIN servicios s ON d.id_servicio = s.id_servicio
+                LEFT JOIN productos p ON d.id_producto = p.id_producto
+                WHERE DATE(cs.fecha_apertura) BETWEEN :f1 AND :f2
+                AND o.estado = 'FINALIZADO'";
+        
+        if ($idUsuario !== 'TODOS') {
+            $query .= " AND cs.id_usuario = :user";
+        }
+
+        $query .= " ORDER BY o.id_orden DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':f1', $f_inicio);
+        $stmt->bindParam(':f2', $f_fin);
+        if ($idUsuario !== 'TODOS') $stmt->bindParam(':user', $idUsuario);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Obtiene datos básicos de una sesión por ID
      */
     public function getSesionInfo($id_sesion) {
-        $query = "SELECT cs.*, u.nombres as cajero 
+        $query = "SELECT cs.*, u.nombres as cajero, r.nombre as rol_apertura_nombre
                   FROM caja_sesiones cs 
                   JOIN usuarios u ON cs.id_usuario = u.id_usuario 
+                  LEFT JOIN roles r ON cs.id_rol_apertura = r.id_rol
                   WHERE cs.id_sesion = :id_sesion";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id_sesion', $id_sesion, PDO::PARAM_INT);

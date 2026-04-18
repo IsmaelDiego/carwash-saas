@@ -147,6 +147,7 @@
         <div class="modal-content">
             <div class="modal-header bg-danger">
                 <h5 class="modal-title text-white fw-bold"><i class="bx bx-lock-open-alt me-2"></i>Apertura de Caja</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="formAperturaCaja">
                 <div class="modal-body">
@@ -242,7 +243,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold small">Vehículo</label>
                                     <div class="input-group">
-                                        <select class="form-select" id="sel_vehiculo_orden" onchange="checkNuevoVeh(this.value)">
+                                        <select class="form-select" id="sel_vehiculo_orden" onchange="checkNuevoVeh(this.value); calcularTotalNuevaOrden();">
                                             <option value="">-- Seleccionar --</option>
                                         </select>
                                     </div>
@@ -252,7 +253,7 @@
                                     <input type="text" class="form-control" id="ubic_orden" placeholder="Zona/Bahía">
                                 </div>
                             </div>
-                            <div id="camposNuevoVehiculo" class="bg-light p-3 rounded-3 mb-4 border border-info" style="display:none">
+                            <div id="camposNuevoVehiculo" class="bg-white p-3 rounded-3 mb-4 border border-info" style="display:none">
                                 <h6 class="fw-bold mb-3 small text-info"><i class="bx bx-car me-1"></i>Datos del Nuevo Vehículo</h6>
                                 <div class="row g-2 mb-2">
                                     <div class="col-6"><label class="form-label small">Placa</label><input type="text" class="form-control text-uppercase" id="nv_placa" placeholder="ABC-123"></div>
@@ -260,9 +261,9 @@
                                 </div>
                                 <div class="mb-0">
                                     <label class="form-label small">Categoría</label>
-                                    <select class="form-select" id="nv_categoria">
+                                    <select class="form-select" id="nv_categoria" onchange="calcularTotalNuevaOrden()">
                                         <?php foreach ($categoriasVH as $cat): ?>
-                                        <option value="<?php echo $cat['id_categoria']; ?>"><?php echo htmlspecialchars($cat['nombre']); ?></option>
+                                        <option value="<?php echo $cat['id_categoria']; ?>" data-factor="<?php echo $cat['factor_precio']; ?>"><?php echo htmlspecialchars($cat['nombre']); ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -291,7 +292,7 @@
                                     </div>
                                     <?php foreach ($promociones as $promo): ?>
                                     <div class="col-12">
-                                        <div class="promo-option" data-id="<?php echo $promo['id_promocion']; ?>" data-tipo="<?php echo $promo['tipo_descuento']; ?>" data-valor="<?php echo $promo['valor']; ?>" onclick="selectPromoOrden(this)">
+                                        <div class="promo-option" data-id="<?php echo $promo['id_promocion']; ?>" data-tipo="<?php echo $promo['tipo_descuento']; ?>" data-valor="<?php echo $promo['valor']; ?>" data-once="<?php echo $promo['solo_una_vez_por_cliente']; ?>" onclick="selectPromoOrden(this)">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div>
                                                     <div class="fw-bold small"><?php echo htmlspecialchars($promo['nombre']); ?></div>
@@ -313,8 +314,7 @@
                                 </div>
                             </div>
                             <?php endif; ?>
-                            
-                            <!-- Cobro Anticipado -->
+                                  <!-- Cobro Anticipado -->
                             <div class="mb-4 bg-label-success p-3 rounded-3 border border-success">
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" id="chk_pago_anticipado" onchange="togglePagoAnticipado(this)">
@@ -333,6 +333,25 @@
                                     <input type="hidden" id="metodo_anticipado" value="EFECTIVO">
                                 </div>
                             </div>
+
+                            <!-- Fidelización (Puntos) -->
+                            <div id="seccion_fidelizacion" class="mb-4 p-3 rounded-3 border bg-light" style="display:none">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="pts-icon-container me-2">
+                                            <i class="bx bxs-star fs-3" id="icon_pts_status"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold small" id="titulo_pts_status">FIDELIZACIÓN</div>
+                                            <div class="text-muted text-uppercase" style="font-size:0.7rem; letter-spacing: 0.5px;" id="msg_pts_status"><?= htmlspecialchars($temporadaActiva) ?></div>
+                                        </div>
+                                    </div>
+                                    <div id="pts_badge_container">
+                                        <span class="badge" id="badge_pts_count" style="font-size:0.9rem">0 pts</span>
+                                    </div>
+                                </div>
+                                <input type="checkbox" id="chk_canjear_puntos" class="d-none" onchange="calcularTotalNuevaOrden()">
+                            </div>                    </div>
                             
                             <!-- Resumen del Total -->
                             <div class="bg-light p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center border">
@@ -340,7 +359,7 @@
                                 <h4 class="fw-bold text-primary mb-0" id="lbl_total_nueva_orden">S/ 0.00</h4>
                             </div>
 
-                            <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill mt-2 shadow-sm" onclick="confirmarCreacionOrden()">
+                            <button class="btn btn-primary btn-lg w-100 fw-bold mt-2 shadow-sm" onclick="confirmarCreacionOrden()">
                                 <i class="bx bx-rocket me-1"></i>CREAR ORDEN E INICIAR SERVICIO
                             </button>
                         </div>
@@ -353,4 +372,174 @@
 
 <?php // Modals de Cliente (Admin) ?>
 <?php require VIEW_PATH . '/partials/cliente/modals.php'; ?>
-?>
+
+<!-- Modal: Gestionar Rampa (Cajero) -->
+<div class="modal fade" id="modalGestionRampa" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-primary p-3">
+                <h5 class="modal-title fw-bold" style="color:white!important"><i class="bx bx-car-wash me-1"></i>Rampa <span id="gr_numero"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="gr_id_rampa">
+                
+                <!-- Aviso de Cierre Diferido -->
+                <div id="avisoCierreDiferido" style="display:none"></div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Operario Asignado</label>
+                    <select class="form-select" id="gr_operador">
+                        <option value="">— Sin asignar —</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Estado de Rampa</label>
+                    <div class="d-flex gap-2">
+                        <div class="flex-fill text-center p-2 rounded-3 border rampa-estado-btn cursor-pointer" data-estado="ACTIVA"
+                             style="cursor:pointer" onclick="selEstadoRampa(this)">
+                            <i class="bx bx-check-circle text-success d-block" style="font-size:1.4rem"></i>
+                            <small class="fw-bold">ACTIVA</small>
+                        </div>
+                        <div class="flex-fill text-center p-2 rounded-3 border rampa-estado-btn cursor-pointer" data-estado="DESCANSO"
+                             style="cursor:pointer" onclick="selEstadoRampa(this)">
+                            <i class="bx bx-coffee text-warning d-block" style="font-size:1.4rem"></i>
+                            <small class="fw-bold">DESCANSO</small>
+                        </div>
+                        <div class="flex-fill text-center p-2 rounded-3 border rampa-estado-btn cursor-pointer" data-estado="INACTIVA"
+                             style="cursor:pointer" onclick="selEstadoRampa(this)">
+                            <i class="bx bx-x-circle text-danger d-block" style="font-size:1.4rem"></i>
+                            <small class="fw-bold">INACTIVA</small>
+                        </div>
+                    </div>
+                    <input type="hidden" id="gr_estado" value="ACTIVA">
+                </div>
+
+                <div class="mb-3" id="gr_motivo_container" style="display:none">
+                    <label class="form-label fw-bold small">Motivo</label>
+                    <select class="form-select" id="gr_motivo">
+                        <option value="Falta de personal">Falta de personal</option>
+                        <option value="Horario de almuerzo">Horario de almuerzo ☕</option>
+                        <option value="Break / Descanso corto">Break / Descanso corto</option>
+                        <option value="Mantenimiento de rampa">Mantenimiento de rampa</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary w-100 fw-bold rounded-pill" onclick="confirmarGestionRampa()">
+                    <i class="bx bx-save me-1"></i>GUARDAR CAMBIOS
+                </button>
+                <button class="btn btn-outline-secondary w-100 mt-2 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Adelantar Orden en Cola -->
+<div class="modal fade" id="modalAdelantar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;border-top:4px solid #ffab00">
+            <div class="modal-body p-4 text-center">
+                <i class="bx bx-up-arrow-circle text-warning" style="font-size:3.5rem"></i>
+                <h5 class="fw-bold mt-2">Adelantar Orden #<span id="adelantar_id"></span></h5>
+                <p class="text-muted small mb-4">Esta orden pasará al <strong>inicio de la cola</strong>. Si hay una rampa libre, iniciará proceso inmediatamente.</p>
+                <button class="btn btn-warning w-100 fw-bold rounded-pill mb-2 text-dark" onclick="confirmarAdelantar()">
+                    <i class="bx bx-rocket me-1"></i>SÍ, ADELANTAR
+                </button>
+                <button class="btn btn-outline-secondary w-100 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Quitar Prioridad -->
+<div class="modal fade" id="modalQuitarPrioridad" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;border-top:4px solid #ff3e1d">
+            <div class="modal-body p-4 text-center">
+                <i class="bx bx-reset text-danger" style="font-size:3.5rem"></i>
+                <h5 class="fw-bold mt-2">Quitar Prioridad #<span id="quitar_prio_id"></span></h5>
+                <p class="text-muted small mb-4">¿Estás seguro de quitar la prioridad? La orden volverá a su posición natural según su hora de llegada.</p>
+                <button class="btn btn-danger w-100 fw-bold rounded-pill mb-2 text-white" onclick="confirmarQuitarPrioridad()">
+                    <i class="bx bx-check me-1"></i>SÍ, QUITAR PRIORIDAD
+                </button>
+                <button class="btn btn-outline-secondary w-100 rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal: Ver Detalle de Orden -->
+<div class="modal fade" id="modalDetalleOrden" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary py-3">
+                <h5 class="modal-title fw-bold text-white mb-0"><i class="bx bx-receipt me-2"></i> RESUMEN DE ORDEN #<span id="det_id_orden"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Sección Info Cliente/Vehículo -->
+                <div class="p-4 bg-light border-bottom">
+                    <div class="row g-3">
+                        <div class="col-6 border-end">
+                            <label class="text-uppercase text-muted fw-bold mb-1 d-block" style="font-size: 0.65rem; letter-spacing: 1px;">Cliente</label>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-label-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:36px; height:36px;">
+                                    <i class="bx bx-user fs-5"></i>
+                                </div>
+                                <div class="fw-bold text-dark lh-1" id="det_cliente" style="font-size: 0.85rem;">—</div>
+                            </div>
+                        </div>
+                        <div class="col-6 px-3">
+                            <label class="text-uppercase text-muted fw-bold mb-1 d-block" style="font-size: 0.65rem; letter-spacing: 1px;">Vehículo</label>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-label-info rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:36px; height:36px;">
+                                    <i class="bx bx-car fs-5"></i>
+                                </div>
+                                <div class="fw-bold text-dark lh-1" id="det_vehiculo" style="font-size: 0.85rem;">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Ítems -->
+                <div class="p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 text-primary small">SERVICIOS Y PRODUCTOS</h6>
+                        <span class="badge bg-label-secondary rounded-pill" style="font-size: 10px;">POS V1.0</span>
+                    </div>
+                    
+                    <div id="det_lista_servicios" class="mb-4 overflow-auto" style="max-height: 250px;">
+                        <!-- Ítems dinámicos -->
+                    </div>
+
+                    <!-- Resumen de Totales -->
+                    <div class="bg-label-primary p-3 rounded-3 mt-3 shadow-none border border-primary border-opacity-10">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Subtotal Bruto</span>
+                            <span class="fw-bold small" id="det_subtotal">S/ 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-danger">
+                            <span class="small">Descuentos</span>
+                            <span class="fw-bold small" id="det_descuento">- S/ 0.00</span>
+                        </div>
+                        <hr class="my-2 opacity-25">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h6 fw-bold mb-0">TOTAL CANCELADO</span>
+                            <span class="h4 fw-bold text-primary mb-0" id="det_total">S/ 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer border-0 p-4 pt-0 d-flex flex-column gap-2">
+                <button id="btnReimprimirDetalle" class="btn btn-primary w-100 py-3 fs-6 fw-bold shadow-sm" style="border-radius: 14px;">
+                    <i class="bx bx-printer me-2 fs-5"></i> REIMPRIMIR TICKET
+                </button>
+                <button class="btn btn-label-secondary w-100 py-2 fw-bold" data-bs-dismiss="modal" style="border-radius: 12px;">
+                    CERRAR
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -18,7 +18,6 @@ $nombre_negocio = !empty($config_sys['nombre_negocio']) ? $config_sys['nombre_ne
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/fonts/iconify-icons.css" />
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/css/core.css" />
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/css/demo.css" />
-    <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/css/dark-mode.css" />
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/css/pages/page-auth.css" />
     <script src="<?= BASE_URL ?>/template/assets/vendor/js/helpers.js"></script>

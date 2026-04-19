@@ -101,28 +101,26 @@
             <div class="m-1">
                 <h5 class="card-header border-bottom mb-3">CATÁLOGO DE SERVICIOS</h5>
 
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <nav aria-label="breadcrumb" class="me-auto">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100">
+                    <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/home">Inicio</a></li>
                             <li class="breadcrumb-item active text-primary">Servicios</li>
                         </ol>
                     </nav>
 
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-
-                        <div class="input-group" style="width: 50%;">
-                            <input type="text" id="buscadorGlobal" class="form-control " placeholder="Buscar servicio..." autocomplete="off">
+                    <div class="d-flex flex-nowrap align-items-center justify-content-end gap-2" style="flex: 1;">
+                        <div class="input-group" style="width: 20%;">
+                            <input type="text" id="buscadorGlobal" class="form-control" placeholder="Buscar servicio..." autocomplete="off">
                             <span class="input-group-text"><i class="bx bx-search text-muted"></i></span>
-
                         </div>
 
-                        <button type="button" class="btn  btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
+                        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
                             <i class="bx bx-plus me-1"></i> Nuevo Servicio
                         </button>
 
-                        <button class="btn  btn-outline-success" type="button" id="btnExportar">
-                            <i class="bx bxs-file-export p-2"></i>
+                        <button type="button" class="btn btn-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#modalReportesServicio">
+                            <i class="bx bx-bar-chart-alt-2 me-1"></i> Centro de Reportes BI
                         </button>
                     </div>
                 </div>
@@ -180,6 +178,7 @@
 </script>
 
 <?php require VIEW_PATH . '/partials/servicio/modals.php'; ?>
+<?php require VIEW_PATH . '/partials/servicio/modal_reporte.php'; ?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 

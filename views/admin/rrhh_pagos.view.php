@@ -99,9 +99,15 @@
                         <button type="button" class="btn btn-primary shadow-sm" id="btnNuevoPago">
                             <i class="bx bx-plus me-1"></i> Nuevo Pago
                         </button>
+
+                        
                         
                         <button class="btn btn-outline-secondary" type="button" id="btnAbrirFiltro">
                             <i class="bx bx-filter-alt me-1"></i> Filtros
+                        </button>
+
+                        <button class="btn btn-dark" type="button" data-bs-toggle="modal" data-bs-target="#modalReportesPagos" title="Central de Reportes">
+                             <i class="bx bx-bar-chart-alt-2 me-1"></i> Central de Reportes BI
                         </button>
                     </div>
                 </div>
@@ -133,6 +139,7 @@
 </div>
 
 <?php require VIEW_PATH . '/partials/rrhh_pago/modals.php'; ?>
+<?php require VIEW_PATH . '/partials/pago/modal_reporte.php'; ?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
 
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>

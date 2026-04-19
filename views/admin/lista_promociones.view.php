@@ -112,14 +112,19 @@
 <div class="content-wrapper">
     <div class="container-fluid flex-grow-1 container-p-y">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 w-100">
             <div>
                 <h4 class="fw-bold mb-0 text-primary">Marketing & Fidelización</h4>
                 <small class="text-muted">Gestiona tus campañas y comunícate directamente con tus clientes.</small>
             </div>
-            <button class="btn btn-primary rounded-pill shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
-                <i class="bx bx-plus-circle me-1"></i> NUEVA CAMPAÑA
-            </button>
+            <div class="d-flex flex-nowrap gap-2 align-items-center">
+                <button class="btn btn-primary rounded-pill shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
+                    <i class="bx bx-plus-circle me-1"></i> NUEVA CAMPAÑA
+                </button>
+                <button class="btn btn-dark rounded-pill shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#modalReportesPromocion">
+                    <i class="bx bx-bar-chart-alt-2 me-1"></i> Centro de Reportes BI
+                </button>
+            </div>
         </div>
 
         <!-- Stats Overview -->
@@ -255,7 +260,6 @@
                         <span class="input-group-text"><i class="bx bx-search text-muted"></i></span>
                         <input type="text" id="buscadorGlobal" class="form-control" placeholder="Buscar campaña..." autocomplete="off">
                     </div>
-                    <button class="btn btn-sm btn-outline-success" id="btnExportar"><i class="bx bxs-file-export"></i></button>
                 </div>
             </div>
             <div class="table-responsive text-nowrap px-3">
@@ -285,6 +289,7 @@
 <script src="<?= BASE_URL ?>/public/js/admin/promocion.js"></script>
 
 <?php require VIEW_PATH . '/partials/promocion/modals.php'; ?>
+<?php require VIEW_PATH . '/partials/promocion/modal_reporte.php'; ?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
 
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>

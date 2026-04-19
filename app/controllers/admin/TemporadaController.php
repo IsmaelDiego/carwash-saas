@@ -115,4 +115,101 @@ class TemporadaController {
             }
         }
     }
+    // =========================================================
+    // EXPORTAR REPORTES BI
+    // =========================================================
+    public function exportar()
+    {
+        requireAuth();
+        global $pdo;
+
+        date_default_timezone_set('America/Lima');
+        $fecha_actual = date('d/m/Y');
+
+        $tipo = $_GET['tipo'] ?? 'general';
+        $formato = $_GET['formato'] ?? 'pdf';
+        $periodo = $_GET['periodo'] ?? 'all';
+        $estado = $_GET['estado'] ?? 'todos';
+
+        // Lógica de traducción de Periodo Inteligente
+        $f_fin = date('Y-m-d');
+        $f_inicio = '1900-01-01'; // Default: Todo el historial
+
+        if ($periodo === '3m') {
+            $f_inicio = date('Y-m-d', strtotime('-3 months'));
+        } elseif ($periodo === '6m') {
+            $f_inicio = date('Y-m-d', strtotime('-6 months'));
+        } elseif (strpos($periodo, 'year_') === 0) {
+            $anioSelect = str_replace('year_', '', $periodo);
+            $f_inicio = "$anioSelect-01-01";
+            $f_fin = "$anioSelect-12-31";
+        }
+
+        $titulos_base = [
+            'general'     => "LISTADO MAESTRO DE TEMPORADAS",
+            'rendimiento' => "MÉTRICAS DE FIDELIZACIÓN POR PERIODO",
+            'impacto'     => "REPORTE SITUACIONAL DE TEMPORADAS"
+        ];
+        
+        $titulo_pdf = $titulos_base[$tipo] ?? "REPORTE DE TEMPORADAS";
+        $titulo_reporte = "$titulo_pdf ($fecha_actual)";
+
+        // Lógica de Filtro Dinámico por Estado
+        $where_estado = "";
+        $params = [$f_inicio, $f_fin];
+
+        if ($estado !== 'todos') {
+            $where_estado = " AND t.estado = ? ";
+            $params[] = $estado;
+        }
+
+        // Consulta Quirúrgica con Filtros de Fecha y Estado
+        $sql = "SELECT t.*, 
+                (SELECT COALESCE(SUM(d.cantidad),0) FROM detalle_orden d INNER JOIN servicios s ON d.id_servicio = s.id_servicio INNER JOIN ordenes o ON d.id_orden = o.id_orden WHERE o.id_temporada = t.id_temporada AND o.estado = 'FINALIZADO' AND s.acumula_puntos = 1 AND o.id_cliente != 1) as puntos_gen,
+                (SELECT COALESCE(COUNT(o.id_orden),0) FROM ordenes o WHERE o.id_temporada = t.id_temporada AND o.estado = 'FINALIZADO' AND o.descuento_puntos > 0 AND o.id_cliente != 1) as puntos_red
+                FROM temporadas t 
+                WHERE t.fecha_inicio BETWEEN ? AND ? $where_estado
+                ORDER BY t.fecha_inicio DESC";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($formato === 'csv') {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=Reporte_Temporadas_' . strtoupper($tipo) . '_' . date('Ymd_His') . '.csv');
+            $output = fopen('php://output', 'w');
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
+
+            fputcsv($output, ['TEMPORADA', 'INICIO', 'FIN', 'PUNTOS GEN.', 'REDENCIONES', 'ESTADO'], ';');
+            foreach ($data as $r) {
+                fputcsv($output, [
+                    mb_strtoupper($r['nombre'], 'UTF-8'),
+                    $r['fecha_inicio'],
+                    $r['fecha_fin'] ?? '---',
+                    $r['puntos_gen'],
+                    $r['puntos_red'],
+                    $r['estado'] ? 'ACTIVA' : 'FINALIZADA'
+                ], ';');
+            }
+            exit;
+        } else {
+            try {
+                require_once BASE_PATH . '/vendor/MPDF/vendor/autoload.php';
+                $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_top' => 15, 'margin_bottom' => 15]);
+                
+                ob_start();
+                $lista = $data;
+                require VIEW_PATH . '/admin/reportes/temporada/listado.view.php';
+                $html = ob_get_clean();
+
+                $mpdf->WriteHTML($html);
+                $mpdf->SetTitle($titulo_reporte);
+                $mpdf->Output('Reporte_Temporadas_' . date('Ymd_His') . '.pdf', 'I');
+                exit;
+            } catch (\Exception $e) {
+                die("Error BI Temporadas: " . $e->getMessage());
+            }
+        }
+    }
 }

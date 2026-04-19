@@ -49,7 +49,7 @@
 <body>
     <div class="header">
         <h1><?= $titulo_pdf ?? 'REPORTE DE VEHÍCULOS' ?></h1>
-        <p>Sistema de Gestión de Flota Automotriz - CarWash Pro BI</p>
+        <p>Sistema de Gestión de Flota Automotriz</p>
     </div>
 
     <table style="width: 100%; margin-bottom: 20px; font-size: 11px;">
@@ -95,7 +95,7 @@
     </table>
 
     <div class="footer">
-        <p>Este documento es un reporte técnico de auditoría de flota. Generado por Antigravity BI Engine.</p>
+        <p>Este reporte es para uso exclusivo administrativo. Generado de forma automatizada por el motor BI del sistema.</p>
     </div>
 </body>
 </html>

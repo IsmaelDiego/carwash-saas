@@ -32,7 +32,7 @@
 <body>
     <div class="header">
         <h1><?= $titulo_pdf ?? 'REPORTE DETALLADO DE CAJA' ?></h1>
-        <p>Análisis de Operaciones y Servicios - Carwash Pro</p>
+        <p>Análisis de Operaciones y Servicios</p>
     </div>
 
     <div class="filters-info">

@@ -38,7 +38,7 @@
 <body>
     <div class="header">
         <h1><?= $titulo_pdf ?? 'REPORTE DE ARQUEOS' ?></h1>
-        <p>Sistema de Gestión Carwash - Panel Administrativo</p>
+        <p>Sistema de Gestión Carwash</p>
     </div>
 
     <div class="filters-info">

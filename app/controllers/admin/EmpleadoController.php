@@ -3,6 +3,7 @@ namespace Controllers\Admin;
 
 use Empleado;
 use Exception;
+use PDO;
 
 class EmpleadoController {
 
@@ -283,6 +284,108 @@ class EmpleadoController {
                 http_response_code(500);
                 echo json_encode(['success' => false, 'message' => 'Error: El empleado tiene registros asociados.']);
             }
+        }
+    }
+
+    // ==========================================
+    // API: CENTRAL DE REPORTES BI
+    // ==========================================
+    public function exportar()
+    {
+        requireAuth();
+        global $pdo;
+
+        date_default_timezone_set('America/Lima');
+        $fecha_actual = date('d/m/Y');
+        $tipo = $_GET['tipo'] ?? 'general';
+        $formato = $_GET['formato'] ?? 'pdf';
+        $rol_filtro = $_GET['rol'] ?? 'todos';
+        $estado_filtro = $_GET['estado'] ?? 'todos';
+
+        $titulos_base = [
+            'general'     => "LISTADO MAESTRO DE PERSONAL",
+            'rendimiento' => "RENDIMIENTO Y PRODUCTIVIDAD OPERATIVA",
+            'seguridad'   => "AUDITORÍA DE ACCESOS Y SEGURIDAD"
+        ];
+        $titulo_pdf = $titulos_base[$tipo] ?? "REPORTE DE PERSONAL";
+        $titulo_reporte = "$titulo_pdf ($fecha_actual)";
+
+        // Construcción de Query Dinámica
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if ($rol_filtro !== 'todos') {
+            $where .= " AND u.id_rol = ? ";
+            $params[] = $rol_filtro;
+        }
+        if ($estado_filtro !== 'todos') {
+            $where .= " AND u.estado = ? ";
+            $params[] = $estado_filtro;
+        }
+
+        if ($tipo === 'rendimiento') {
+            $sql = "SELECT u.id_usuario, u.dni, u.nombres, r.nombre as rol_nombre, u.estado,
+                           COUNT(o.id_orden) as total_ordenes,
+                           COALESCE(SUM(o.total_final), 0) as recaudacion_total
+                    FROM usuarios u
+                    INNER JOIN roles r ON u.id_rol = r.id_rol
+                    LEFT JOIN ordenes o ON u.id_usuario = o.id_usuario_creador AND o.estado = 'FINALIZADO'
+                    $where
+                    GROUP BY u.id_usuario
+                    ORDER BY total_ordenes DESC";
+        } else {
+            $sql = "SELECT u.*, r.nombre as rol_nombre 
+                    FROM usuarios u
+                    INNER JOIN roles r ON u.id_rol = r.id_rol
+                    $where
+                    ORDER BY u. nombres ASC";
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $lista = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($formato === 'pdf') {
+            try {
+                require_once BASE_PATH . '/vendor/MPDF/vendor/autoload.php';
+                $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_top' => 15]);
+                
+                ob_start();
+                require VIEW_PATH . '/admin/reportes/empleado/listado.view.php';
+                $html = ob_get_clean();
+
+                $mpdf->WriteHTML($html);
+                $mpdf->SetTitle($titulo_reporte);
+                $mpdf->Output('Reporte_Personal_' . date('Ymd_His') . '.pdf', 'I');
+                exit;
+            } catch (\Exception $e) { die("Error PDF: " . $e->getMessage()); }
+        } else {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=Reporte_Personal_' . date('Ymd_His') . '.csv');
+            $output = fopen('php://output', 'w');
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM UTF-8
+
+            if ($tipo === 'rendimiento') {
+                fputcsv($output, ['ID', 'DNI', 'Nombres', 'Cargo', 'Total Ordenes', 'Recaudacion Total', 'Estado'], ';');
+                foreach ($lista as $r) {
+                    fputcsv($output, [
+                        $r['id_usuario'], $r['dni'], mb_strtoupper($r['nombres'], 'UTF-8'), 
+                        $r['rol_nombre'], $r['total_ordenes'], $r['recaudacion_total'],
+                        $r['estado'] == 1 ? 'ACTIVO' : 'INACTIVO'
+                    ], ';');
+                }
+            } else {
+                fputcsv($output, ['ID', 'DNI', 'Nombres', 'Email', 'Telefono', 'Cargo', 'Estado', 'Fecha Registro'], ';');
+                foreach ($lista as $r) {
+                    fputcsv($output, [
+                        $r['id_usuario'], $r['dni'], mb_strtoupper($r['nombres'], 'UTF-8'), 
+                        $r['email'], $r['telefono'], $r['rol_nombre'],
+                        $r['estado'] == 1 ? 'ACTIVO' : 'INACTIVO', $r['fecha_creacion']
+                    ], ';');
+                }
+            }
+            fclose($output);
+            exit;
         }
     }
 }

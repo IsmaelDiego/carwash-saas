@@ -35,7 +35,7 @@
 <body>
     <div class="header">
         <h1><?= $titulo_pdf ?? 'REPORTE ESTRATÉGICO DE PAGOS' ?></h1>
-        <p>Análisis de Flujo por Métodos de Pago - Carwash Pro</p>
+        <p>Análisis de Flujo por Métodos de Pago</p>
     </div>
 
     <div class="filters-info">

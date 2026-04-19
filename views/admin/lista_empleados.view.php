@@ -124,8 +124,8 @@
                             <i class="bx bx-user-plus me-1"></i> Nuevo Empleado
                         </button>
 
-                        <button class="btn btn-outline-success" type="button" id="btnExportar">
-                            <i class="bx bxs-file-export p-2"></i>
+                        <button class="btn btn-dark" type="button" data-bs-toggle="modal" data-bs-target="#modalReportesPersonal" title="Central de Reportes">
+                             <i class="bx bx-bar-chart-alt-2 me-1"></i> Central de Reportes BI
                         </button>
                     </div>
                 </div>
@@ -173,6 +173,7 @@
 </script>
 
 <?php require VIEW_PATH . '/partials/empleado/modals.php'; ?>
+<?php require VIEW_PATH . '/partials/empleado/modal_reporte.php'; ?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 

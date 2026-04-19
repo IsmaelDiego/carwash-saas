@@ -48,7 +48,7 @@
 <body>
     <div class="header">
         <h1><?= $titulo_pdf ?? 'LISTADO DE CLIENTES' ?></h1>
-        <p>Sistema de Inteligencia de Clientes - Dashboard BI</p>
+        <p>Sistema de Inteligencia de Clientes</p>
     </div>
 
     <table class="info-table">

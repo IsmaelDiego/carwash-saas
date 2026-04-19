@@ -48,21 +48,27 @@
 <div class="content-wrapper">
     <div class="container-fluid flex-grow-1 container-p-y">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 w-100">
             <div>
                 <h4 class="fw-bold mb-0 text-primary">Gestión de Periodos</h4>
                 <small class="text-muted">Administra las temporadas de venta y puntos.</small>
             </div>
 
-            <?php if (!$tActual): ?>
-                <button class="btn btn-primary rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
-                    <i class="bx bx-play me-1"></i> INICIAR TEMPORADA
+            <div class="d-flex flex-nowrap gap-2 align-items-center">
+                <?php if (!$tActual): ?>
+                    <button class="btn btn-primary rounded-pill shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#modalRegistrar">
+                        <i class="bx bx-play me-1"></i> INICIAR TEMPORADA
+                    </button>
+                <?php else: ?>
+                    <span class="badge bg-label-success fs-6 border border-success px-3 rounded-pill py-2">
+                        <i class="bx bx-check-circle me-1"></i> Periodo en Curso
+                    </span>
+                <?php endif; ?>
+                
+                <button class="btn btn-dark rounded-pill shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#modalReportesTemporada">
+                    <i class="bx bx-bar-chart-alt-2 me-1"></i> Centro de Reportes BI
                 </button>
-            <?php else: ?>
-                <span class="badge bg-label-success fs-6 border border-success px-3">
-                    <i class="bx bx-check-circle me-1"></i> Periodo en Curso
-                </span>
-            <?php endif; ?>
+            </div>
         </div>
 
         <div class="row g-4 mb-4">
@@ -232,6 +238,7 @@
 </script>
 
 <?php require VIEW_PATH . '/partials/temporada/modals.php'; ?>
+<?php require VIEW_PATH . '/partials/temporada/modal_reporte.php'; ?>
 <?php require VIEW_PATH . '/partials/global/toasts.php'; ?>
 <?php require VIEW_PATH . '/layouts/footer.view.php'; ?>
 

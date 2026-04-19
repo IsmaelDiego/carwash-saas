@@ -544,13 +544,34 @@
                         </div>
 
                     </div>
+
+                    <!-- FORMATO DE SALIDA -->
+                    <div class="card shadow-sm border-0 mt-4">
+                        <div class="card-body p-3">
+                            <label class="form-label fw-bold text-dark small mb-3 d-block"><i class="bx bx-file me-1"></i> 2. ELIGE EL FORMATO DE SALIDA</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="formato" id="prod_fmt_pdf" value="pdf" checked>
+                                    <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center py-2" for="prod_fmt_pdf">
+                                        <i class="bx bxs-file-pdf me-2 fs-4"></i> PDF (Formal)
+                                    </label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="formato" id="prod_fmt_csv" value="csv">
+                                    <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center py-2" for="prod_fmt_csv">
+                                        <i class="bx bx-spreadsheet me-2 fs-4"></i> EXCEL (Data)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <!-- FOOTER -->
                 <div class="modal-footer p-4 border-top bg-white d-flex justify-content-between align-items-center">
                     <button class="btn btn-outline-secondary px-4 fw-bold" type="button" id="btnRepLimpiar"><i class="bx bx-eraser me-2"></i> LIMPIAR</button>
                     <div>
                         <button class="btn btn-white fw-bold text-muted border me-2" data-bs-dismiss="modal" type="button">Cancelar</button>
-                        <button class="btn btn-dark fw-bold shadow-sm px-4" type="submit"><i class="bx bxs-file-export me-2"></i> GENERAR Y DESCARGAR</button>
+                        <button class="btn btn-dark fw-bold shadow-sm px-4" type="submit"><i class="bx bxs-file-export me-2"></i> GENERAR REPORTE</button>
                     </div>
                 </div>
             </form>

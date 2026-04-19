@@ -141,9 +141,6 @@ class PromocionController {
     // =======================================================
     // WHATSAPP
     // =======================================================
-   // =======================================================
-    // WHATSAPP CON DETECCIÓN DE ERRORES (WARNING)
-    // =======================================================
     public function enviarwhatsapp() {
         requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -171,22 +168,117 @@ class PromocionController {
             foreach ($clientes as $c) {
                 $nombre = explode(' ', trim($c['nombres']))[0];
                 $mensaje = str_replace('{{nombre}}', $nombre, $input['mensaje']);
-                
                 $res = $whapi->enviarMensaje($c['telefono'], $mensaje);
-                
                 if ($res['success']) $enviados++; else $errores++;
                 usleep(200000);
             }
 
-            // LÓGICA DE RESPUESTA MODIFICADA
-            // Si hubo al menos 1 error, lo tratamos como 'warning'
             $tipoRespuesta = ($errores > 0) ? 'warning' : 'success';
-            
             echo json_encode([
-                'success' => true, // Mantenemos true para que el JS limpie el formulario
-                'type'    => $tipoRespuesta, // Nuevo campo para el color del Toast
+                'success' => true,
+                'type'    => $tipoRespuesta,
                 'message' => "Reporte de Envío: ✅ $enviados Enviados | ⚠️ $errores Fallidos"
             ]);
+        }
+    }
+
+    // =======================================================
+    // EXPORTAR REPORTES BI
+    // =======================================================
+    public function exportar()
+    {
+        requireAuth();
+        global $pdo;
+        
+        date_default_timezone_set('America/Lima');
+        $fecha_actual = date('d/m/Y');
+
+        $tipo = $_GET['tipo'] ?? 'general';
+        $formato = $_GET['formato'] ?? 'pdf';
+        $f_inicio = $_GET['f_inicio'] ?? date('Y-m-d');
+        $f_fin = $_GET['f_fin'] ?? date('Y-m-d');
+
+        $titulos_base = [
+            'general'     => "LISTADO MAESTRO DE CAMPAÑAS",
+            'rendimiento' => "ANÁLISIS DE EFECTIVIDAD Y CANJES",
+            'impacto'     => "REPORTE DE IMPACTO FINANCIERO"
+        ];
+        
+        $titulo_pdf = $titulos_base[$tipo] ?? "REPORTE DE PROMOCIONES";
+        $titulo_reporte = "$titulo_pdf ($fecha_actual)";
+
+        if ($tipo === 'general') {
+            $query = "SELECT * FROM promociones ORDER BY id_promocion DESC";
+            $stmt = $pdo->query($query);
+            $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } elseif ($tipo === 'rendimiento') {
+            // EFECTIVIDAD: Resumen por Campaña
+            $query = "SELECT p.nombre, p.valor, p.tipo_descuento, COUNT(h.id_historial) as total_usos
+                      FROM promociones p
+                      LEFT JOIN historial_uso_promociones h ON p.id_promocion = h.id_promocion
+                      WHERE h.fecha_uso IS NULL OR DATE(h.fecha_uso) BETWEEN ? AND ?
+                      GROUP BY p.id_promocion
+                      ORDER BY total_usos DESC";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([$f_inicio, $f_fin]);
+            $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } else {
+            // FINANCIERO / AUDITORÍA: Detalle Cliente por Cliente
+            $query = "SELECT p.nombre, p.valor, p.tipo_descuento, h.fecha_uso, c.nombres, c.apellidos
+                      FROM historial_uso_promociones h
+                      JOIN promociones p ON h.id_promocion = p.id_promocion
+                      JOIN clientes c ON h.id_cliente = c.id_cliente
+                      WHERE DATE(h.fecha_uso) BETWEEN ? AND ?
+                      ORDER BY h.fecha_uso DESC";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([$f_inicio, $f_fin]);
+            $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        if ($formato === 'csv') {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=Reporte_Promociones_' . strtoupper($tipo) . '_' . date('Ymd_His') . '.csv');
+            $output = fopen('php://output', 'w');
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
+
+            if ($tipo === 'general') {
+                fputcsv($output, ['CAMPAÑA', 'VALOR', 'TIPO', 'VIGENCIA', 'ESTADO'], ';');
+                foreach ($data as $r) {
+                    fputcsv($output, [
+                        mb_strtoupper($r['nombre'], 'UTF-8'), 
+                        $r['valor'], 
+                        $r['tipo_descuento'], 
+                        $r['fecha_inicio'].' al '.$r['fecha_fin'],
+                        $r['estado'] ? 'ACTIVA' : 'INACTIVA'
+                    ], ';');
+                }
+            } else {
+                fputcsv($output, ['CAMPAÑA', 'VALOR DESC.', 'TIPO', 'TOTAL CANJES'], ';');
+                foreach ($data as $r) {
+                    fputcsv($output, [
+                        mb_strtoupper($r['nombre'], 'UTF-8'), 
+                        $r['valor'],
+                        $r['tipo_descuento'],
+                        $r['total_usos']
+                    ], ';');
+                }
+            }
+            exit;
+        } else {
+            try {
+                require_once BASE_PATH . '/vendor/MPDF/vendor/autoload.php';
+                $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_top' => 15, 'margin_bottom' => 15]);
+                ob_start();
+                $lista = $data;
+                require VIEW_PATH . '/admin/reportes/promocion/listado.view.php';
+                $html = ob_get_clean();
+                $mpdf->WriteHTML($html);
+                $mpdf->SetTitle($titulo_reporte);
+                $mpdf->Output('Reporte_Promociones_' . date('Ymd_His') . '.pdf', 'I');
+                exit;
+            } catch (\Exception $e) {
+                die("Error al generar PDF: " . $e->getMessage());
+            }
         }
     }
 }

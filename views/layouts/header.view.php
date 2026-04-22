@@ -73,12 +73,28 @@ $logo_path_app = !empty($config_sys_app['logo']) ? BASE_URL . '/' . $config_sys_
         }
     </style>
     <script>
+        // CONFIGURACIÓN DE NOTIFICACIONES OPTIMIZADA
+        let notificationInterval = null;
+        let currentNotifVersion = localStorage.getItem('last_notif_v') || '0';
+        const POLL_INTERVAL = 60000; // 60 Segundos (Ahorro de recursos)
+
         window.updateGlobalNotifications = async function() {
+            // Si la página no es visible, no gastamos recursos del servidor
+            if (document.hidden) return;
+
             try {
                 const baseUrl = '<?= BASE_URL ?>';
-                let res = await fetch(baseUrl + '/admin/caja/getglobalnotifications?t=' + new Date().getTime());
+                let res = await fetch(`${baseUrl}/admin/caja/getglobalnotifications?v=${currentNotifVersion}&t=${new Date().getTime()}`);
                 let data = await res.json();
+                
                 if (data && data.success) {
+                    // Si el servidor confirma que no hay cambios, salimos de inmediato
+                    if (data.unchanged) return;
+
+                    // Actualizar versión local
+                    currentNotifVersion = data.v || '0';
+                    localStorage.setItem('last_notif_v', currentNotifVersion);
+
                     let total = data.data.total;
                     let lista = data.data.lista;
                     
@@ -99,35 +115,55 @@ $logo_path_app = !empty($config_sys_app['logo']) ? BASE_URL . '/' . $config_sys_
                         if (lista.length === 0) {
                             ulItems.innerHTML = `<li class="list-group-item list-group-item-action dropdown-notifications-item"><div class="d-flex justify-content-center py-4"><span class="text-muted"><i class="bx bx-check-circle text-success me-1"></i> Sin alertas pendientes</span></div></li>`;
                         } else {
-                            // Solo redibujamos si el total cambió para no parpadear el dropdown abierto
-                            let currentItemsCount = ulItems.querySelectorAll('.dropdown-notifications-item').length;
-                            if (currentItemsCount !== lista.length || total > 0) {
-                                ulItems.innerHTML = '';
-                                lista.forEach(notif => {
-                                    ulItems.innerHTML += `
-                                    <li class="list-group-item list-group-item-action dropdown-notifications-item cursor-pointer" onclick="window.location.href='${notif.url}'">
-                                        <div class="d-flex" style="align-items: center;">
-                                            <div class="flex-shrink-0 me-3">
-                                                <div class="avatar shadow-sm d-flex align-items-center justify-content-center bg-label-${notif.color}" style="width: 40px; height: 40px; border-radius: 50%;">
-                                                    <i class="bx ${notif.icono} fs-4"></i>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1" style="font-size: 0.85rem; font-weight: 700; color: #566a7f;">${notif.titulo}</h6>
-                                                <p class="mb-0 text-muted" style="font-size: 0.75rem; line-height: 1.3;">${notif.descripcion}</p>
+                            ulItems.innerHTML = '';
+                            lista.forEach(notif => {
+                                ulItems.innerHTML += `
+                                <li class="list-group-item list-group-item-action dropdown-notifications-item cursor-pointer" onclick="window.location.href='${notif.url}'">
+                                    <div class="d-flex" style="align-items: center;">
+                                        <div class="flex-shrink-0 me-3">
+                                            <div class="avatar shadow-sm d-flex align-items-center justify-content-center bg-label-${notif.color}" style="width: 40px; height: 40px; border-radius: 50%;">
+                                                <i class="bx ${notif.icono} fs-4"></i>
                                             </div>
                                         </div>
-                                    </li>`;
-                                });
-                            }
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1" style="font-size: 0.85rem; font-weight: 700; color: #566a7f;">${notif.titulo}</h6>
+                                            <p class="mb-0 text-muted" style="font-size: 0.75rem; line-height: 1.3;">${notif.descripcion}</p>
+                                        </div>
+                                    </div>
+                                </li>`;
+                            });
                         }
                     }
                 }
             } catch(e) { console.error('Error updating notifications:', e); }
         };
 
-        // Iniciar el monitor global de notificaciones (cada 1 segundo)
-        setInterval(window.updateGlobalNotifications, 500);
+        // Iniciar monitor inteligente
+        function startNotificationMonitor() {
+            if (!notificationInterval) {
+                window.updateGlobalNotifications(); // Primera ejecución inmediata
+                notificationInterval = setInterval(window.updateGlobalNotifications, POLL_INTERVAL);
+            }
+        }
+
+        function stopNotificationMonitor() {
+            if (notificationInterval) {
+                clearInterval(notificationInterval);
+                notificationInterval = null;
+            }
+        }
+
+        // Evento de cambio de visibilidad (Ahorro de batería y Servidor)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopNotificationMonitor();
+            } else {
+                startNotificationMonitor();
+            }
+        });
+
+        // Iniciar al cargar
+        startNotificationMonitor();
     </script>
 
 </head>

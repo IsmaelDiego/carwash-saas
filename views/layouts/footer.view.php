@@ -83,24 +83,55 @@ $(document).ready(function() {
 
 
 
- <script>
-     // Busca todos los elementos con la clase .hide-url
-     document.querySelectorAll('.hide-url').forEach(link => {
-         // 1. Guardamos la ruta real
-         const url = link.getAttribute('href');
+  <script>
+    // Busca todos los elementos con la clase .hide-url
+    document.querySelectorAll('.hide-url').forEach(link => {
+        const url = link.getAttribute('href');
+        link.removeAttribute('href');
+        link.style.cursor = 'pointer';
+        link.addEventListener('click', () => {
+            window.location.href = url;
+        });
+    });
 
-         // 2. Quitamos el href para que no salga abajo
-         link.removeAttribute('href');
+    // RESTAURAR SCROLL TRAS REPORTES/MODALES
+    $(document).ready(function() {
+        $(document).on('hidden.bs.modal', '.modal', function () {
+            // Pequeño delay para dejar que Bootstrap termine sus transiciones
+            setTimeout(() => {
+                if ($('.modal.show').length === 0) {
+                    $('.modal-backdrop').remove();
+                    $('body').removeClass('modal-open').css({'overflow': 'auto', 'padding-right': '0'});
+                }
+            }, 350);
+        });
 
-         // 3. Añadimos el cursor de mano (porque al quitar href se pierde)
-         link.style.cursor = 'pointer';
+        // Gestión de Reportes (Nueva Pestaña)
+        $('form[target="_blank"]').on('submit', function() {
+            const $f = $(this);
+            const $m = $f.closest('.modal');
+            const $b = $f.find('button[type="submit"]');
 
-         // 4. Añadimos el evento click
-         link.addEventListener('click', () => {
-             window.location.href = url;
-         });
-     });
- </script>
+            if ($m.length) {
+                $b.prop('disabled', true).addClass('disabled');
+                
+                setTimeout(() => {
+                    $b.prop('disabled', false).removeClass('disabled');
+                    const inst = bootstrap.Modal.getInstance($m[0]);
+                    if (inst) inst.hide(); else $m.modal('hide');
+                    
+                    // Asegurar limpieza tras el hide oficial
+                    setTimeout(() => {
+                        if ($('.modal.show').length === 0) {
+                            $('.modal-backdrop').remove();
+                            $('body').removeClass('modal-open').css('overflow', 'auto');
+                        }
+                    }, 500);
+                }, 800);
+            }
+        });
+    });
+  </script>
  </body>
 
  </html>

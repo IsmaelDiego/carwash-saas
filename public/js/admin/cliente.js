@@ -6,12 +6,31 @@ const ClienteModule = {
     this.initDataTable();
     this.initEventosUI();
     this.initFormularios();
+    this.initValidacionesTelefono();
     // Solo fixes para MODALES, no para Offcanvas (Bootstrap maneja bien Offcanvas si no interferimos)
     this.initModalFixes();
     // Stats: computar después de cada carga AJAX de DataTables
     const self = this;
     $("#tablaClientes").on("xhr.dt", function () {
       setTimeout(() => self.computeStats(), 100);
+    });
+  },
+
+  // 0. VALIDACIONES DE TELÉFONO
+  initValidacionesTelefono: function () {
+    const inputsTelf = ["#telefono", "#edit_tel1"];
+    $(inputsTelf.join(",")).on("input", function () {
+      // 1. Solo números y máximo 9 dígitos
+      this.value = this.value.replace(/[^0-9]/g, "").substring(0, 9);
+
+      // 2. Validar que empiece con 9
+      if (this.value.length > 0 && this.value[0] !== "9") {
+        this.value = "";
+        $(this).addClass("border-danger text-danger animate__animated animate__shakeX");
+        setTimeout(() => {
+          $(this).removeClass("border-danger text-danger animate__animated animate__shakeX");
+        }, 1000);
+      }
     });
   },
 

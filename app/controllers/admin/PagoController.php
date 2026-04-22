@@ -59,6 +59,7 @@ class PagoController {
         $estado = $_POST['estado'];
 
         if ($this->pagoModel->cambiarEstado($id_pago, $estado)) {
+            markSystemChange();
             echo json_encode(['success' => true, 'message' => 'Estado actualizado correctamente']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);

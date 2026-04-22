@@ -1,14 +1,11 @@
 <?php
-// config/database.php — Singleton PDO Connection
 
 class Database {
     private static ?PDO $instance = null;
 
     public static function getInstance(): PDO {
         if (self::$instance === null) {
-            // ── Credenciales ──
-            // LOCAL:       host=localhost, db=carwash-sys, user=root, pass=''
-            // INFINITYFREE: Cambia estos valores con los de tu panel MySQL
+            
             $host = 'localhost';
             $db   = 'carwash-sys';
             $user = 'root';
@@ -36,13 +33,9 @@ class Database {
         return self::$instance;
     }
 
-    // Evitar clonación y deserialización
     private function __construct() {}
     private function __clone() {}
     public function __wakeup() { throw new \Exception("Cannot unserialize singleton"); }
 }
 
-// ── Compatibilidad hacia atrás ──
-// Mantiene $pdo como variable global para que todo el código existente siga funcionando
-// sin necesidad de refactorizar cada controlador.
 $pdo = Database::getInstance();

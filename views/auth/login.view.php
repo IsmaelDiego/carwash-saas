@@ -22,19 +22,6 @@ $nombre_negocio = !empty($config_sys['nombre_negocio']) ? $config_sys['nombre_ne
     <link rel="stylesheet" href="<?= BASE_URL ?>/template/assets/vendor/css/pages/page-auth.css" />
     <script src="<?= BASE_URL ?>/template/assets/vendor/js/helpers.js"></script>
     <script src="<?= BASE_URL ?>/template/assets/js/config.js"></script>
-    <script>
-        // Init Theme Settings
-        (function() {
-            const storedTheme = localStorage.getItem('theme') || 'light';
-            if (storedTheme === 'dark') {
-                document.documentElement.setAttribute('data-bs-theme', 'dark');
-                document.documentElement.classList.add('dark-style');
-            } else {
-                document.documentElement.setAttribute('data-bs-theme', 'light');
-                document.documentElement.classList.remove('dark-style');
-            }
-        })();
-    </script>
 </head>
 
 <body>

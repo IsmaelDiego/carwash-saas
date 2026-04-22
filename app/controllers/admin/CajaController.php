@@ -306,10 +306,11 @@ class CajaController
 
             $pdo->commit();
             
-            // Forzar recarga de notificaciones en la sesión del admin
+            // Forzar recarga de notificaciones en la sesión del admin y marcar cambio global
             if (isset($_SESSION['_notif_cache'])) {
                 unset($_SESSION['_notif_cache']);
             }
+            markSystemChange();
             
             echo json_encode(['success' => true, 'message' => 'Caja aperturada remotamente con éxito.']);
         } catch (\Exception $e) {
@@ -368,10 +369,23 @@ class CajaController
         requireAuth();
         header('Content-Type: application/json');
         
+        $clientV = $_GET['v'] ?? '0';
+        $serverV = getSystemVersion();
+
+        // Si el cliente ya tiene la última versión, respondemos instantáneamente
+        if ($clientV !== '0' && $clientV === $serverV) {
+            echo json_encode(['success' => true, 'unchanged' => true, 'v' => $serverV]);
+            exit;
+        }
+        
         // El helper ya está incluido globalmente por el Router/Index
         $notificaciones = getAdminNotifications();
         
-        echo json_encode(['success' => true, 'data' => $notificaciones]);
+        echo json_encode([
+            'success' => true, 
+            'data' => $notificaciones,
+            'v' => $serverV
+        ]);
         exit;
     }
 }

@@ -1061,9 +1061,9 @@ class DashboardController
         require_once __DIR__ . '/../../models/Rampa.php';
         $rampaModel = new \Rampa($pdo);
 
-        // Operarios para asignación
+        // Operarios para asignación (Solo rol Operario, sin incluir Cajeros)
         $operarios = $pdo->query(
-            "SELECT id_usuario, nombres, dni FROM usuarios WHERE id_rol IN (2,3) AND estado = 1 ORDER BY nombres"
+            "SELECT id_usuario, nombres, dni FROM usuarios WHERE id_rol = 3 AND estado = 1 ORDER BY nombres"
         )->fetchAll(\PDO::FETCH_ASSOC);
 
         echo json_encode([

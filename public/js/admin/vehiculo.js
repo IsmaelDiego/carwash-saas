@@ -5,12 +5,39 @@ const VehiculoModule = {
     init: function() {
         this.initDataTable();
         this.initEventosUI();
+        this.initMascaraPlaca();
         this.initFormularios();
         this.initBuscadorPropietario();
         // Stats: computar después de cada carga AJAX
         const self = this;
         $('#tablaVehiculos').on('xhr.dt', function() {
             setTimeout(() => self.computeStats(), 100);
+        });
+    },
+
+    // 0. MÁSCARA DINÁMICA DE PLACA (ABC-123)
+    initMascaraPlaca: function() {
+        const input = $('#reg_placa');
+        if (!input.length) return;
+
+        input.on('input', function() {
+            // 1. Limpiar todo lo que no sea letra o número inicialmente
+            let raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            
+            let final = '';
+            
+            // Bloque 1: Los primeros 3 caracteres (Cualquiera: A-Z o 0-9)
+            let p1 = raw.substring(0, 3);
+            final = p1;
+
+            // Bloque 2: Si hay más de 3, inyectar guion y solo permitir números después
+            if (raw.length > 3) {
+                // Tomamos del 4 al 6 y forzamos que sean solo números
+                let p2 = raw.substring(3, 6).replace(/[^0-9]/g, '');
+                final = p1 + '-' + p2;
+            }
+
+            this.value = final;
         });
     },
 
@@ -23,7 +50,7 @@ const VehiculoModule = {
             "processing": true,
             "responsive": true,
             "autoWidth": false,
-            "ordering": true,
+            "ordering": false,
             "ajax": { "url": `${BASE_URL}/admin/vehiculo/getall`, "type": "GET" },
             
             // DOM: Paginación Izquierda, Info Derecha

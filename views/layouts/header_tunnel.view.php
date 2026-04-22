@@ -1,5 +1,7 @@
 <!doctype html>
 <?php
+    require_once APP_PATH . '/helpers/system_helper.php';
+    $config = getSystemConfig();
     // Detectar rol para mostrar datos correctos
     $userRole = (int)($_SESSION['user']['role'] ?? 0);
     $roleName = $_SESSION['user']['rolename'] ?? 'Empleado';
@@ -24,7 +26,7 @@
     <meta name="description" content="Panel <?= $pageTitle ?> <?= htmlspecialchars($config['nombre_negocio'] ?? 'Carwash XP') ?>" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>/<?= !empty($config['logo']) ? $config['logo'] : 'template/assets/img/favicon/favicon.ico' ?>" />
+    <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>/<?= !empty($config['logo']) ? $config['logo'] : 'template/assets/img/favicon/favicon.ico' ?>?v=<?= $config['logo_version'] ?? '1' ?>" />
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -58,7 +60,7 @@
                         <div class="navbar-nav align-items-center">
                             <div class="nav-item d-flex align-items-center gap-2">
                                 <?php if (!empty($config['logo'])): ?>
-                                    <img src="<?= BASE_URL ?>/<?= $config['logo'] ?>" alt="Logo" style="height: 30px; width: auto;" class="me-1">
+                                    <img src="<?= BASE_URL ?>/<?= $config['logo'] ?>?v=<?= $config['logo_version'] ?? '1' ?>" alt="Logo" style="height: 30px; width: auto;" class="me-1">
                                 <?php else: ?>
                                     <span class="text-primary fw-bold"><i class="icon-base bx bx-droplet icon-md me-1"></i></span>
                                 <?php endif; ?>

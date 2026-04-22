@@ -83,10 +83,10 @@
                     <!-- Datos del auto -->
                     <div class="row g-4 mb-4">
                         <div class="col-md-5">
-                            <label class="form-label fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">Placa (Sin Guiones)</label>
+                            <label class="form-label fw-bold text-muted text-uppercase" style="font-size: 0.75rem;">Placa Vehicular</label>
                             <div class="input-group input-group-merge shadow-sm">
                                 <span class="input-group-text bg-white"><i class='bx bx-hash text-muted'></i></span>
-                                <input type="text" class="form-control text-uppercase fw-bold" name="placa" placeholder="Ej. ABC123" required oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();" maxlength="7">
+                                <input type="text" class="form-control text-uppercase fw-bold" name="placa" id="reg_placa" placeholder="Ej. ABC-123" required maxlength="7">
                             </div>
                         </div>
                         <div class="col-md-7">

@@ -149,10 +149,12 @@ class Empleado {
     // 9. ELIMINAR EMPLEADO
     // =========================================================
     public function eliminar($id) {
-        try {
-            $stmt = $this->pdo->prepare("DELETE FROM usuarios WHERE id_usuario = :id");
-            return $stmt->execute([':id' => $id]);
-        } catch (Exception $e) { return false; }
+        // 1. Intentar limpiar registros técnicos menores que suelen bloquear el borrardo sin motivo funcional
+        $this->pdo->prepare("DELETE FROM notificaciones_recuperacion WHERE id_usuario = :id")->execute([':id' => $id]);
+        
+        // 2. Intentar el borrado principal. Si falla por FK (órdenes, pagos), lanzará una excepción que capturará el Controller
+        $stmt = $this->pdo->prepare("DELETE FROM usuarios WHERE id_usuario = :id");
+        return $stmt->execute([':id' => $id]);
     }
 
     // =========================================================

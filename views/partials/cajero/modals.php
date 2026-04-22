@@ -250,7 +250,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold small">Ubicación</label>
-                                    <input type="text" class="form-control" id="ubic_orden" placeholder="Zona/Bahía">
+                                    <input type="text" class="form-control" id="ubic_orden" value="Atención en local" placeholder="Zona/Bahía">
                                 </div>
                             </div>
                             <div id="camposNuevoVehiculo" class="bg-white p-3 rounded-3 mb-4 border border-info" style="display:none">
@@ -258,6 +258,10 @@
                                 <div class="row g-2 mb-2">
                                     <div class="col-6"><label class="form-label small">Placa</label><input type="text" class="form-control text-uppercase" id="nv_placa" placeholder="ABC-123"></div>
                                     <div class="col-6"><label class="form-label small">Color</label><input type="text" class="form-control" id="nv_color" placeholder="Rojo"></div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Detalles / Observaciones</label>
+                                    <input type="text" class="form-control" id="nv_observaciones" placeholder="Ej: Rayón puerta izq, falta tapón, etc.">
                                 </div>
                                 <div class="mb-0">
                                     <label class="form-label small">Categoría</label>

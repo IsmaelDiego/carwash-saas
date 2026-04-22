@@ -24,7 +24,7 @@ const ProductoModule = {
             processing: true,
             responsive: true,
             autoWidth: false,
-            ordering: true,
+            ordering: false,
             ajax: `${BASE_URL}/admin/producto/getall`,
             dom: '<"row mx-2"<"col-md-12 my-2"l>><t><"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
             pageLength: 10,
@@ -113,7 +113,7 @@ const ProductoModule = {
                         <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                             <i class="bx bx-dots-vertical-rounded"></i>
                         </button>
-                        <div class="dropdown-menu">
+                        <div class="dropdown-menu dropdown-menu-end">
                             <a class="dropdown-item btn-editar" href="javascript:void(0);">
                                 <i class="bx bx-edit-alt me-1"></i> Editar
                             </a>
@@ -453,7 +453,13 @@ const ProductoModule = {
             }
             $('#tbodyLotes').html(html);
             $('#tablaLotesModal').DataTable({
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+                language: {
+                    lengthMenu: " _MENU_ ",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_",
+                    infoEmpty: "0 registros",
+                    paginate: { next: "Sig.", previous: "Ant." },
+                    zeroRecords: "No hay lotes para mostrar",
+                },
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
                 pageLength: 10,
                 autoWidth: false,
@@ -599,7 +605,13 @@ const ProductoModule = {
             }
             $('#tbodyKardex').html(html);
             $('#tablaKardexModal').DataTable({
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+                language: {
+                    lengthMenu: " _MENU_ ",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_",
+                    infoEmpty: "0 movimientos",
+                    paginate: { next: "Sig.", previous: "Ant." },
+                    zeroRecords: "Sin movimientos registrados",
+                },
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
                 pageLength: 25,
                 autoWidth: false,

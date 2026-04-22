@@ -24,7 +24,7 @@
                             <label class="form-label fw-bold text-dark small">DNI <span class="text-danger">*</span></label>
                             <div class="input-group input-group-merge shadow-sm">
                                 <span class="input-group-text bg-white text-primary"><i class="bx bx-id-card"></i></span>
-                                <input type="text" class="form-control" name="dni" id="reg_dni" placeholder="Ej. 75692933" maxlength="11" required autocomplete="off" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                <input type="text" class="form-control" name="dni" id="reg_dni" placeholder="Ej. 75692933" maxlength="8" required autocomplete="off" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 <button class="btn btn-outline-primary" type="button" id="btnBuscarDniEmpleado">
                                     <i class="bx bx-search fs-5"></i>
                                 </button>
@@ -54,7 +54,7 @@
                             <label class="form-label fw-bold text-dark small">Teléfono / Celular</label>
                             <div class="input-group input-group-merge shadow-sm">
                                 <span class="input-group-text bg-white text-primary"><i class="bx bx-phone"></i></span>
-                                <input type="text" class="form-control" name="telefono" placeholder="Ej. 973563350" maxlength="20" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                <input type="text" class="form-control" name="telefono" id="reg_telefono" placeholder="Ej. 973563350" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                             </div>
                         </div>
                         <!-- EMAIL -->
@@ -80,7 +80,7 @@
 
                     <div class="alert alert-primary mt-4 mb-0 border-0 shadow-sm d-flex align-items-center gap-3" style="border-radius:12px; background: rgba(105, 108, 255, 0.08);">
                         <i class="bx bx-info-circle fs-2 text-primary"></i>
-                        <small class="text-primary fw-medium">El empleado accederá a su cuenta usando su <strong>DNI</strong> como usuario y la <strong>contraseña</strong> que le asignes aquí.</small>
+                        <small class="text-primary fw-medium">El empleado accederá a su cuenta usando su <strong>DNI y CORREO</strong> como usuario y la <strong>contraseña</strong> que le asignes aquí.</small>
                     </div>
                 </div>
                 <div class="modal-footer p-4 border-top bg-white">
@@ -173,7 +173,7 @@
                             <label class="form-label fw-bold text-dark small">Teléfono / Celular</label>
                             <div class="input-group input-group-merge shadow-sm">
                                 <span class="input-group-text bg-white"><i class="bx bx-phone"></i></span>
-                                <input type="text" id="edit_telefono" name="telefono" class="form-control" maxlength="20" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                <input type="text" id="edit_telefono" name="telefono" class="form-control" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                             </div>
                         </div>
                         <!-- EMAIL -->

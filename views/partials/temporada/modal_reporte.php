@@ -121,14 +121,4 @@
     </div>
 </div>
 
-<script>
-document.getElementById('formReportesTemporada').addEventListener('submit', function() {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('modalReportesTemporada'));
-    setTimeout(() => {
-        modal.hide();
-        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-        document.body.style.overflow = 'auto';
-        document.body.classList.remove('modal-open');
-    }, 1000);
-});
-</script>
+

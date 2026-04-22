@@ -104,4 +104,21 @@
     </div>
 </div>
 
-
+<!-- Modal Rechazar Pago -->
+<div class="modal fade" id="modalRechazarPago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <i class="bx bx-x-circle text-danger" style="font-size: 4rem;"></i>
+                </div>
+                <h4 class="mb-2">¿Rechazar Pago?</h4>
+                <p class="text-muted mb-4">Esta solicitud se marcará como rechazada y se cerrará el seguimiento.</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnRechazarPago">Sí, rechazar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

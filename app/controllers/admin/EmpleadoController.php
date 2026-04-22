@@ -1,13 +1,16 @@
 <?php
+
 namespace Controllers\Admin;
 
 use Empleado;
 use Exception;
 use PDO;
 
-class EmpleadoController {
+class EmpleadoController
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         requireRole(1); // Solo Admin
     }
 
@@ -15,12 +18,14 @@ class EmpleadoController {
     // VISTA PRINCIPAL
     // URL: /admin/empleado
     // ==========================================
-    public function index() {
+    public function index()
+    {
         requireAuth();
         require VIEW_PATH . '/admin/lista_empleados.view.php';
     }
 
-    public function lista() {
+    public function lista()
+    {
         $this->index();
     }
 
@@ -28,7 +33,8 @@ class EmpleadoController {
     // API: OBTENER TODOS (JSON para DataTables)
     // URL: /admin/empleado/getall
     // ==========================================
-    public function getall() {
+    public function getall()
+    {
         requireAuth();
         global $pdo;
         header('Content-Type: application/json');
@@ -36,7 +42,8 @@ class EmpleadoController {
         echo json_encode(['data' => $model->getAll()]);
     }
 
-    public function getone() {
+    public function getone()
+    {
         requireAuth();
         global $pdo;
         header('Content-Type: application/json');
@@ -58,7 +65,8 @@ class EmpleadoController {
     // API: OBTENER ROLES (JSON para Select)
     // URL: /admin/empleado/getroles
     // ==========================================
-    public function getroles() {
+    public function getroles()
+    {
         requireAuth();
         global $pdo;
         header('Content-Type: application/json');
@@ -70,7 +78,8 @@ class EmpleadoController {
     // API: OBTENER ESTADÍSTICAS
     // URL: /admin/empleado/getstats
     // ==========================================
-    public function getstats() {
+    public function getstats()
+    {
         requireAuth();
         global $pdo;
         header('Content-Type: application/json');
@@ -82,21 +91,36 @@ class EmpleadoController {
     // API: REGISTRAR EMPLEADO
     // URL: /admin/empleado/registrarempleado
     // ==========================================
-    public function registrarempleado() {
+    public function registrarempleado()
+    {
         requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
             header('Content-Type: application/json');
             $input = json_decode(file_get_contents('php://input'), true);
 
-            // Validación de campos obligatorios
-            if (empty($input['dni']) || empty($input['nombres']) || empty($input['id_rol']) || empty($input['password'])) {
-                echo json_encode(['success' => false, 'message' => 'DNI, Nombres, Rol y Contraseña son obligatorios.']);
+            // --- VALIDACIONES DE FORMATO ---
+            $dni = trim($input['dni'] ?? '');
+            $telefono = trim($input['telefono'] ?? '');
+            $email = trim($input['email'] ?? '');
+            $password = $input['password'] ?? '';
+
+            if (!preg_match('/^[0-9]{8}$/', $dni)) {
+                echo json_encode(['success' => false, 'message' => 'El DNI debe tener exactamente 8 números.']);
                 return;
             }
 
-            // Validar longitud de contraseña
-            if (strlen($input['password']) < 6) {
+            if (!empty($telefono) && !preg_match('/^9[0-9]{8}$/', $telefono)) {
+                echo json_encode(['success' => false, 'message' => 'El celular debe tener 9 dígitos y empezar con el número 9.']);
+                return;
+            }
+
+            if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico es inválido.']);
+                return;
+            }
+
+            if (empty($password) || strlen($password) < 6) {
                 echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.']);
                 return;
             }
@@ -104,16 +128,20 @@ class EmpleadoController {
             $model = new Empleado($pdo);
 
             // Validar DNI duplicado
-            if ($model->existeDni($input['dni'])) {
+            if ($model->existeDni($dni)) {
                 echo json_encode(['success' => false, 'message' => 'Este DNI ya está registrado.']);
                 return;
             }
 
             // Validar Email duplicado
-            if (!empty($input['email']) && $model->existeEmail($input['email'])) {
+            if (!empty($email) && $model->existeEmail($email)) {
                 echo json_encode(['success' => false, 'message' => 'Este email ya está registrado.']);
                 return;
             }
+
+            $input['dni'] = $dni;
+            $input['telefono'] = $telefono;
+            $input['email'] = $email;
 
             try {
                 if ($model->registrar($input)) {
@@ -122,7 +150,6 @@ class EmpleadoController {
                     throw new Exception("Error al insertar en BD.");
                 }
             } catch (Exception $e) {
-                http_response_code(500);
                 echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
             }
         }
@@ -132,25 +159,57 @@ class EmpleadoController {
     // API: EDITAR EMPLEADO
     // URL: /admin/empleado/editarempleado
     // ==========================================
-    public function editarempleado() {
+    public function editarempleado()
+    {
         requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
             header('Content-Type: application/json');
             $input = json_decode(file_get_contents('php://input'), true);
 
-            if (empty($input['id_usuario']) || empty($input['nombres']) || empty($input['id_rol'])) {
-                echo json_encode(['success' => false, 'message' => 'Datos obligatorios incompletos.']);
+            // --- VALIDACIONES DE FORMATO ---
+            $id_usuario = $input['id_usuario'] ?? null;
+            $dni = trim($input['dni'] ?? '');
+            $telefono = trim($input['telefono'] ?? '');
+            $email = trim($input['email'] ?? '');
+
+            if (!$id_usuario || empty($dni) || empty($input['nombres'])) {
+                echo json_encode(['success' => false, 'message' => 'ID, DNI y Nombres son obligatorios.']);
+                return;
+            }
+
+            if (!preg_match('/^[0-9]{8}$/', $dni)) {
+                echo json_encode(['success' => false, 'message' => 'El DNI debe tener exactamente 8 números.']);
+                return;
+            }
+
+            if (!empty($telefono) && !preg_match('/^9[0-9]{8}$/', $telefono)) {
+                echo json_encode(['success' => false, 'message' => 'El celular debe tener 9 dígitos y empezar con el número 9.']);
+                return;
+            }
+
+            if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico es inválido.']);
                 return;
             }
 
             $model = new Empleado($pdo);
+            
+            // Validar DNI duplicado excluyendo al actual
+            if ($model->existeDni($dni, $id_usuario)) {
+                echo json_encode(['success' => false, 'message' => 'Este DNI ya está siendo usado por otro empleado.']);
+                return;
+            }
 
             // Validar Email duplicado excluyendo el actual
-            if (!empty($input['email']) && $model->existeEmail($input['email'], $input['id_usuario'])) {
+            if (!empty($email) && $model->existeEmail($email, $id_usuario)) {
                 echo json_encode(['success' => false, 'message' => 'Este email ya está registrado por otro usuario.']);
                 return;
             }
+
+            $input['dni'] = $dni;
+            $input['telefono'] = $telefono;
+            $input['email'] = $email;
 
             try {
                 if ($model->editar($input)) {
@@ -169,7 +228,8 @@ class EmpleadoController {
     // API: CAMBIAR CONTRASEÑA
     // URL: /admin/empleado/cambiarpassword
     // ==========================================
-    public function cambiarpassword() {
+    public function cambiarpassword()
+    {
         requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
@@ -193,7 +253,7 @@ class EmpleadoController {
                     // Marcar notificaciones de recuperación como atendidas
                     $stmt = $pdo->prepare("UPDATE notificaciones_recuperacion SET estado = 'ATENDIDO' WHERE id_usuario = :id AND estado = 'PENDIENTE'");
                     $stmt->execute([':id' => $input['id_usuario']]);
-                    
+
                     echo json_encode(['success' => true, 'message' => '¡Contraseña actualizada!']);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Error al actualizar la contraseña.']);
@@ -208,7 +268,8 @@ class EmpleadoController {
     // API: CAMBIAR ESTADO
     // URL: /admin/empleado/cambiarestado
     // ==========================================
-    public function cambiarestado() {
+    public function cambiarestado()
+    {
         requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
@@ -235,7 +296,8 @@ class EmpleadoController {
     // API: ELIMINAR EMPLEADO
     // URL: /admin/empleado/eliminarempleado
     // ==========================================
-    public function eliminarempleado() {
+    public function eliminarempleado()
+    {
         requireAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             global $pdo;
@@ -254,35 +316,37 @@ class EmpleadoController {
 
             // Proteger al Super Admin (id=1)
             if ($input['id_usuario'] == 1) {
-                echo json_encode(['success' => false, 'message' => 'No se puede eliminar al Super Admin.']);
+                echo json_encode(['success' => false, 'message' => 'El Administrador es vital para el sistema y no puede ser eliminado.']);
                 return;
             }
 
             // Proteger al usuario actualmente logueado
             if ($input['id_usuario'] == $_SESSION['user']['id']) {
-                echo json_encode(['success' => false, 'message' => 'No puedes eliminarte a ti mismo.']);
+                echo json_encode(['success' => false, 'message' => 'Por seguridad, no puedes eliminar tu propia cuenta mientras estás en sesión.']);
                 return;
             }
 
             $model = new Empleado($pdo);
 
             // Verificar la contraseña del administrador actual
-            $admin = $model->getById($_SESSION['user']['id']);
-            if (!$admin || !password_verify($input['password_admin'], $admin['password_hash'])) {
-                echo json_encode(['success' => false, 'message' => 'Contraseña de administrador incorrecta.']);
+            $adminCurrent = $model->getById($_SESSION['user']['id']);
+            if (!$adminCurrent || !password_verify($input['password_admin'], $adminCurrent['password_hash'])) {
+                echo json_encode(['success' => false, 'message' => 'La contraseña de confirmación es incorrecta.']);
                 return;
             }
 
             try {
                 if ($model->eliminar($input['id_usuario'])) {
-                    echo json_encode(['success' => true, 'message' => 'Empleado eliminado.']);
+                    echo json_encode(['success' => true, 'message' => '¡Colaborador eliminado exitosamente!']);
                 } else {
-                    http_response_code(409);
-                    echo json_encode(['success' => false, 'message' => 'No se puede eliminar: tiene registros asociados (órdenes, cierres, etc).']);
+                    echo json_encode(['success' => false, 'message' => 'No se pudo eliminar el registro. Intenta desactivarlo mejor.']);
                 }
             } catch (Exception $e) {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error: El empleado tiene registros asociados.']);
+                // El error suele ser por integridad referencial (Foreign Keys)
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Este usuario tiene historial asociado (órdenes, pagos, permisos o registros de auditoría). Te recomendamos cambiar su estado a INACTIVO.'
+                ]);
             }
         }
     }
@@ -349,7 +413,7 @@ class EmpleadoController {
             try {
                 require_once BASE_PATH . '/vendor/MPDF/vendor/autoload.php';
                 $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_top' => 15]);
-                
+
                 ob_start();
                 require VIEW_PATH . '/admin/reportes/empleado/listado.view.php';
                 $html = ob_get_clean();
@@ -358,7 +422,9 @@ class EmpleadoController {
                 $mpdf->SetTitle($titulo_reporte);
                 $mpdf->Output('Reporte_Personal_' . date('Ymd_His') . '.pdf', 'I');
                 exit;
-            } catch (\Exception $e) { die("Error PDF: " . $e->getMessage()); }
+            } catch (\Exception $e) {
+                die("Error PDF: " . $e->getMessage());
+            }
         } else {
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename=Reporte_Personal_' . date('Ymd_His') . '.csv');
@@ -369,8 +435,12 @@ class EmpleadoController {
                 fputcsv($output, ['ID', 'DNI', 'Nombres', 'Cargo', 'Total Ordenes', 'Recaudacion Total', 'Estado'], ';');
                 foreach ($lista as $r) {
                     fputcsv($output, [
-                        $r['id_usuario'], $r['dni'], mb_strtoupper($r['nombres'], 'UTF-8'), 
-                        $r['rol_nombre'], $r['total_ordenes'], $r['recaudacion_total'],
+                        $r['id_usuario'],
+                        $r['dni'],
+                        mb_strtoupper($r['nombres'], 'UTF-8'),
+                        $r['rol_nombre'],
+                        $r['total_ordenes'],
+                        $r['recaudacion_total'],
                         $r['estado'] == 1 ? 'ACTIVO' : 'INACTIVO'
                     ], ';');
                 }
@@ -378,9 +448,14 @@ class EmpleadoController {
                 fputcsv($output, ['ID', 'DNI', 'Nombres', 'Email', 'Telefono', 'Cargo', 'Estado', 'Fecha Registro'], ';');
                 foreach ($lista as $r) {
                     fputcsv($output, [
-                        $r['id_usuario'], $r['dni'], mb_strtoupper($r['nombres'], 'UTF-8'), 
-                        $r['email'], $r['telefono'], $r['rol_nombre'],
-                        $r['estado'] == 1 ? 'ACTIVO' : 'INACTIVO', $r['fecha_creacion']
+                        $r['id_usuario'],
+                        $r['dni'],
+                        mb_strtoupper($r['nombres'], 'UTF-8'),
+                        $r['email'],
+                        $r['telefono'],
+                        $r['rol_nombre'],
+                        $r['estado'] == 1 ? 'ACTIVO' : 'INACTIVO',
+                        $r['fecha_creacion']
                     ], ';');
                 }
             }

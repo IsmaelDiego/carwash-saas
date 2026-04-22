@@ -14,9 +14,7 @@ let _saldoEsperado = 0;
 document.addEventListener("DOMContentLoaded", () => {
   cargarOrdenes();
   cargarRampas();
-  // Iniciar cronómetros cada 30 segundos
   setInterval(actualizarCronometros, 30000);
-  // Auto-refresco completo cada 60 segundos para evitar datos estáticos
   setInterval(() => {
     cargarOrdenes();
     cargarRampas();
@@ -44,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ═══ CARGAR ÓRDENES ═══
 async function cargarOrdenes(btn = null) {
   let icon = null;
   if (btn) {
@@ -627,6 +624,7 @@ function abrirModalNuevaOrden() {
 
   document.getElementById("nv_placa").value = "";
   document.getElementById("nv_color").value = "";
+  if(document.getElementById("nv_observaciones")) document.getElementById("nv_observaciones").value = "";
   document.getElementById("camposNuevoVehiculo").style.display = "none";
 
   document
@@ -649,6 +647,8 @@ function abrirModalNuevaOrden() {
   const lblTotal = document.getElementById("lbl_total_nueva_orden");
   if (lblTotal) lblTotal.textContent = "S/ 0.00";
 
+  if (document.getElementById("ubic_orden")) document.getElementById("ubic_orden").value = "Atención en local";
+
   new bootstrap.Modal(document.getElementById("modalNuevaOrden")).show();
 }
 
@@ -661,6 +661,7 @@ async function cargarVehiculosCliente(id) {
     camposNuevoVeh.style.display = "none";
     document.getElementById("nv_placa").value = "";
     document.getElementById("nv_color").value = "";
+    if (document.getElementById("nv_observaciones")) document.getElementById("nv_observaciones").value = "";
     document.getElementById("nv_categoria").selectedIndex = 0;
   }
 
@@ -867,6 +868,7 @@ async function confirmarCreacionOrden() {
       id_cliente: idCliente,
       placa: placa,
       color: document.getElementById("nv_color").value,
+      observaciones: document.getElementById("nv_observaciones") ? document.getElementById("nv_observaciones").value : "",
       id_categoria: document.getElementById("nv_categoria").value,
     };
     const resV = await fetch(`${BASE_URL}/caja/dashboard/registrarvehiculo`, {
@@ -913,6 +915,7 @@ async function confirmarCreacionOrden() {
       pago_anticipado: pagoAnticipado,
       metodo_pago: metodoPagoAnt,
       canjear_puntos: chkCanje && chkCanje.checked,
+      ubicacion_en_local: document.getElementById("ubic_orden") ? document.getElementById("ubic_orden").value : null,
     }),
   });
   const r = await res.json();

@@ -122,14 +122,4 @@ document.querySelectorAll('input[name="tipo"]').forEach(radio => {
         document.querySelector('.sec-whatsapp').style.display = (this.value === 'marketing') ? 'block' : 'none';
     });
 });
-
-document.getElementById('formReportesCliente').addEventListener('submit', function() {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('modalReportesCliente'));
-    setTimeout(() => {
-        modal.hide();
-        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-        document.body.style.overflow = 'auto';
-        document.body.classList.remove('modal-open');
-    }, 1000);
-});
 </script>

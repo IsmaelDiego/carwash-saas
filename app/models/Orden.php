@@ -7,9 +7,6 @@ class Orden {
         $this->pdo = $pdo;
     }
 
-    // ════════════════════════════════════════
-    // LISTAR ÓRDENES CON DETALLES
-    // ════════════════════════════════════════
     public function getAll($estado = null) {
         $sql = "SELECT o.*, 
                     c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos,
@@ -36,9 +33,6 @@ class Orden {
         return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ════════════════════════════════════════
-    // LISTAR ÓRDENES ACTIVAS CAJERO (Con Detalle de Productos/Servicios)
-    // ════════════════════════════════════════
     public function getActivasCajero($excluirEnCola = false) {
         $sql = "SELECT o.*, c.nombres AS cli_nombres, c.apellidos AS cli_apellidos, c.puntos_acumulados, v.placa, pr.nombre AS nombre_promocion,
                     r.numero AS rampa_numero, r.nombre AS rampa_nombre,

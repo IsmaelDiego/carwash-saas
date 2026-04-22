@@ -284,8 +284,6 @@
                         <label class="form-label fw-bold small">¿Para qué es este token?</label>
                         <select class="form-select" name="motivo" required>
                             <option value="">-- Seleccionar --</option>
-                            <option value="Cajero ausente - Operario cobra">Cajero ausente — Operario cobra</option>
-                            <option value="Corrección de registro - Cajero">Corrección de registro — Cajero</option>
                             <option value="Anulación autorizada">Anulación autorizada</option>
                             <option value="Otro">Otro motivo</option>
                         </select>

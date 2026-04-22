@@ -27,7 +27,7 @@ const PermisoModule = {
             "destroy": true,
             "processing": true,
             "responsive": true,
-            "order": [[3, 'desc']], // Order by 'Desde' date mainly
+            "order": false, // Order by 'Desde' date mainly
             "dom": '<"row mx-2"<"col-md-12 my-2"l>>t<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
             "ajax": { "url": `${BASE_URL}/admin/permiso/getall`, "type": "GET" },
             "language": {

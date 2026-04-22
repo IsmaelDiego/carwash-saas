@@ -4,6 +4,7 @@ const EmpleadoModule = {
     init: function() {
         this.initDataTable();
         this.initEventosUI();
+        this.initValidacionesEntrada();
         this.initFormularios();
         this.initVisualFixes();
         this.cargarRoles();
@@ -184,7 +185,7 @@ const EmpleadoModule = {
             const coloresRol = { 'Administrador': 'primary', 'Cajero': 'info', 'Operario': 'warning' };
 
             let html = `
-                <div class="col-sm-6 col-xl-3 mb-3">
+                <div class="col-sm-6 col-xl mb-3">
                     <div class="card stat-card h-100 shadow-sm">
                         <div class="card-body d-flex align-items-center gap-3">
                             <div class="stat-icon bg-label-primary"><i class="bx bx-group text-primary"></i></div>
@@ -195,7 +196,7 @@ const EmpleadoModule = {
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-6 col-xl-3 mb-3">
+                <div class="col-sm-6 col-xl mb-3">
                     <div class="card stat-card h-100 shadow-sm">
                         <div class="card-body d-flex align-items-center gap-3">
                             <div class="stat-icon bg-label-success"><i class="bx bx-check-circle text-success"></i></div>
@@ -211,13 +212,13 @@ const EmpleadoModule = {
                 const icono = iconosRol[r.nombre] || 'bx-user';
                 const color = coloresRol[r.nombre] || 'secondary';
                 html += `
-                    <div class="col-sm-6 col-xl-3 mb-3">
+                    <div class="col-sm-6 col-xl mb-3">
                         <div class="card stat-card h-100 shadow-sm">
                             <div class="card-body d-flex align-items-center gap-3">
                                 <div class="stat-icon bg-label-${color}"><i class="bx ${icono} text-${color}"></i></div>
                                 <div>
                                     <div class="stat-value text-${color}">${r.cantidad}</div>
-                                    <small class="text-muted fw-medium">${r.nombre}s</small>
+                                    <small class="text-muted fw-medium">${r.nombre}</small>
                                 </div>
                             </div>
                         </div>
@@ -438,6 +439,13 @@ const EmpleadoModule = {
                     formData.forEach((value, key) => { object[key] = value; });
 
                     let jsonData = JSON.stringify(object);
+
+                    // VALIDACIÓN PREVENTIVA FRONTEND
+                    if (!self.validarFormatos(object)) {
+                        btn.prop('disabled', false).text(btnText);
+                        return;
+                    }
+
                     let res = await fetch(`${BASE_URL}${url}`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
@@ -496,6 +504,58 @@ const EmpleadoModule = {
         toastEl.style.zIndex = "11000";
         $('#toastMensaje').text(msg);
         new bootstrap.Toast(toastEl).show();
+    },
+
+    // ════════════════════════════════════════════════════
+    // 7. VALIDACIONES DE ENTRADA (SOLO NÚMEROS Y LONGITUD)
+    // ════════════════════════════════════════════════════
+    initValidacionesEntrada: function() {
+        const self = this;
+        const inputsDni = ['#reg_dni', '#edit_dni'];
+        const inputsTelf = ['#reg_telefono', '#edit_telefono'];
+
+        // Solo números y max 8 para DNI
+        $(inputsDni.join(',')).on('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').substring(0, 8);
+        });
+
+        // Solo números, max 9 y validación del '9' para Celular
+        $(inputsTelf.join(',')).on('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').substring(0, 9);
+            const val = this.value;
+            if (val.length > 0 && val.charAt(0) !== '9') {
+                $(this).addClass('is-invalid');
+                if (!$(this).next('.invalid-feedback').length) {
+                    $(this).after('<div class="invalid-feedback">El celular debe empezar con 9</div>');
+                }
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+    },
+
+    validarFormatos: function(data) {
+        // DNI: 8 dígitos
+        if (data.dni && !/^[0-9]{8}$/.test(data.dni)) {
+            this.mostrarToast("El DNI debe tener exactamente 8 números", "danger");
+            return false;
+        }
+        // Teléfono: 9 dígitos iniciando con 9
+        if (data.telefono && !/^9[0-9]{8}$/.test(data.telefono)) {
+            this.mostrarToast("El celular debe empezar con 9 y tener 9 dígitos", "danger");
+            return false;
+        }
+        // Email
+        if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+            this.mostrarToast("El formato del correo es inválido", "danger");
+            return false;
+        }
+        // Password (solo si está presente en la data, ej: registro o cambio pass)
+        if (data.password !== undefined && data.password.length < 6) {
+            this.mostrarToast("La contraseña debe tener al menos 6 caracteres", "danger");
+            return false;
+        }
+        return true;
     },
 
     consultarReniec: async function () {

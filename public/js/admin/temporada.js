@@ -28,7 +28,7 @@ const TemporadaModule = {
             "processing": true, 
             "responsive": true, 
             "autoWidth": false, 
-            "ordering": true,
+            "ordering": false,
             "ajax": { "url": `${BASE_URL}/admin/temporada/getall`, "type": "GET" },
             "dom": 't<"row mx-2"<"col-md-6"p><"col-md-6 text-end"i>>',
             "pageLength": 10,

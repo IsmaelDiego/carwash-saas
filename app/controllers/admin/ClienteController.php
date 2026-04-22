@@ -70,13 +70,14 @@ class ClienteController
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
-            // VALIDACIÓN V3.2: DNI, Nombres, Apellidos y Teléfono son requeridos
-            // Nota: 'telefono_principal' ya no existe, ahora es 'telefono'
-            if (empty($data['dni']) || empty($data['nombres']) || empty($data['apellidos']) || empty($data['telefono'])) {
+            // --- VALIDACIÓN ESTRICTA DE CELULAR ---
+            $telefono = trim($data['telefono'] ?? '');
+            if (!preg_match('/^9[0-9]{8}$/', $telefono)) {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'DNI, Nombres, Apellidos y Teléfono son obligatorios.']);
+                echo json_encode(['success' => false, 'message' => 'El celular debe empezar con 9 y tener exactamente 9 dígitos numéricos.']);
                 return;
             }
+            $data['telefono'] = $telefono;
 
             $clienteModel = new Cliente($pdo);
 
@@ -118,12 +119,22 @@ class ClienteController
 
             $data = json_decode(file_get_contents('php://input'), true);
 
-            // Validación V3.2: ID y Teléfono obligatorios
-            if (empty($data['id_cliente']) || empty($data['telefono'])) {
+            // --- VALIDACIÓN ESTRICTA DE CELULAR ---
+            $id_cliente = $data['id_cliente'] ?? null;
+            $telefono = trim($data['telefono'] ?? '');
+
+            if (!$id_cliente || empty($telefono)) {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'El teléfono es obligatorio para actualizar.']);
+                echo json_encode(['success' => false, 'message' => 'Datos incompletos para actualizar.']);
                 return;
             }
+
+            if (!preg_match('/^9[0-9]{8}$/', $telefono)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El celular debe empezar con 9 y tener exactamente 9 dígitos.']);
+                return;
+            }
+            $data['telefono'] = $telefono;
 
             $clienteModel = new Cliente($pdo);
 

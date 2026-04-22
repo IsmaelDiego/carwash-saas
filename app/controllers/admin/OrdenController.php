@@ -16,7 +16,6 @@ class OrdenController {
         include VIEW_PATH . '/partials/orden/modal_reporte.php';
     }
 
-    // API: Obtener lista de órdenes
     public function getlista() {
         requireAuth();
         global $pdo;
@@ -49,7 +48,6 @@ class OrdenController {
         }
     }
 
-    // API: Obtener datos para gráfico (Ingresos de últimos 6 meses)
     public function getgrafico() {
         requireAuth();
         global $pdo;

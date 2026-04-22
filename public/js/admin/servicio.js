@@ -21,7 +21,7 @@ const ServicioModule = {
             "processing": true,
             "responsive": true,
             "autoWidth": false,
-            "ordering": true,
+            "ordering": false,
             "ajax": { "url": `${BASE_URL}/admin/servicio/getall`, "type": "GET" },
             
             // DOM: Paginación Izquierda, Info Derecha

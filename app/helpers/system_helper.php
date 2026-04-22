@@ -148,3 +148,24 @@ function getAdminNotifications()
         'total' => $total_notificaciones
     ];
 }
+
+/**
+ * Marca un cambio en el sistema para invalidar la caché de notificaciones del cliente.
+ */
+function markSystemChange()
+{
+    $cacheDir = dirname(__DIR__, 2) . '/public/cache';
+    if (!is_dir($cacheDir)) {
+        mkdir($cacheDir, 0777, true);
+    }
+    file_put_contents($cacheDir . '/notif_version.txt', time());
+}
+
+/**
+ * Obtiene la versión actual del sistema basada en el archivo de caché.
+ */
+function getSystemVersion()
+{
+    $file = dirname(__DIR__, 2) . '/public/cache/notif_version.txt';
+    return file_exists($file) ? file_get_contents($file) : '0';
+}
